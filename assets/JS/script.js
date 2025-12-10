@@ -1,4 +1,4 @@
-// Valid credentials for both Admin and Principal
+ // Valid credentials for both Admin and Principal
         const validCredentials = {
             admin: {
                 username: 'admin',
@@ -13,7 +13,7 @@
             principal: {
                 username: 'principal',
                 password: 'principal123',
-                name: 'Dr. Ranjit Deshmukh',
+                name: 'Dr. Sarah Johnson',
                 email: 'principal@edumaster.edu',
                 role: 'principal',
                 avatar: 'P',
@@ -125,14 +125,14 @@
         let principalCredentials = {
             username: 'principal',
             password: 'principal123',
-            displayName: 'Dr. Ranjit Deshmukh',
+            displayName: 'Dr. Sarah Johnson',
             email: 'principal@edumaster.edu',
             lastChanged: new Date().toISOString().split('T')[0]
         };
 
         // Principal settings storage
         let principalSettings = {
-            displayName: 'Dr. Ranjit Deshmukh',
+            displayName: 'Dr. Sarah Johnson',
             username: 'principal',
             email: 'principal@edumaster.edu',
             profilePhoto: null,
@@ -530,15 +530,13 @@
                 hideToast();
             });
             
-            // Module card clicks
+            // Module card clicks - DISABLED as per requirement
             moduleCards.forEach(card => {
                 card.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    
-                    const module = this.dataset.module;
-                    console.log('Module clicked:', module);
-                    showModule(module);
+                    // Do nothing - click functionality disabled as per requirement
+                    console.log('Module card click disabled:', this.dataset.module);
                 });
             });
             
@@ -1808,7 +1806,7 @@
             loadPrincipalSettingsFromStorage();
             
             // Update form fields - ensure they have values
-            principalSettingsName.value = principalSettings.displayName || 'Dr. Ranjit Deshmuk';
+            principalSettingsName.value = principalSettings.displayName || 'Dr. Sarah Johnson';
             principalSettingsUsername.value = principalSettings.username || 'principal';
             principalSettingsEmail.value = principalSettings.email || 'principal@edumaster.edu';
             principalSettingsRole.value = 'Principal';
@@ -2112,14 +2110,14 @@
                 principalCredentials = {
                     username: 'principal',
                     password: 'principal123',
-                    displayName: 'Dr. Ranjit Deshmukh',
+                    displayName: 'Dr. Sarah Johnson',
                     email: 'principal@edumaster.edu',
                     lastChanged: new Date().toISOString().split('T')[0]
                 };
                 
                 // Also reset principal settings
                 principalSettings = {
-                    displayName: 'Dr. Ranjit Deshmukh',
+                    displayName: 'Dr. Sarah Johnson',
                     username: 'principal',
                     email: 'principal@edumaster.edu',
                     profilePhoto: null,
