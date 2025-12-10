@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EDU MASTER</title>
+    
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js for reports -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Particles.js CDN -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+ 
+    <!-- Particles.js Background Container -->
+    <div id="particles-js"></div>
+
+    <!-- Favicon for modern browsers -->
+    <link rel="icon" type="image/png" href="assets/FAVICON/Favicon.png">
+
+    <!-- Favicon for older browsers -->
+    <link rel="icon" type="image/x-icon" href="assets/FAVICON/favicon ICO.ico">
+
+    <!-- Optional: Apple iPhone/iPad -->
+    <link rel="apple-touch-icon" href="assets/FAVICON/Favicon.png">
+      
+    <!-- External CSS -->
+    <link rel="stylesheet" href="assets/CSS/style.css">
+
+</head>
+<body>
+    
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
+        <div class="floating-elements">
+            <div class="floating-element" style="width: 300px; height: 300px; top: -100px; left: -100px; animation-delay: 0s;"></div>
+            <div class="floating-element" style="width: 400px; height: 400px; bottom: -150px; right: -100px; animation-delay: -5s;"></div>
+            <div class="floating-element" style="width: 200px; height: 200px; top: 50%; right: 20%; animation-delay: -10s;"></div>
+        </div>
+        
+        <div class="login-wrapper">
+            <!-- Left Panel - Product Information -->
+            <div class="login-left">
+                <div class="left-content">
+                    <h1 class="product-title">EDU MASTER</h1>
+                   
+                    <div class="welcome-section">
+                        <div class="welcome-message">
+                            Hello,<br>
+                            Welcome!
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel - Login Form -->
+            <div class="login-right">
+                <div class="logo-container">
+                    <h1 class="logo-main">Login to continue</h1>
+                </div>
+                
+                <form class="login-form" id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label clickable-label" for="username">
+                            <i class="fas fa-user"></i> Username
+                        </label>
+                        <div class="form-input-container">
+                            <input type="text" id="username" class="form-input" placeholder="Enter your username" autocomplete="username">
+                            <span class="form-icon">
+                                <i class="fas fa-user-circle"></i>
+                            </span>
+                        </div>
+                        <div id="usernameError" class="error-message"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label clickable-label" for="password">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        <div class="form-input-container">
+                            <input type="password" id="password" class="form-input" placeholder="Enter your password" autocomplete="current-password">
+                            <span class="form-icon">
+                                <i class="fas fa-key"></i>
+                            </span>
+                            <button type="button" class="toggle-password" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div id="passwordError" class="error-message"></div>
+                    </div>
+                    
+                    <div class="form-group role-selector-container">
+                        <label class="form-label">
+                            <i class="fas fa-user-tag"></i> Select Login Role
+                        </label>
+                        <div class="role-selector">
+                            <button type="button" class="role-btn active" data-role="admin" id="adminRoleBtn">
+                                <i class="fas fa-user-shield role-icon"></i>
+                                <span>Admin Login</span>
+                                <small style="font-size: 0.75rem; font-weight: normal; margin-top: 3px;">Full system access</small>
+                            </button>
+                            <button type="button" class="role-btn" data-role="principal" id="principalRoleBtn">
+                                <i class="fas fa-user-tie role-icon"></i>
+                                <span>Principal Login</span>
+                                <small style="font-size: 0.75rem; font-weight: normal; margin-top: 3px;">View-only access</small>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="login-btn-container">
+                        <button type="submit" class="login-btn" id="loginButton">
+                            <span>LOGIN TO DASHBOARD</span>
+                            <div class="loading-spinner" id="loadingSpinner"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dashboard -->
+    <div class="dashboard-container" id="dashboard">
+        <!-- Navbar -->
+        <nav class="dashboard-navbar">
+            <div class="dashboard-logo">EDU MASTER</div>
+            <div class="dashboard-user">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">
+                        <span id="avatarText">A</span>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name" id="dashboardUserName">System Administrator</div>
+                        <div class="user-role" id="dashboardUserRole">Admin</div>
+                    </div>
+                </div>
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </nav>
+        
+        <!-- Main Dashboard Content -->
+        <main class="dashboard-content" id="mainDashboard">
+            <!-- Success Banner -->
+            <div class="success-banner" id="successBanner">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h1 class="success-title">Login Successful!</h1>
+                <p class="success-subtitle" id="successSubtitle">Welcome to EDU MASTER Dashboard</p>
+            </div>
+            
+            <!-- Welcome Banner -->
+            <div class="welcome-banner" id="welcomeBanner">
+                <h1 class="welcome-title-large" id="welcomeTitle">Welcome back, System Administrator!</h1>
+                <p class="welcome-subtitle-large" id="welcomeSubtitle">You have full access to manage institutes, programmes, classes, and academic years.</p>
+            </div>
+            
+            <!-- Stats Overview -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div>
+                            <div class="stat-title">Total Institutes</div>
+                            <div class="stat-value" id="statInstitutes">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-change">
+                        <i class="fas fa-arrow-up"></i> <span id="instituteChange">0</span> new this month
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div>
+                            <div class="stat-title">Academic Years</div>
+                            <div class="stat-value" id="statYears">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-change">
+                        <i class="fas fa-check-circle"></i> <span id="activeYearCount">0</span> active year
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div>
+                            <div class="stat-title">Programmes</div>
+                            <div class="stat-value" id="statProgrammes">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-change">
+                        <i class="fas fa-arrow-up"></i> <span id="programmeChange">0</span> new programme
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div>
+                            <div class="stat-title">Classes</div>
+                            <div class="stat-value" id="statClasses">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-change">
+                        <i class="fas fa-arrow-up"></i> <span id="classChange">0</span> new classes
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Master Modules -->
+            <div class="modules-section">
+                <h2 class="section-title">
+                    <i class="fas fa-th-large"></i> Master Modules
+                </h2>
+                <div class="modules-grid">
+                    <div class="module-card" data-module="institute">
+                        <div class="module-icon">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div class="module-name">Institute Master</div>
+                        <div class="module-description">Manage all educational institutes, their details, and status.</div>
+                    </div>
+                    
+                    <div class="module-card" data-module="academic">
+                        <div class="module-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="module-name">Academic Year Master</div>
+                        <div class="module-description">Define and manage academic years and set current year.</div>
+                    </div>
+                    
+                    <div class="module-card" data-module="programme">
+                        <div class="module-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="module-name">Programme Master</div>
+                        <div class="module-description">Create and manage educational programmes and courses.</div>
+                    </div>
+                    
+                    <div class="module-card" data-module="class">
+                        <div class="module-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="module-name">Class Master</div>
+                        <div class="module-description">Manage classes, semesters, and programme mappings.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="modules-section">
+                <h2 class="section-title">
+                    <i class="fas fa-bolt"></i> Quick Actions
+                </h2>
+                <div class="quick-actions-grid">
+                    <button class="quick-action-btn btn-green" id="addInstituteBtn">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add New Institute</span>
+                    </button>
+                    
+                    <button class="quick-action-btn btn-teal" id="addAcademicYearBtn">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Academic Year</span>
+                    </button>
+                    
+                    <button class="quick-action-btn btn-purple" id="addProgrammeBtn">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add New Programme</span>
+                    </button>
+                    
+                    <button class="quick-action-btn btn-pink" id="addClassBtn">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Class Master</span>
+                    </button>
+                    
+                    <button class="quick-action-btn btn-orange" id="viewReportsBtn">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>View Reports</span>
+                    </button>
+                    
+                    <button class="quick-action-btn btn-gray" id="settingsBtn">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Database Tables Section -->
+            <div class="database-tables-section" id="databaseTablesSection">
+                <h2 class="section-title">
+                    <i class="fas fa-database"></i> Database Tables
+                </h2>
+                
+                <div class="table-tabs">
+                    <button class="table-tab active" data-table="institute">Institute Master</button>
+                    <button class="table-tab" data-table="academic">Academic Year Master</button>
+                    <button class="table-tab" data-table="programme">Programme Master</button>
+                    <button class="table-tab" data-table="class">Class Master</button>
+                </div>
+                
+                <!-- Institute Table -->
+                <div class="table-container active" id="instituteTableContainer">
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Institute ID</th>
+                                    <th>Institute Name</th>
+                                    <th>Institute Code</th>
+                                    <th>Address</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th>Updated At</th>
+                                    <th class="actions-header">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="databaseInstituteTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Academic Year Table -->
+                <div class="table-container" id="academicTableContainer">
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Year ID</th>
+                                    <th>Year Name</th>
+                                    <th>Is Current</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th class="actions-header">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="databaseAcademicTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Programme Table -->
+                <div class="table-container" id="programmeTableContainer">
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Programme ID</th>
+                                    <th>Programme Name</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th class="actions-header">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="databaseProgrammeTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Class Table -->
+                <div class="table-container" id="classTableContainer">
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Class ID</th>
+                                    <th>Programme ID</th>
+                                    <th>Programme Name</th>
+                                    <th>Semester Name</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th class="actions-header">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="databaseClassTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Reports Module -->
+        <div class="dashboard-content module-section" id="reportsModule">
+            <div class="module-header">
+                <button class="back-to-dashboard" id="backFromReports">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+                <h2 class="section-title">
+                    <i class="fas fa-chart-bar"></i> Reports & Analytics
+                </h2>
+            </div>
+            
+            <div class="reports-section">
+                <!-- Summary Cards -->
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <div class="summary-value" id="reportTotalInstitutes">0</div>
+                        <div class="summary-label">Total Institutes</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value" id="reportTotalProgrammes">0</div>
+                        <div class="summary-label">Total Programmes</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value" id="reportTotalClasses">0</div>
+                        <div class="summary-label">Total Classes</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-value" id="reportActiveYears">0</div>
+                        <div class="summary-label">Active Years</div>
+                    </div>
+                </div>
+                
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <div class="chart-title">Institute Distribution</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="instituteChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <div class="chart-title">Programme Statistics</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="programmeChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <div class="chart-title">Academic Year Status</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="academicYearChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <div class="chart-title">Class Distribution by Programme</div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="classDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Export Actions -->
+                <div class="export-actions">
+                    <button class="btn btn-primary" id="exportPdfBtn">
+                        <i class="fas fa-file-pdf"></i> Export Report as PDF
+                    </button>
+                    <button class="btn btn-success" id="exportExcelBtn">
+                        <i class="fas fa-file-excel"></i> Export Data to Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Module -->
+        <div class="dashboard-content module-section" id="settingsModule">
+            <div class="module-header">
+                <button class="back-to-dashboard" id="backFromSettings">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+                <h2 class="section-title">
+                    <i class="fas fa-cog"></i> Settings
+                </h2>
+            </div>
+            
+            <div class="settings-section">
+                <div class="settings-tabs">
+                    <button class="settings-tab active" data-panel="profile">Profile</button>
+                    <button class="settings-tab" data-panel="security">Security</button>
+                    <button class="settings-tab" data-panel="principal" id="principalManagementTab" style="display: none;">Principal Management</button>
+                </div>
+                
+                <!-- Profile Settings Panel -->
+                <div class="settings-panel active" id="profilePanel">
+                    <div class="profile-photo-container">
+                        <div class="profile-photo" id="profilePhoto">
+                            <span id="profileInitials">A</span>
+                        </div>
+                        <input type="file" id="profilePhotoInput" accept="image/*" style="display: none;">
+                        <button class="photo-upload-btn" id="uploadPhotoBtn">
+                            <i class="fas fa-camera"></i> Change Profile Photo
+                        </button>
+                    </div>
+                    
+                    <div class="form-card">
+                        <h3 class="mb-4">Profile Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Display Name *</label>
+                                <input type="text" class="search-input" id="profileName" placeholder="Enter your display name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Username *</label>
+                                <input type="text" class="search-input" id="profileUsername" placeholder="Enter your username">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Email Address *</label>
+                                <input type="email" class="search-input" id="profileEmail" placeholder="Enter your email address">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Role</label>
+                                <input type="text" class="search-input" id="profileRole" readonly>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" id="saveProfileBtn">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Panel -->
+                <div class="settings-panel" id="securityPanel">
+                    <!-- Change Username Section -->
+                    <div class="form-card">
+                        <h3 class="mb-4">Change Username</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Current Username *</label>
+                                <input type="text" class="search-input" id="currentUsername" placeholder="Enter current username">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">New Username *</label>
+                                <input type="text" class="search-input" id="newUsername" placeholder="Enter new username">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Username *</label>
+                                <input type="text" class="search-input" id="confirmUsername" placeholder="Confirm new username">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" id="changeUsernameBtn">
+                                <i class="fas fa-user-edit"></i> Change Username
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Change Password Section -->
+                    <div class="form-card mt-4">
+                        <h3 class="mb-4">Change Password</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Current Password *</label>
+                                <input type="password" class="search-input" id="currentPassword" placeholder="Enter current password">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">New Password *</label>
+                                <input type="password" class="search-input" id="newPassword" placeholder="Enter new password">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Password *</label>
+                                <input type="password" class="search-input" id="confirmPassword" placeholder="Confirm new password">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" id="changePasswordBtn">
+                                <i class="fas fa-key"></i> Change Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Principal Management Panel (Admin Only) -->
+                <div class="settings-panel" id="principalPanel">
+                    <div class="form-card">
+                        <h3 class="mb-4">Principal Credentials Management</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Principal Display Name *</label>
+                                <input type="text" class="search-input" id="principalDisplayName" placeholder="Enter principal's display name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Principal Username *</label>
+                                <input type="text" class="search-input" id="principalUsername" placeholder="Enter principal's username">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Principal Password *</label>
+                                <input type="password" class="search-input" id="principalPassword" placeholder="Enter principal's password">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm Password *</label>
+                                <input type="password" class="search-input" id="principalConfirmPassword" placeholder="Confirm principal's password">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" id="savePrincipalBtn">
+                                <i class="fas fa-save"></i> Save Principal Credentials
+                            </button>
+                            <button class="btn btn-warning" id="resetPrincipalBtn">
+                                <i class="fas fa-redo"></i> Reset to Default
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-card mt-4">
+                        <h3 class="mb-4">Current Principal Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Current Display Name</label>
+                                <input type="text" class="search-input" id="currentPrincipalName" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Current Username</label>
+                                <input type="text" class="search-input" id="currentPrincipalUsername" readonly>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Password Last Changed</label>
+                                <input type="text" class="search-input" id="passwordLastChanged" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Principal Settings Module (UPDATED - Fully Functional) -->
+        <div class="dashboard-content module-section" id="principalSettingsModule">
+            <div class="module-header">
+                <button class="back-to-dashboard" id="backFromPrincipalSettings">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+                <h2 class="section-title">
+                    <i class="fas fa-user-tie"></i> Principal Settings
+                </h2>
+            </div>
+            
+            <div class="principal-settings-section">
+                <div class="principal-settings-tabs">
+                    <button class="principal-settings-tab active" data-panel="principalProfile">Profile</button>
+                    <button class="principal-settings-tab" data-panel="principalSecurity">Security</button>
+                </div>
+                
+                <!-- Principal Profile Settings Panel -->
+                <div class="principal-settings-panel active" id="principalProfilePanel">
+                    <div class="profile-photo-container">
+                        <div class="profile-photo" id="principalProfilePhoto">
+                            <span id="principalProfileInitials">P</span>
+                        </div>
+                        <input type="file" id="principalProfilePhotoInput" accept="image/*" style="display: none;">
+                        <button class="photo-upload-btn" id="principalUploadPhotoBtn">
+                            <i class="fas fa-camera"></i> Change Profile Photo
+                        </button>
+                    </div>
+                    
+                    <div class="form-card">
+                        <h3 class="mb-4">Profile Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Display Name *</label>
+                                <input type="text" class="search-input" id="principalSettingsName" placeholder="Enter your display name" value="Dr. Ranjit Deshmukh">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Username *</label>
+                                <input type="text" class="search-input" id="principalSettingsUsername" placeholder="Enter your username" value="principal">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Email Address *</label>
+                                <input type="email" class="search-input" id="principalSettingsEmail" placeholder="Enter your email address" value="principal@edumaster.edu">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Role</label>
+                                <input type="text" class="search-input" id="principalSettingsRole" readonly value="Principal">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" id="savePrincipalSettingsBtn">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Principal Security Panel -->
+                <div class="principal-settings-panel" id="principalSecurityPanel">
+                    <!-- Change Username Section -->
+                    <div class="form-card">
+                        <h3 class="mb-4">Change Username</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Current Username *</label>
+                                <input type="text" class="search-input" id="principalCurrentUsername" placeholder="Enter current username" value="principal">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">New Username *</label>
+                                <input type="text" class="search-input" id="principalNewUsername" placeholder="Enter new username">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Username *</label>
+                                <input type="text" class="search-input" id="principalConfirmUsername" placeholder="Confirm new username">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" id="changePrincipalUsernameBtn">
+                                <i class="fas fa-user-edit"></i> Change Username
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Change Password Section -->
+                    <div class="form-card mt-4">
+                        <h3 class="mb-4">Change Password</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Current Password *</label>
+                                <input type="password" class="search-input" id="principalCurrentPassword" placeholder="Enter current password">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">New Password *</label>
+                                <input type="password" class="search-input" id="principalNewPassword" placeholder="Enter new password">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Password *</label>
+                                <input type="password" class="search-input" id="principalConfirmPassword" placeholder="Confirm new password">
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" id="changePrincipalPasswordBtn">
+                                <i class="fas fa-key"></i> Change Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Institute Master Module -->
+        <div class="dashboard-content module-section" id="instituteModule">
+            <div class="module-header">
+                <button class="back-to-dashboard" id="backFromInstitute">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+                <h2 class="section-title">
+                    <i class="fas fa-university"></i> Institute Master
+                </h2>
+            </div>
+            
+            <div class="form-card" id="instituteFormCard">
+                <h3 class="mb-4" id="instituteFormTitle">Add New Institute</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Institute Name *</label>
+                        <input type="text" class="search-input" id="instituteName" placeholder="Enter institute name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Institute Code *</label>
+                        <input type="text" class="search-input" id="instituteCode" placeholder="Enter institute code">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Address *</label>
+                        <input type="text" class="search-input" id="instituteAddress" placeholder="Enter institute address">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="search-input" id="instituteStatus">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="saveInstituteBtn">
+                        <i class="fas fa-save"></i> Save Institute
+                    </button>
+                    <button class="btn btn-secondary" id="cancelInstituteBtn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInstitute" placeholder="Search institutes by name, code, or address...">
+                <button class="btn btn-primary" id="clearInstituteSearch">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Institute ID</th>
+                            <th>Institute Name</th>
+                            <th>Institute Code</th>
+                            <th>Address</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th class="actions-header">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="instituteTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Academic Year Master Module -->
+        <div class="dashboard-content module-section" id="academicModule">
+            <div class="module-header">
+                <button class="back-to-dashboard" id="backFromAcademic">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+                <h2 class="section-title">
+                    <i class="fas fa-calendar-alt"></i> Academic Year Master
+                </h2>
+            </div>
+            
+            <div class="form-card" id="academicFormCard">
+                <h3 class="mb-4" id="academicFormTitle">Add New Academic Year</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Year Name *</label>
+                        <input type="text" class="search-input" id="yearName" placeholder="e.g., 2024-2025">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Start Date *</label>
+                        <input type="date" class="search-input" id="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">End Date *</label>
+                        <input type="date" class="search-input" id="endDate">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Is Current Year</label>
+                        <select class="search-input" id="isCurrentYear">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="search-input" id="academicStatus">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="saveAcademicBtn">
+                        <i class="fas fa-save"></i> Save Academic Year
+                    </button>
+                    <button class="btn btn-secondary" id="cancelAcademicBtn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchAcademic" placeholder="Search academic years by name...">
+                <button class="btn btn-primary" id="clearAcademicSearch">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Year ID</th>
+                            <th>Year Name</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Current Year</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th class="actions-header">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="academicTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Programme Master Module -->
+        <div class="dashboard-content module-section" id="programmeModule">
+            <div class="module-header">
+                <button class="back-to-dashboard" id="backFromProgramme">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+                <h2 class="section-title">
+                    <i class="fas fa-graduation-cap"></i> Programme Master
+                </h2>
+            </div>
+            
+            <div class="form-card" id="programmeFormCard">
+                <h3 class="mb-4" id="programmeFormTitle">Add New Programme</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Programme Name *</label>
+                        <input type="text" class="search-input" id="programmeName" placeholder="Enter programme name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Programme Code *</label>
+                        <input type="text" class="search-input" id="programmeCode" placeholder="Enter programme code">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Duration (Years) *</label>
+                        <input type="number" class="search-input" id="programmeDuration" placeholder="e.g., 3" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="search-input" id="programmeDescription" placeholder="Enter programme description" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="search-input" id="programmeStatus">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="saveProgrammeBtn">
+                        <i class="fas fa-save"></i> Save Programme
+                    </button>
+                    <button class="btn btn-secondary" id="cancelProgrammeBtn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchProgramme" placeholder="Search programmes by name or code...">
+                <button class="btn btn-primary" id="clearProgrammeSearch">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Programme ID</th>
+                            <th>Programme Name</th>
+                            <th>Programme Code</th>
+                            <th>Duration</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th class="actions-header">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="programmeTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Class Master Module -->
+        <div class="dashboard-content module-section" id="classModule">
+            <div class="module-header">
+                <button class="back-to-dashboard" id="backFromClass">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+                <h2 class="section-title">
+                    <i class="fas fa-chalkboard-teacher"></i> Class Master
+                </h2>
+            </div>
+            
+            <div class="form-card" id="classFormCard">
+                <h3 class="mb-4" id="classFormTitle">Add New Class</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Class Name *</label>
+                        <input type="text" class="search-input" id="className" placeholder="Enter class name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Class Code *</label>
+                        <input type="text" class="search-input" id="classCode" placeholder="Enter class code">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Programme *</label>
+                        <select class="search-input" id="classProgramme">
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Academic Year *</label>
+                        <select class="search-input" id="classAcademicYear">
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Semester *</label>
+                        <input type="text" class="search-input" id="classSemester" placeholder="e.g., Semester 1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max Students</label>
+                        <input type="number" class="search-input" id="classMaxStudents" placeholder="e.g., 60" min="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="search-input" id="classStatus">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="saveClassBtn">
+                        <i class="fas fa-save"></i> Save Class
+                    </button>
+                    <button class="btn btn-secondary" id="cancelClassBtn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchClass" placeholder="Search classes by name, code, or semester...">
+                <button class="btn btn-primary" id="clearClassSearch">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+            
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Class ID</th>
+                            <th>Class Name</th>
+                            <th>Class Code</th>
+                            <th>Programme</th>
+                            <th>Academic Year</th>
+                            <th>Semester</th>
+                            <th>Max Students</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th class="actions-header">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="classTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <div class="toast-content">
+            <div class="toast-title" id="toastTitle">Success</div>
+            <div class="toast-message" id="toastMessage">Operation completed successfully</div>
+        </div>
+        <button class="close-toast" id="closeToast">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- External JS -->
+     <script src="assets/JS/script.js"></script>
+   
+</body>
+</html>
