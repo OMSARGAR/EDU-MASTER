@@ -1,4 +1,4 @@
- // Valid credentials for both Admin and Principal
+  // Valid credentials for both Admin and Principal
         const validCredentials = {
             admin: {
                 username: 'admin',
@@ -145,6 +145,10 @@
         let editingProgrammeId = null;
         let editingClassId = null;
 
+        // Custom Alert System
+        let customAlertResolve = null;
+        let customAlertPromise = null;
+
         // DOM Elements
         const loginPage = document.getElementById('loginPage');
         const dashboard = document.getElementById('dashboard');
@@ -162,6 +166,14 @@
         const toastTitle = document.getElementById('toastTitle');
         const toastMessage = document.getElementById('toastMessage');
         const closeToast = document.getElementById('closeToast');
+        
+        // Custom Alert Elements
+        const customAlertOverlay = document.getElementById('customAlertOverlay');
+        const customAlertIcon = document.getElementById('customAlertIcon');
+        const customAlertTitle = document.getElementById('customAlertTitle');
+        const customAlertMessage = document.getElementById('customAlertMessage');
+        const customAlertCancel = document.getElementById('customAlertCancel');
+        const customAlertConfirm = document.getElementById('customAlertConfirm');
         
         // Dashboard elements
         const userAvatar = document.getElementById('userAvatar');
@@ -288,6 +300,190 @@
         let hasSubmitted = false;
         let charts = {};
         let profilePhotoUrl = null;
+        let loginAnimationPlayed = false;
+
+        // Custom Alert System Functions
+        function showCustomAlert(message, title = 'Alert', type = 'info') {
+            return new Promise((resolve) => {
+                // Set alert content
+                customAlertTitle.textContent = title;
+                customAlertMessage.textContent = message;
+                
+                // Set icon based on type
+                customAlertIcon.className = 'custom-alert-icon';
+                let iconClass = 'fas fa-info-circle';
+                
+                switch(type) {
+                    case 'success':
+                        customAlertIcon.classList.add('success');
+                        iconClass = 'fas fa-check-circle';
+                        break;
+                    case 'warning':
+                        customAlertIcon.classList.add('warning');
+                        iconClass = 'fas fa-exclamation-triangle';
+                        break;
+                    case 'error':
+                        customAlertIcon.classList.add('error');
+                        iconClass = 'fas fa-times-circle';
+                        break;
+                    case 'info':
+                    default:
+                        customAlertIcon.classList.add('info');
+                        iconClass = 'fas fa-info-circle';
+                        break;
+                }
+                
+                customAlertIcon.innerHTML = `<i class="${iconClass}"></i>`;
+                
+                // Show only OK button for alerts
+                customAlertCancel.style.display = 'none';
+                customAlertConfirm.textContent = 'OK';
+                
+                // Show the alert
+                customAlertOverlay.classList.add('show');
+                
+                // Set up event listeners
+                const handleConfirm = () => {
+                    hideCustomAlert();
+                    resolve(true);
+                };
+                
+                const handleCancel = () => {
+                    hideCustomAlert();
+                    resolve(false);
+                };
+                
+                const handleKeyDown = (e) => {
+                    if (e.key === 'Escape') {
+                        handleConfirm();
+                    } else if (e.key === 'Enter') {
+                        handleConfirm();
+                    }
+                };
+                
+                // Add event listeners
+                customAlertConfirm.onclick = handleConfirm;
+                customAlertCancel.onclick = handleCancel;
+                
+                // Close on overlay click
+                const handleOverlayClick = (e) => {
+                    if (e.target === customAlertOverlay) {
+                        handleConfirm();
+                    }
+                };
+                
+                customAlertOverlay.addEventListener('click', handleOverlayClick);
+                document.addEventListener('keydown', handleKeyDown);
+                
+                // Store cleanup function
+                customAlertResolve = () => {
+                    customAlertOverlay.removeEventListener('click', handleOverlayClick);
+                    document.removeEventListener('keydown', handleKeyDown);
+                    customAlertConfirm.onclick = null;
+                    customAlertCancel.onclick = null;
+                };
+            });
+        }
+        
+        function showCustomConfirm(message, title = 'Confirm', type = 'warning') {
+            return new Promise((resolve) => {
+                // Set alert content
+                customAlertTitle.textContent = title;
+                customAlertMessage.textContent = message;
+                
+                // Set icon based on type
+                customAlertIcon.className = 'custom-alert-icon';
+                let iconClass = 'fas fa-question-circle';
+                
+                switch(type) {
+                    case 'success':
+                        customAlertIcon.classList.add('success');
+                        iconClass = 'fas fa-check-circle';
+                        break;
+                    case 'warning':
+                        customAlertIcon.classList.add('warning');
+                        iconClass = 'fas fa-exclamation-triangle';
+                        break;
+                    case 'error':
+                        customAlertIcon.classList.add('error');
+                        iconClass = 'fas fa-times-circle';
+                        break;
+                    case 'info':
+                    default:
+                        customAlertIcon.classList.add('info');
+                        iconClass = 'fas fa-question-circle';
+                        break;
+                }
+                
+                customAlertIcon.innerHTML = `<i class="${iconClass}"></i>`;
+                
+                // Show both buttons for confirm
+                customAlertCancel.style.display = 'inline-flex';
+                customAlertConfirm.textContent = 'Confirm';
+                customAlertCancel.textContent = 'Cancel';
+                
+                // Show the alert
+                customAlertOverlay.classList.add('show');
+                
+                // Set up event listeners
+                const handleConfirm = () => {
+                    hideCustomAlert();
+                    resolve(true);
+                };
+                
+                const handleCancel = () => {
+                    hideCustomAlert();
+                    resolve(false);
+                };
+                
+                const handleKeyDown = (e) => {
+                    if (e.key === 'Escape') {
+                        handleCancel();
+                    } else if (e.key === 'Enter') {
+                        handleConfirm();
+                    }
+                };
+                
+                // Add event listeners
+                customAlertConfirm.onclick = handleConfirm;
+                customAlertCancel.onclick = handleCancel;
+                
+                // Close on overlay click
+                const handleOverlayClick = (e) => {
+                    if (e.target === customAlertOverlay) {
+                        handleCancel();
+                    }
+                };
+                
+                customAlertOverlay.addEventListener('click', handleOverlayClick);
+                document.addEventListener('keydown', handleKeyDown);
+                
+                // Store cleanup function
+                customAlertResolve = () => {
+                    customAlertOverlay.removeEventListener('click', handleOverlayClick);
+                    document.removeEventListener('keydown', handleKeyDown);
+                    customAlertConfirm.onclick = null;
+                    customAlertCancel.onclick = null;
+                };
+            });
+        }
+        
+        function hideCustomAlert() {
+            customAlertOverlay.classList.remove('show');
+            if (customAlertResolve) {
+                customAlertResolve();
+                customAlertResolve = null;
+            }
+        }
+        
+        // Replace default alert and confirm
+        window.alert = function(message) {
+            return showCustomAlert(message, 'Alert', 'info');
+        };
+        
+        window.confirm = function(message) {
+            return showCustomConfirm(message, 'Confirm', 'warning');
+        };
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -297,9 +493,12 @@
             initParticles();
             
             // Initialize animations
-            setTimeout(() => {
-                document.querySelector('.login-wrapper').style.animation = 'fadeInUp 0.5s ease-out forwards';
-            }, 100);
+            if (!loginAnimationPlayed) {
+                loginAnimationPlayed = true;
+                setTimeout(() => {
+                    document.querySelector('.login-wrapper').style.animation = 'fadeInUp 0.5s ease-out forwards';
+                }, 100);
+            }
             
             // Set up all event listeners
             setupEventListeners();
@@ -326,6 +525,13 @@
             
             // Initialize Principal Settings
             initializePrincipalSettings();
+            
+            // Add animation reset for logout
+            const originalHandleLogout = handleLogout;
+            handleLogout = function() {
+                loginAnimationPlayed = false;
+                originalHandleLogout.call(this);
+            };
         });
 
         // Initialize Principal Settings
@@ -779,6 +985,7 @@
                 
                 if (e.key === 'Escape') {
                     hideToast();
+                    hideCustomAlert();
                 }
             });
         }
@@ -1297,9 +1504,11 @@
             document.querySelectorAll('.delete-institute-db').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const instituteId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this institute?')) {
-                        deleteInstitute(instituteId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this institute?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteInstitute(instituteId);
+                        }
+                    });
                 });
             });
         }
@@ -1345,9 +1554,11 @@
             document.querySelectorAll('.delete-academic-db').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const yearId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this academic year?')) {
-                        deleteAcademicYear(yearId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this academic year?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteAcademicYear(yearId);
+                        }
+                    });
                 });
             });
         }
@@ -1392,9 +1603,11 @@
             document.querySelectorAll('.delete-programme-db').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const programmeId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this programme?')) {
-                        deleteProgramme(programmeId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this programme?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteProgramme(programmeId);
+                        }
+                    });
                 });
             });
         }
@@ -1441,9 +1654,11 @@
             document.querySelectorAll('.delete-class-db').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const classId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this class?')) {
-                        deleteClass(classId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this class?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteClass(classId);
+                        }
+                    });
                 });
             });
         }
@@ -2105,8 +2320,9 @@
             showToast('Success', 'Principal credentials updated successfully', 'success');
         }
         
-        function resetPrincipalCredentials() {
-            if (confirm('Are you sure you want to reset Principal credentials to default?')) {
+        async function resetPrincipalCredentials() {
+            const confirmed = await showCustomConfirm('Are you sure you want to reset Principal credentials to default?', 'Reset Credentials', 'warning');
+            if (confirmed) {
                 principalCredentials = {
                     username: 'principal',
                     password: 'principal123',
@@ -2320,9 +2536,11 @@
             document.querySelectorAll('.delete-institute').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const instituteId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this institute?')) {
-                        deleteInstitute(instituteId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this institute?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteInstitute(instituteId);
+                        }
+                    });
                 });
             });
         }
@@ -2384,9 +2602,11 @@
             document.querySelectorAll('.delete-institute').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const instituteId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this institute?')) {
-                        deleteInstitute(instituteId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this institute?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteInstitute(instituteId);
+                        }
+                    });
                 });
             });
         }
@@ -2538,9 +2758,11 @@
             document.querySelectorAll('.delete-academic').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const yearId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this academic year?')) {
-                        deleteAcademicYear(yearId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this academic year?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteAcademicYear(yearId);
+                        }
+                    });
                 });
             });
         }
@@ -2609,9 +2831,11 @@
             document.querySelectorAll('.delete-academic').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const yearId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this academic year?')) {
-                        deleteAcademicYear(yearId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this academic year?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteAcademicYear(yearId);
+                        }
+                    });
                 });
             });
         }
@@ -2749,9 +2973,11 @@
             document.querySelectorAll('.delete-programme').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const programmeId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this programme?')) {
-                        deleteProgramme(programmeId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this programme?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteProgramme(programmeId);
+                        }
+                    });
                 });
             });
         }
@@ -2821,9 +3047,11 @@
             document.querySelectorAll('.delete-programme').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const programmeId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this programme?')) {
-                        deleteProgramme(programmeId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this programme?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteProgramme(programmeId);
+                        }
+                    });
                 });
             });
         }
@@ -2981,9 +3209,11 @@
             document.querySelectorAll('.delete-class').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const classId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this class?')) {
-                        deleteClass(classId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this class?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteClass(classId);
+                        }
+                    });
                 });
             });
         }
@@ -3049,9 +3279,11 @@
             document.querySelectorAll('.delete-class').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const classId = this.getAttribute('data-id');
-                    if (confirm('Are you sure you want to delete this class?')) {
-                        deleteClass(classId);
-                    }
+                    showCustomConfirm('Are you sure you want to delete this class?', 'Confirm Delete', 'warning').then(confirmed => {
+                        if (confirmed) {
+                            deleteClass(classId);
+                        }
+                    });
                 });
             });
         }
@@ -3136,10 +3368,12 @@
             resetAllForms();
         }
         
-        function handleLogout() {
+        async function handleLogout() {
             console.log('Handling logout...');
             
-            if (confirm('Are you sure you want to logout?')) {
+            const confirmed = await showCustomConfirm('Are you sure you want to logout?', 'Confirm Logout', 'warning');
+            
+            if (confirmed) {
                 showToast('Logged Out', 'You have been successfully logged out', 'success');
                 
                 // Hide success banner if shown
@@ -3188,10 +3422,22 @@
                     // Show main dashboard
                     showMainDashboard();
                     
-                    // Fade in login page
+                    // Reset login animation for next login
+                    loginAnimationPlayed = false;
                     loginPage.style.opacity = '0';
+                    const loginWrapper = document.querySelector('.login-wrapper');
+                    loginWrapper.style.opacity = '0';
+                    loginWrapper.style.transform = 'translateY(20px) scale(0.98)';
+                    loginWrapper.style.animation = 'none';
+                    
+                    // Fade in login page with animation
                     setTimeout(() => {
                         loginPage.style.opacity = '1';
+                        if (!loginAnimationPlayed) {
+                            loginAnimationPlayed = true;
+                            loginWrapper.style.animation = 'cardAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+                            loginWrapper.style.animationDelay = '0.3s';
+                        }
                         usernameInput.focus();
                     }, 50);
                     
