@@ -13,7 +13,7 @@
             principal: {
                 username: 'principal',
                 password: 'principal123',
-                name: 'Dr. Sarah Johnson',
+                name: 'Dr. Ranjit Deshmukh',
                 email: 'principal@edumaster.edu',
                 role: 'principal',
                 avatar: 'P',
@@ -125,14 +125,14 @@
         let principalCredentials = {
             username: 'principal',
             password: 'principal123',
-            displayName: 'Dr. Sarah Johnson',
+            displayName: 'Dr. Ranjit Deshmukh',
             email: 'principal@edumaster.edu',
             lastChanged: new Date().toISOString().split('T')[0]
         };
 
         // Principal settings storage
         let principalSettings = {
-            displayName: 'Dr. Sarah Johnson',
+            displayName: 'Dr. Ranjit Deshmukh',
             username: 'principal',
             email: 'principal@edumaster.edu',
             profilePhoto: null,
@@ -1806,7 +1806,7 @@
             loadPrincipalSettingsFromStorage();
             
             // Update form fields - ensure they have values
-            principalSettingsName.value = principalSettings.displayName || 'Dr. Sarah Johnson';
+            principalSettingsName.value = principalSettings.displayName || 'Dr. Ranjit Deshmukh';
             principalSettingsUsername.value = principalSettings.username || 'principal';
             principalSettingsEmail.value = principalSettings.email || 'principal@edumaster.edu';
             principalSettingsRole.value = 'Principal';
@@ -2110,14 +2110,14 @@
                 principalCredentials = {
                     username: 'principal',
                     password: 'principal123',
-                    displayName: 'Dr. Sarah Johnson',
+                    displayName: 'Dr. Ranjit Deshmukh',
                     email: 'principal@edumaster.edu',
                     lastChanged: new Date().toISOString().split('T')[0]
                 };
                 
                 // Also reset principal settings
                 principalSettings = {
-                    displayName: 'Dr. Sarah Johnson',
+                    displayName: 'Dr. Ranjit Deshmukh',
                     username: 'principal',
                     email: 'principal@edumaster.edu',
                     profilePhoto: null,
