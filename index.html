@@ -44,7 +44,22 @@
 </head>
 <body>
     
-   <!-- Login Page -->
+  <!-- Custom Alert Box -->
+    <div class="custom-alert-overlay" id="customAlertOverlay">
+        <div class="custom-alert-box">
+            <div class="custom-alert-icon" id="customAlertIcon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <h3 class="custom-alert-title" id="customAlertTitle">Alert Title</h3>
+            <p class="custom-alert-message" id="customAlertMessage">This is a custom alert message that replaces default browser alerts.</p>
+            <div class="custom-alert-buttons">
+                <button class="custom-alert-btn cancel" id="customAlertCancel">Cancel</button>
+                <button class="custom-alert-btn confirm" id="customAlertConfirm">OK</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Login Page -->
     <div class="login-container" id="loginPage">
         <div class="floating-elements">
             <div class="floating-element" style="width: 300px; height: 300px; top: -100px; left: -100px; animation-delay: 0s;"></div>
@@ -417,7 +432,6 @@
                 <div class="footer-content">
                     <div class="footer-copyright">
                         © 2025 EDU MASTER | All Rights Reserved
-
                     </div>
                     <div class="footer-developer">
                         Designed & Developed by Team SPC
