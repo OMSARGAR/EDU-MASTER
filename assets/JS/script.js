@@ -1,5 +1,4 @@
-  // Valid credentials for both Admin and Principal
-        const validCredentials = {
+const validCredentials = {
             admin: {
                 username: 'admin',
                 password: 'admin123',
