@@ -42,9 +42,7 @@
     <link rel="stylesheet" href="assets/CSS/style.css">
 
 </head>
-<body>
-    
-  <!-- Custom Alert Box -->
+ <!-- Custom Alert Box -->
     <div class="custom-alert-overlay" id="customAlertOverlay">
         <div class="custom-alert-box">
             <div class="custom-alert-icon" id="customAlertIcon">
@@ -326,7 +324,7 @@
                 </div>
             </div>
             
-            <!-- Database Tables Section -->
+            <!-- Database Tables Section - UPDATED WITH WRAPPER FOR MOBILE -->
             <div class="database-tables-section" id="databaseTablesSection">
                 <h2 class="section-title">
                     <i class="fas fa-database"></i> Database Tables
@@ -342,86 +340,94 @@
                 <!-- Institute Table -->
                 <div class="table-container active" id="instituteTableContainer">
                     <div class="data-table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Institute ID</th>
-                                    <th>Institute Name</th>
-                                    <th>Institute Code</th>
-                                    <th>Address</th>
-                                    <th>Status</th>
-                                    <th>Created At</th>
-                                    <th>Updated At</th>
-                                    <th class="actions-header">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="databaseInstituteTableBody">
-                                <!-- Data will be populated by JavaScript -->
-                            </tbody>
-                        </table>
+                        <div class="data-table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Institute ID</th>
+                                        <th>Institute Name</th>
+                                        <th>Institute Code</th>
+                                        <th>Address</th>
+                                        <th>Status</th>
+                                        <th>Created At</th>
+                                        <th>Updated At</th>
+                                        <th class="actions-header">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="databaseInstituteTableBody">
+                                    <!-- Data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Academic Year Table -->
                 <div class="table-container" id="academicTableContainer">
                     <div class="data-table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Year ID</th>
-                                    <th>Year Name</th>
-                                    <th>Is Current</th>
-                                    <th>Status</th>
-                                    <th>Created At</th>
-                                    <th class="actions-header">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="databaseAcademicTableBody">
-                                <!-- Data will be populated by JavaScript -->
-                            </tbody>
-                        </table>
+                        <div class="data-table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Year ID</th>
+                                        <th>Year Name</th>
+                                        <th>Is Current</th>
+                                        <th>Status</th>
+                                        <th>Created At</th>
+                                        <th class="actions-header">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="databaseAcademicTableBody">
+                                    <!-- Data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Programme Table -->
                 <div class="table-container" id="programmeTableContainer">
                     <div class="data-table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Programme ID</th>
-                                    <th>Programme Name</th>
-                                    <th>Status</th>
-                                    <th>Created At</th>
-                                    <th class="actions-header">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="databaseProgrammeTableBody">
-                                <!-- Data will be populated by JavaScript -->
-                            </tbody>
-                        </table>
+                        <div class="data-table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Programme ID</th>
+                                        <th>Programme Name</th>
+                                        <th>Status</th>
+                                        <th>Created At</th>
+                                        <th class="actions-header">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="databaseProgrammeTableBody">
+                                    <!-- Data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Class Table -->
                 <div class="table-container" id="classTableContainer">
                     <div class="data-table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Class ID</th>
-                                    <th>Programme ID</th>
-                                    <th>Programme Name</th>
-                                    <th>Semester Name</th>
-                                    <th>Status</th>
-                                    <th>Created At</th>
-                                    <th class="actions-header">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="databaseClassTableBody">
-                                <!-- Data will be populated by JavaScript -->
-                            </tbody>
-                        </table>
+                        <div class="data-table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Class ID</th>
+                                        <th>Programme ID</th>
+                                        <th>Programme Name</th>
+                                        <th>Semester Name</th>
+                                        <th>Status</th>
+                                        <th>Created At</th>
+                                        <th class="actions-header">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="databaseClassTableBody">
+                                    <!-- Data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -865,22 +871,24 @@
             </div>
             
             <div class="data-table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Institute ID</th>
-                            <th>Institute Name</th>
-                            <th>Institute Code</th>
-                            <th>Address</th>
-                            <th>Status</th>
-                            <th>Created Date</th>
-                            <th class="actions-header">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="instituteTableBody">
-                        <!-- Data will be populated by JavaScript -->
-                    </tbody>
-                </table>
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Institute ID</th>
+                                <th>Institute Name</th>
+                                <th>Institute Code</th>
+                                <th>Address</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th class="actions-header">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="instituteTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         
@@ -945,23 +953,25 @@
             </div>
             
             <div class="data-table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Year ID</th>
-                            <th>Year Name</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Current Year</th>
-                            <th>Status</th>
-                            <th>Created Date</th>
-                            <th class="actions-header">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="academicTableBody">
-                        <!-- Data will be populated by JavaScript -->
-                    </tbody>
-                </table>
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Year ID</th>
+                                <th>Year Name</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Current Year</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th class="actions-header">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="academicTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         
@@ -1025,23 +1035,25 @@
             </div>
             
             <div class="data-table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Programme ID</th>
-                            <th>Programme Name</th>
-                            <th>Programme Code</th>
-                            <th>Duration</th>
-                            <th>Description</th>
-                            <th>Status</th>
-                            <th>Created Date</th>
-                            <th class="actions-header">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="programmeTableBody">
-                        <!-- Data will be populated by JavaScript -->
-                    </tbody>
-                </table>
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Programme ID</th>
+                                <th>Programme Name</th>
+                                <th>Programme Code</th>
+                                <th>Duration</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th class="actions-header">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="programmeTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         
@@ -1119,25 +1131,27 @@
             </div>
             
             <div class="data-table-container">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Class ID</th>
-                            <th>Class Name</th>
-                            <th>Class Code</th>
-                            <th>Programme</th>
-                            <th>Academic Year</th>
-                            <th>Semester</th>
-                            <th>Max Students</th>
-                            <th>Status</th>
-                            <th>Created Date</th>
-                            <th class="actions-header">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="classTableBody">
-                        <!-- Data will be populated by JavaScript -->
-                    </tbody>
-                </table>
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Class ID</th>
+                                <th>Class Name</th>
+                                <th>Class Code</th>
+                                <th>Programme</th>
+                                <th>Academic Year</th>
+                                <th>Semester</th>
+                                <th>Max Students</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th class="actions-header">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="classTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -1155,7 +1169,7 @@
             <i class="fas fa-times"></i>
         </button>
     </div>
-
+    
     <!-- External JS -->
     <script src="assets/JS/script.js"></script>
    
