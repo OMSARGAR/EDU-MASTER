@@ -1,3 +1,5 @@
+<style>
+    
         :root {
             --primary: #4f46e5;
             --primary-light: #6366f1;
@@ -2656,6 +2658,157 @@
             .module-header .back-to-dashboard {
                 align-self: flex-start;
             }
+            
+            /* =========================================== */
+            /* MOBILE FIXES FOR QUICK ACTIONS FORMS */
+            /* =========================================== */
+            
+            /* Center input fields in all Quick Actions forms */
+            .module-section .form-row {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 15px !important;
+                margin-bottom: 20px !important;
+                width: 100% !important;
+            }
+            
+            .module-section .form-group {
+                width: 100% !important;
+                max-width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .module-section .search-input {
+                width: 100% !important;
+                max-width: 100% !important;
+                text-align: left !important;
+                padding: 16px 20px !important;
+                border-radius: 14px !important;
+                font-size: 1rem !important;
+                box-sizing: border-box !important;
+                margin: 0 auto !important;
+                display: block !important;
+            }
+            
+            .module-section .form-label {
+                width: 100% !important;
+                text-align: left !important;
+                margin-bottom: 8px !important;
+                justify-content: flex-start !important;
+            }
+            
+            .module-section .form-actions {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+            
+            .module-section .form-actions .btn {
+                width: 100% !important;
+                max-width: 100% !important;
+                justify-content: center !important;
+            }
+            
+            /* Fix for input text overflow on mobile */
+            .search-input, .form-input {
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                white-space: normal !important;
+                overflow: hidden !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            
+            /* Prevent text from overflowing input boxes */
+            input[type="text"],
+            input[type="password"],
+            input[type="email"],
+            input[type="number"],
+            input[type="date"],
+            select,
+            textarea {
+                max-width: 100% !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                white-space: nowrap !important;
+            }
+            
+            /* Fix long text in input fields */
+            .module-section .search-input {
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                max-width: 100% !important;
+            }
+            
+            /* =========================================== */
+            /* MOBILE FIXES FOR REPORTS SECTION */
+            /* =========================================== */
+            
+            .reports-section .charts-grid {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 20px !important;
+                width: 100% !important;
+            }
+            
+            .reports-section .chart-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 15px !important;
+                margin: 0 auto !important;
+                overflow: hidden !important;
+            }
+            
+            .reports-section .summary-cards {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 15px !important;
+                width: 100% !important;
+            }
+            
+            .reports-section .summary-card {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 20px !important;
+                margin: 0 auto !important;
+                text-align: center !important;
+            }
+            
+            /* Ensure report charts don't overflow */
+            .reports-section .chart-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+            }
+            
+            .reports-section canvas {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+            
+            /* Center export buttons */
+            .reports-section .export-actions {
+                flex-direction: column !important;
+                align-items: center !important;
+                width: 100% !important;
+            }
+            
+            .reports-section .export-actions .btn {
+                width: 100% !important;
+                max-width: 100% !important;
+                justify-content: center !important;
+            }
         }
         
         @media (max-width: 576px) {
@@ -2820,6 +2973,42 @@
                 width: 100%;
                 justify-content: center;
             }
+            
+            /* Additional mobile fixes for very small screens */
+            .reports-section .chart-wrapper {
+                height: 220px !important;
+            }
+            
+            .reports-section .summary-card {
+                padding: 15px !important;
+            }
+            
+            .reports-section .summary-value {
+                font-size: 1.8rem !important;
+            }
+            
+            .reports-section .summary-label {
+                font-size: 0.85rem !important;
+            }
+            
+            /* Ensure all input fields are properly centered on very small screens */
+            .module-section .form-group {
+                margin-bottom: 12px !important;
+            }
+            
+            .module-section .search-input {
+                padding: 14px 16px !important;
+                font-size: 16px !important; /* Prevent iOS zoom */
+            }
+            
+            /* Fix report cards alignment */
+            .reports-section .charts-grid {
+                gap: 15px !important;
+            }
+            
+            .reports-section .chart-container {
+                padding: 12px !important;
+            }
         }
         
         /* Very small devices */
@@ -2870,6 +3059,23 @@
                 padding: 6px 10px;
                 font-size: 0.75rem;
             }
+            
+            /* Additional fixes for very small screens */
+            .reports-section .chart-wrapper {
+                height: 200px !important;
+            }
+            
+            .reports-section .summary-card {
+                padding: 12px !important;
+            }
+            
+            .reports-section .summary-value {
+                font-size: 1.6rem !important;
+            }
+            
+            .reports-section .summary-label {
+                font-size: 0.8rem !important;
+            }
         }
         
         /* Large screens (computers, laptops) - show both sections */
@@ -2886,6 +3092,50 @@
             .data-table {
                 table-layout: auto;
                 width: 100%;
+            }
+            
+            /* Ensure desktop forms remain unchanged */
+            .module-section .form-row {
+                grid-template-columns: repeat(2, 1fr) !important;
+                display: grid !important;
+                align-items: start !important;
+            }
+            
+            .module-section .form-group {
+                display: block !important;
+                width: auto !important;
+                margin-bottom: 0 !important;
+            }
+            
+            .module-section .search-input {
+                width: 100% !important;
+                text-align: left !important;
+            }
+            
+            .module-section .form-actions {
+                flex-direction: row !important;
+                align-items: center !important;
+            }
+            
+            .module-section .form-actions .btn {
+                width: auto !important;
+            }
+            
+            /* Ensure report section remains unchanged on desktop */
+            .reports-section .charts-grid {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                align-items: stretch !important;
+            }
+            
+            .reports-section .summary-cards {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                align-items: stretch !important;
+            }
+            
+            .reports-section .export-actions {
+                flex-direction: row !important;
             }
         }
         
@@ -2921,3 +3171,5 @@
                 z-index: 10;
             }
         }
+    
+   </style>
