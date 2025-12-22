@@ -1,4 +1,4 @@
-        // Store credentials in localStorage for persistence
+// Store credentials in localStorage for persistence
 let storedCredentials = {
     admin: JSON.parse(localStorage.getItem('eduMasterAdminCredentials')) || {
         username: 'admin',
@@ -73,7 +73,28 @@ const termMapping = {
     'TY-ENTC': ['TERM 5', 'TERM 6']
 };
 
-// Helper function to check if all classes for a program are completed
+// NEW: Function to check if Class Master has any records
+function hasClassMasterRecords() {
+    return classes.length > 0;
+}
+
+// NEW: Function to check if all related classes in Class Master are completed for a specific academic year
+function areAllRelatedClassesCompleted(academicYearId) {
+    // Get all classes related to this academic year
+    const relatedClasses = classes.filter(cls => cls.academic_year === academicYearId);
+    
+    // If no classes exist, return true (no restriction)
+    if (relatedClasses.length === 0) {
+        return true;
+    }
+    
+    // Check if ALL related classes have status "Completed"
+    const allCompleted = relatedClasses.every(cls => cls.status === 'Completed');
+    
+    return allCompleted;
+}
+
+// NEW: Function to check if all classes for a program are completed
 function areAllClassesCompletedForProgram(programmeId) {
     // Get all classes for this program
     const programClasses = classes.filter(cls => cls.programme_id === programmeId);
@@ -85,59 +106,20 @@ function areAllClassesCompletedForProgram(programmeId) {
     return programClasses.every(cls => cls.status === 'Completed');
 }
 
-// Helper function to check if all classes for an academic year are completed
-function areAllClassesCompletedForAcademicYear(academicYearId) {
-    // Get all classes for this academic year
-    const yearClasses = classes.filter(cls => cls.academic_year === academicYearId);
-    
-    // If no classes exist, return true
-    if (yearClasses.length === 0) return true;
-    
-    // Check if all classes have status "Completed"
-    return yearClasses.every(cls => cls.status === 'Completed');
+// NEW: Function to check if academic year has any related classes
+function hasRelatedAcademicYearClasses(academicYearId) {
+    return classes.some(cls => cls.academic_year === academicYearId);
 }
 
-// Helper function to check if program name already exists
-function getProgramIdByName(programmeName) {
-    const program = programmes.find(prog => prog.name === programmeName);
-    return program ? program.id : null;
-}
-
-// Helper function to generate unique Program ID for duplicate names
-function generateUniqueProgramId(programmeName) {
-    // Get all programs with the same name
-    const sameNamePrograms = programmes.filter(prog => 
-        prog.name.toLowerCase() === programmeName.toLowerCase()
-    );
-    
-    if (sameNamePrograms.length === 0) {
-        // No existing program with this name, generate normal ID
-        return `PID${String(programmes.length + 1).padStart(3, '0')}`;
-    }
-    
-    // Find the highest number suffix
-    let maxSuffix = 0;
-    sameNamePrograms.forEach(prog => {
-        // Extract number from ID (e.g., "PID001" -> 1)
-        const match = prog.id.match(/PID(\d+)/);
-        if (match) {
-            const num = parseInt(match[1]);
-            if (num > maxSuffix) maxSuffix = num;
-        }
-    });
-    
-    // Generate new ID with next available number
-    return `PID${String(maxSuffix + 1).padStart(3, '0')}`;
-}
-
-// Helper function to check if a program has any related classes
-function hasRelatedClasses(programmeId) {
+// NEW: Function to check if program has any related classes
+function hasRelatedProgramClasses(programmeId) {
     return classes.some(cls => cls.programme_id === programmeId);
 }
 
-// Helper function to check if an academic year has any related classes
-function hasRelatedAcademicYearClasses(academicYearId) {
-    return classes.some(cls => cls.academic_year === academicYearId);
+// Helper function to get academic year name by ID
+function getAcademicYearNameById(id) {
+    const year = academicYears.find(year => year.id === id);
+    return year ? year.name : id; // fallback to ID if not found
 }
 
 // Date format function - NEW: Convert date to DD-MM-YYYY format
@@ -192,12 +174,6 @@ function formatDateForDisplay(dateStr) {
     return formatDateToDDMMYYYY(dateStr);
 }
 
-// Helper function to get academic year name by ID
-function getAcademicYearNameById(id) {
-    const year = academicYears.find(year => year.id === id);
-    return year ? year.name : id; // fallback to ID if not found
-}
-
 // User profile photos storage
 let userProfilePhotos = {
     admin: null,
@@ -234,170 +210,88 @@ let editingClassId = null;
 let customAlertResolve = null;
 let customAlertPromise = null;
 
-// DOM Elements
-const loginPage = document.getElementById('loginPage');
-const dashboard = document.getElementById('dashboard');
-const loginForm = document.getElementById('loginForm');
-const roleButtons = document.querySelectorAll('.role-btn');
-const togglePassword = document.getElementById('togglePassword');
-const passwordInput = document.getElementById('password');
-const usernameInput = document.getElementById('username');
-const loginButton = document.getElementById('loginButton');
-const loadingSpinner = document.getElementById('loadingSpinner');
-const logoutBtn = document.getElementById('logoutBtn');
-const usernameError = document.getElementById('usernameError');
-const passwordError = document.getElementById('passwordError');
-const toast = document.getElementById('toast');
-const toastTitle = document.getElementById('toastTitle');
-const toastMessage = document.getElementById('toastMessage');
-const closeToast = document.getElementById('closeToast');
-
-// Custom Alert Elements
-const customAlertOverlay = document.getElementById('customAlertOverlay');
-const customAlertIcon = document.getElementById('customAlertIcon');
-const customAlertTitle = document.getElementById('customAlertTitle');
-const customAlertMessage = document.getElementById('customAlertMessage');
-const customAlertCancel = document.getElementById('customAlertCancel');
-const customAlertConfirm = document.getElementById('customAlertConfirm');
-
-// Dashboard elements
-const userAvatar = document.getElementById('userAvatar');
-const avatarText = document.getElementById('avatarText');
-const dashboardUserName = document.getElementById('dashboardUserName');
-const dashboardUserRole = document.getElementById('dashboardUserRole');
-const welcomeBanner = document.getElementById('welcomeBanner');
-const successBanner = document.getElementById('successBanner');
-const welcomeTitle = document.getElementById('welcomeTitle');
-const welcomeSubtitle = document.getElementById('welcomeSubtitle');
-const successSubtitle = document.getElementById('successSubtitle');
-const mainDashboard = document.getElementById('mainDashboard');
-
-// Stats elements
-const statInstitutes = document.getElementById('statInstitutes');
-const statYears = document.getElementById('statYears');
-const statProgrammes = document.getElementById('statProgrammes');
-const statClasses = document.getElementById('statClasses');
-const instituteChange = document.getElementById('instituteChange');
-const activeYearCount = document.getElementById('activeYearCount');
-const programmeChange = document.getElementById('programmeChange');
-const classChange = document.getElementById('classChange');
-
-// Quick action buttons
-const addInstituteBtn = document.getElementById('addInstituteBtn');
-const addAcademicYearBtn = document.getElementById('addAcademicYearBtn');
-const addProgrammeBtn = document.getElementById('addProgrammeBtn');
-const addClassBtn = document.getElementById('addClassBtn');
-const viewReportsBtn = document.getElementById('viewReportsBtn');
-const settingsBtn = document.getElementById('settingsBtn');
-
-// Module sections
-const instituteModule = document.getElementById('instituteModule');
-const academicModule = document.getElementById('academicModule');
-const programmeModule = document.getElementById('programmeModule');
-const classModule = document.getElementById('classModule');
-const reportsModule = document.getElementById('reportsModule');
-const settingsModule = document.getElementById('settingsModule');
-const principalSettingsModule = document.getElementById('principalSettingsModule');
-const databaseTablesSection = document.getElementById('databaseTablesSection');
-
-// Back buttons
-const backFromInstitute = document.getElementById('backFromInstitute');
-const backFromAcademic = document.getElementById('backFromAcademic');
-const backFromProgramme = document.getElementById('backFromProgramme');
-const backFromClass = document.getElementById('backFromClass');
-const backFromReports = document.getElementById('backFromReports');
-const backFromSettings = document.getElementById('backFromSettings');
-const backFromPrincipalSettings = document.getElementById('backFromPrincipalSettings');
-
-// Module cards
-const moduleCards = document.querySelectorAll('.module-card');
-
-// Database table elements
-const tableTabs = document.querySelectorAll('.table-tab');
-const tableContainers = document.querySelectorAll('.table-container');
-
-// Reports elements
-const exportPdfBtn = document.getElementById('exportPdfBtn');
-const exportExcelBtn = document.getElementById('exportExcelBtn');
-const reportTotalInstitutes = document.getElementById('reportTotalInstitutes');
-const reportTotalProgrammes = document.getElementById('reportTotalProgrammes');
-const reportTotalClasses = document.getElementById('reportTotalClasses');
-const reportActiveYears = document.getElementById('reportActiveYears');
-
-// Settings elements
-const settingsTabs = document.querySelectorAll('.settings-tab');
-const settingsPanels = document.querySelectorAll('.settings-panel');
-const profileName = document.getElementById('profileName');
-const profileEmail = document.getElementById('profileEmail');
-const profileRole = document.getElementById('profileRole');
-const profileMobile = document.getElementById('profileMobile');
-const saveProfileBtn = document.getElementById('saveProfileBtn');
-const currentPassword = document.getElementById('currentPassword');
-const newPassword = document.getElementById('newPassword');
-const confirmPassword = document.getElementById('confirmPassword');
-const changePasswordBtn = document.getElementById('changePasswordBtn');
-const currentUsername = document.getElementById('currentUsername');
-const newUsername = document.getElementById('newUsername');
-const confirmUsername = document.getElementById('confirmUsername');
-const changeUsernameBtn = document.getElementById('changeUsernameBtn');
-
-// Principal Management elements (Admin only)
-const principalProfileTab = document.getElementById('principalProfileTab');
-const principalSecurityTab = document.getElementById('principalSecurityTab');
-const principalProfilePanel = document.getElementById('principalProfilePanel');
-const principalSecurityPanel = document.getElementById('principalSecurityPanel');
-const principalDisplayName = document.getElementById('principalDisplayName');
-const principalRole = document.getElementById('principalRole');
-const principalEmail = document.getElementById('principalEmail');
-const principalMobile = document.getElementById('principalMobile');
-const savePrincipalBtn = document.getElementById('savePrincipalBtn');
-
-// Principal Security elements (Admin only)
-const principalCurrentUsername = document.getElementById('principalCurrentUsername');
-const principalNewUsername = document.getElementById('principalNewUsername');
-const principalConfirmUsername = document.getElementById('principalConfirmUsername');
-const changePrincipalUsernameBtn = document.getElementById('changePrincipalUsernameBtn');
-const principalCurrentPassword = document.getElementById('principalCurrentPassword');
-const principalNewPassword = document.getElementById('principalNewPassword');
-const principalConfirmPassword = document.getElementById('principalConfirmPassword');
-const changePrincipalPasswordBtn = document.getElementById('changePrincipalPasswordBtn');
-
-// Principal settings elements
-const principalSettingsTabs = document.querySelectorAll('.principal-settings-tab');
-const principalSettingsPanels = document.querySelectorAll('.principal-settings-panel');
-const principalSettingsName = document.getElementById('principalSettingsName');
-const principalSettingsEmail = document.getElementById('principalSettingsEmail');
-const principalSettingsRole = document.getElementById('principalSettingsRole');
-const principalSettingsMobile = document.getElementById('principalSettingsMobile');
-const savePrincipalSettingsBtn = document.getElementById('savePrincipalSettingsBtn');
-const principalCurrentUsernameField = document.getElementById('principalCurrentUsernameField');
-const principalNewUsernameField = document.getElementById('principalNewUsernameField');
-const principalConfirmUsernameField = document.getElementById('principalConfirmUsernameField');
-const changePrincipalUsernameBtnField = document.getElementById('changePrincipalUsernameBtnField');
-const principalCurrentPasswordField = document.getElementById('principalCurrentPasswordField');
-const principalNewPasswordField = document.getElementById('principalNewPasswordField');
-const principalConfirmPasswordField = document.getElementById('principalConfirmPasswordField');
-const changePrincipalPasswordBtnField = document.getElementById('changePrincipalPasswordBtnField');
-
-// Application state
-let currentUser = null;
-let toastTimeout = null;
-let currentRole = 'admin';
-let successBannerTimeout = null;
-let hasSubmitted = false;
-let charts = {};
-let profilePhotoUrl = null;
-let loginAnimationPlayed = false;
-
-// Scroll position tracking
-let dashboardScrollPosition = 0;
-
 // NEW: Store previous academic year dropdown values for validation
 let previousIsCurrentYearValue = '';
 let previousAcademicStatusValue = '';
 
 // NEW: Store previous programme status dropdown value for validation
 let previousProgrammeStatusValue = '';
+
+// NEW: Immediate validation system for dropdowns
+const dropdownValidationTracker = {
+    // Track validation state for dropdowns
+    errors: new Map(),
+    
+    // Add error for a dropdown
+    addError(dropdownId, message) {
+        this.errors.set(dropdownId, message);
+        this.showError(dropdownId, message);
+    },
+    
+    // Remove error for a dropdown
+    removeError(dropdownId) {
+        this.errors.delete(dropdownId);
+        this.hideError(dropdownId);
+    },
+    
+    // Show error in UI
+    showError(dropdownId, message) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        
+        // Create or get error message element
+        let errorElement = dropdown.parentElement.querySelector('.dropdown-error-message');
+        if (!errorElement) {
+            errorElement = document.createElement('div');
+            errorElement.className = 'dropdown-error-message';
+            dropdown.parentElement.appendChild(errorElement);
+        }
+        
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        errorElement.classList.add('show');
+        
+        // Highlight dropdown
+        dropdown.classList.add('error');
+        
+        // Add shake animation
+        dropdown.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+            dropdown.style.animation = '';
+        }, 500);
+    },
+    
+    // Hide error in UI
+    hideError(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+        
+        const errorElement = dropdown.parentElement.querySelector('.dropdown-error-message');
+        if (errorElement) {
+            errorElement.style.display = 'none';
+            errorElement.classList.remove('show');
+        }
+        
+        dropdown.classList.remove('error');
+    },
+    
+    // Clear all errors
+    clearAll() {
+        this.errors.clear();
+        document.querySelectorAll('.dropdown-error-message').forEach(el => {
+            el.style.display = 'none';
+            el.classList.remove('show');
+        });
+        document.querySelectorAll('.search-input.error').forEach(el => {
+            el.classList.remove('error');
+        });
+    },
+    
+    // Check if any errors exist
+    hasErrors() {
+        return this.errors.size > 0;
+    }
+};
 
 // Custom Alert System Functions
 function showCustomAlert(message, title = 'Alert', type = 'info') {
@@ -618,6 +512,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Principal Settings
     initializePrincipalSettings();
     
+    // Add CSS for dropdown error messages
+    addDropdownErrorStyles();
+    
     // Focus on username field
     setTimeout(() => {
         usernameInput.focus();
@@ -631,23 +528,37 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 });
 
-// Initialize Principal Settings
-function initializePrincipalSettings() {
-    // Load saved principal settings
-    const savedSettings = localStorage.getItem('eduMasterPrincipalSettings');
-    if (savedSettings) {
-        try {
-            const parsed = JSON.parse(savedSettings);
-            if (parsed.displayName) principalSettingsName.value = parsed.displayName;
-            if (parsed.email) principalSettingsEmail.value = parsed.email;
-            if (parsed.mobile) principalSettingsMobile.value = parsed.mobile;
-        } catch (e) {
-            console.error('Error loading principal settings:', e);
+// Add CSS for dropdown error messages
+function addDropdownErrorStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .dropdown-error-message {
+            color: var(--danger);
+            font-size: 0.85rem;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(5px);
+            transition: opacity var(--transition-fast), transform var(--transition-fast);
+            height: 20px;
         }
-    }
-    
-    // Ensure Principal Settings forms are visible
-    setTimeout(ensurePrincipalSettingsVisibility, 100);
+        
+        .dropdown-error-message.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .search-input.error {
+            border-color: var(--danger) !important;
+            background-color: rgba(239, 68, 68, 0.05) !important;
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both !important;
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 // Particles.js initialization
@@ -757,6 +668,176 @@ function initParticles() {
     });
 }
 
+// NEW: Apply Class Master validation rules when showing forms - UPDATED FOR IMMEDIATE VALIDATION
+function applyClassMasterValidationRules() {
+    const hasRecords = hasClassMasterRecords();
+    
+    // Get form elements
+    const academicStatus = document.getElementById('academicStatus');
+    const isCurrentYear = document.getElementById('isCurrentYear');
+    const programmeStatus = document.getElementById('programmeStatus');
+    
+    // Always ensure Status dropdown is visible and enabled when adding new records
+    if (editingAcademicId === null && academicStatus) {
+        academicStatus.disabled = false;
+        academicStatus.style.opacity = '1';
+        academicStatus.removeAttribute('title');
+    }
+    
+    if (editingProgrammeId === null && programmeStatus) {
+        programmeStatus.disabled = false;
+        programmeStatus.style.opacity = '1';
+        programmeStatus.removeAttribute('title');
+    }
+    
+    // RULE 1: When no records in Class Master
+    if (!hasRecords) {
+        // RULE 1a & 1b: All options must be selectable in Academic Year
+        if (academicStatus) {
+            academicStatus.disabled = false;
+            academicStatus.style.opacity = '1';
+            academicStatus.removeAttribute('title');
+        }
+        if (isCurrentYear) {
+            isCurrentYear.disabled = false;
+            isCurrentYear.style.opacity = '1';
+            isCurrentYear.removeAttribute('title');
+        }
+        // RULE 1c: All options must be selectable in Programme
+        if (programmeStatus) {
+            programmeStatus.disabled = false;
+            programmeStatus.style.opacity = '1';
+            programmeStatus.removeAttribute('title');
+        }
+    } 
+    // RULE 3: When records exist in Class Master
+    else {
+        // Check if we're editing existing records
+        const isEditingAcademic = editingAcademicId !== null;
+        const isEditingProgramme = editingProgrammeId !== null;
+        
+        if (isEditingAcademic) {
+            // When editing Academic Year, always show all status options
+            if (academicStatus) {
+                academicStatus.disabled = false;
+                academicStatus.style.opacity = '1';
+                academicStatus.removeAttribute('title');
+                
+                // Store the current value as previous value for validation
+                previousAcademicStatusValue = academicStatus.value;
+                academicStatus.setAttribute('data-previous-value', previousAcademicStatusValue);
+            }
+        }
+        
+        if (isEditingProgramme) {
+            // When editing Programme, always show all status options
+            if (programmeStatus) {
+                programmeStatus.disabled = false;
+                programmeStatus.style.opacity = '1';
+                programmeStatus.removeAttribute('title');
+                
+                // Store the current value as previous value for validation
+                previousProgrammeStatusValue = programmeStatus.value;
+                programmeStatus.setAttribute('data-previous-value', previousProgrammeStatusValue);
+            }
+        }
+    }
+}
+
+// NEW: Validate Academic Year Is Current Year dropdown immediately
+function validateAcademicYearCurrentYearImmediate() {
+    const isCurrentYear = document.getElementById('isCurrentYear');
+    const selectedValue = isCurrentYear ? isCurrentYear.value : '';
+    
+    if (!isCurrentYear) return true;
+    
+    // Clear previous error
+    dropdownValidationTracker.removeError('isCurrentYear');
+    
+    // If selecting "No" and there are records in Class Master
+    if (selectedValue === 'No' && hasClassMasterRecords() && editingAcademicId) {
+        const hasRelatedClasses = hasRelatedAcademicYearClasses(editingAcademicId);
+        
+        if (hasRelatedClasses) {
+            // Check if all related classes are completed
+            const allCompleted = areAllRelatedClassesCompleted(editingAcademicId);
+            
+            if (!allCompleted) {
+                dropdownValidationTracker.addError(
+                    'isCurrentYear',
+                    'Cannot set to "No" when related classes exist in Class Master. Complete all related classes first.'
+                );
+                return false;
+            }
+        }
+    }
+    
+    return true;
+}
+
+// NEW: Validate Academic Year Status dropdown immediately
+function validateAcademicYearStatusImmediate() {
+    const academicStatus = document.getElementById('academicStatus');
+    const selectedValue = academicStatus ? academicStatus.value : '';
+    
+    if (!academicStatus) return true;
+    
+    // Clear previous error
+    dropdownValidationTracker.removeError('academicStatus');
+    
+    // When records exist in Class Master, Status must not be changeable to Inactive or Completed unless all related classes are completed
+    if (hasClassMasterRecords() && editingAcademicId) {
+        const hasRelatedClasses = hasRelatedAcademicYearClasses(editingAcademicId);
+        
+        if (hasRelatedClasses && (selectedValue === 'Inactive' || selectedValue === 'Completed')) {
+            // Check if all related classes are completed
+            const allCompleted = areAllRelatedClassesCompleted(editingAcademicId);
+            
+            if (!allCompleted) {
+                dropdownValidationTracker.addError(
+                    'academicStatus',
+                    'Cannot set status to Inactive or Completed. All related Class Master records must be marked as Completed first.'
+                );
+                return false;
+            }
+        }
+    }
+    
+    return true;
+}
+
+// NEW: Validate Programme Status dropdown immediately
+function validateProgrammeStatusImmediate() {
+    const programmeStatus = document.getElementById('programmeStatus');
+    const selectedValue = programmeStatus ? programmeStatus.value : '';
+    
+    if (!programmeStatus) return true;
+    
+    // Clear previous error
+    dropdownValidationTracker.removeError('programmeStatus');
+    
+    // When records exist in Class Master, Status must not be changeable to Inactive or Completed unless all related classes are completed
+    if (hasClassMasterRecords() && editingProgrammeId) {
+        const hasRelatedClasses = hasRelatedProgramClasses(editingProgrammeId);
+        
+        if (hasRelatedClasses && (selectedValue === 'Inactive' || selectedValue === 'Completed')) {
+            // Check if all related classes are completed
+            const allCompleted = areAllClassesCompletedForProgram(editingProgrammeId);
+            
+            if (!allCompleted) {
+                dropdownValidationTracker.addError(
+                    'programmeStatus',
+                    'Cannot set status to Inactive or Completed. All related Class Master records must be marked as Completed first.'
+                );
+                return false;
+            }
+        }
+    }
+    
+    return true;
+}
+
+// Setup event listeners with immediate validation
 function setupEventListeners() {
     console.log('Setting up event listeners...');
     
@@ -1016,13 +1097,13 @@ function setupEventListeners() {
     document.getElementById('searchInstitute').addEventListener('input', filterInstitutes);
     document.getElementById('clearInstituteSearch').addEventListener('click', clearInstituteSearch);
     
-    // Academic form actions
+    // Academic form actions - Updated with new validation rules
     document.getElementById('saveAcademicBtn').addEventListener('click', saveAcademicYear);
     document.getElementById('cancelAcademicBtn').addEventListener('click', cancelAcademicForm);
     document.getElementById('searchAcademic').addEventListener('input', filterAcademicYears);
     document.getElementById('clearAcademicSearch').addEventListener('click', clearAcademicSearch);
     
-    // Programme form actions
+    // Programme form actions - Updated with new validation rules
     document.getElementById('saveProgrammeBtn').addEventListener('click', saveProgramme);
     document.getElementById('cancelProgrammeBtn').addEventListener('click', cancelProgrammeForm);
     document.getElementById('searchProgramme').addEventListener('input', filterProgrammes);
@@ -1051,7 +1132,7 @@ function setupEventListeners() {
                 
                 // NEW: Enable Academic Year dropdown and populate with active academic years
                 academicYearSelect.disabled = false;
-                updateAcademicYearDropdown();
+                updateAcademicYearDropdownForClassMaster();
                 
                 // Disable and reset Term dropdown (waiting for Class Code selection)
                 termSelect.disabled = true;
@@ -1100,173 +1181,115 @@ function setupEventListeners() {
         }
     });
     
-    // NEW: Academic Year "Is Current Year" dropdown validation
+    // NEW: Academic Year "Is Current Year" dropdown validation - UPDATED FOR IMMEDIATE VALIDATION
     document.getElementById('isCurrentYear').addEventListener('change', function() {
         const selectedValue = this.value;
-        const statusValue = document.getElementById('academicStatus').value;
         
         // Store previous value for revert if validation fails
         previousIsCurrentYearValue = this.getAttribute('data-previous-value') || '';
         
-        // Check if user is trying to select "No"
-        if (selectedValue === 'No') {
-            // Check if status is "Inactive" or "Completed" (or trying to set it)
-            if (statusValue === 'Inactive' || statusValue === 'Completed') {
-                // Check if editing an existing academic year
-                if (editingAcademicId) {
-                    // Check if all related classes are completed
-                    if (!areAllClassesCompletedForAcademicYear(editingAcademicId)) {
-                        showCustomAlert(
-                            'Cannot set "Is Current Year" to "No" with Status "Inactive" or "Completed" because there are classes in this academic year that are not completed. All related classes in Class Master must have Status "Completed".',
-                            'Validation Error',
-                            'error'
-                        );
-                        // Revert to previous value
-                        this.value = previousIsCurrentYearValue;
-                        return;
-                    }
-                } else {
-                    // For new academic year (not editing), check if there are any classes in ANY academic year
-                    // that are not completed (general validation)
-                    const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
-                    if (hasIncompleteClasses) {
-                        showCustomAlert(
-                            'Cannot set "Is Current Year" to "No" with Status "Inactive" or "Completed" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".',
-                            'Validation Error',
-                            'error'
-                        );
-                        // Revert to previous value
-                        this.value = previousIsCurrentYearValue;
-                        return;
-                    }
-                }
-            }
-        }
+        // Clear any previous validation errors
+        dropdownValidationTracker.removeError('isCurrentYear');
         
-        // Store the new value as previous value
-        this.setAttribute('data-previous-value', selectedValue);
-    });
-    
-    // NEW: Academic Year "Status" dropdown validation - UPDATED WITH REQUIREMENTS
-    document.getElementById('academicStatus').addEventListener('change', function() {
-        const selectedValue = this.value;
-        const isCurrentYearValue = document.getElementById('isCurrentYear').value;
-        
-        // Store previous value for revert if validation fails
-        previousAcademicStatusValue = this.getAttribute('data-previous-value') || '';
-        
-        // Check if user is trying to select "Inactive" or "Completed"
-        if (selectedValue === 'Inactive' || selectedValue === 'Completed') {
-            // Case 1: When Is Current Year is "No"
-            if (isCurrentYearValue === 'No') {
-                // Check if editing an existing academic year
-                if (editingAcademicId) {
-                    // Check if all related classes are completed
-                    if (!areAllClassesCompletedForAcademicYear(editingAcademicId)) {
-                        showCustomAlert(
-                            `Cannot set Status to "${selectedValue}" when "Is Current Year" is "No" because there are classes in this academic year that are not completed. All related classes in Class Master must have Status "Completed".`,
-                            'Validation Error',
-                            'error'
-                        );
-                        // Revert to previous value
-                        this.value = previousAcademicStatusValue;
-                        return;
-                    }
-                } else {
-                    // For new academic year (not editing), check if there are any classes in ANY academic year
-                    // that are not completed (general validation)
-                    const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
-                    if (hasIncompleteClasses) {
-                        showCustomAlert(
-                            `Cannot set Status to "${selectedValue}" when "Is Current Year" is "No" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".`,
-                            'Validation Error',
-                            'error'
-                        );
-                        // Revert to previous value
-                        this.value = previousAcademicStatusValue;
-                        return;
-                    }
-                }
-            }
-            // Case 2: When Is Current Year is "Yes" - Allow "Inactive" or "Completed" with validation
-            else if (isCurrentYearValue === 'Yes') {
-                // Check if editing an existing academic year
-                if (editingAcademicId) {
-                    // Check if all related classes are completed
-                    if (!areAllClassesCompletedForAcademicYear(editingAcademicId)) {
-                        showCustomAlert(
-                            `Cannot set Status to "${selectedValue}" because there are classes in this academic year that are not completed. All related classes in Class Master must have Status "Completed".`,
-                            'Validation Error',
-                            'error'
-                        );
-                        // Revert to previous value
-                        this.value = previousAcademicStatusValue;
-                        return;
-                    }
-                } else {
-                    // For new academic year (not editing), check if there are any classes in ANY academic year
-                    // that are not completed (general validation)
-                    const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
-                    if (hasIncompleteClasses) {
-                        showCustomAlert(
-                            `Cannot set Status to "${selectedValue}" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".`,
-                            'Validation Error',
-                            'error'
-                        );
-                        // Revert to previous value
-                        this.value = previousAcademicStatusValue;
-                        return;
-                    }
-                }
-            }
-            // Case 3: When Is Current Year is not selected yet (empty)
-            else {
-                showCustomAlert(
-                    'Please select "Is Current Year" option first before setting Status to "Inactive" or "Completed".',
-                    'Validation Error',
-                    'error'
+        // RULE 2: Only one Academic Year can be marked as Current Year at a time
+        if (selectedValue === 'Yes') {
+            // Check if there is another academic year already marked as current
+            const otherCurrentYear = academicYears.find(year => 
+                year.is_current === 'Yes' && 
+                (!editingAcademicId || year.id !== editingAcademicId)
+            );
+            
+            if (otherCurrentYear) {
+                dropdownValidationTracker.addError(
+                    'isCurrentYear',
+                    `Cannot mark this year as current. "${otherCurrentYear.name}" is already marked as current year.`
                 );
                 // Revert to previous value
-                this.value = previousAcademicStatusValue;
+                this.value = previousIsCurrentYearValue;
                 return;
             }
         }
         
+        // NEW: Validate immediately when selecting "No" and records exist in Class Master
+        if (selectedValue === 'No' && hasClassMasterRecords() && editingAcademicId) {
+            const hasRelatedClasses = hasRelatedAcademicYearClasses(editingAcademicId);
+            
+            if (hasRelatedClasses) {
+                // Check if all related classes are completed
+                const allCompleted = areAllRelatedClassesCompleted(editingAcademicId);
+                
+                if (!allCompleted) {
+                    dropdownValidationTracker.addError(
+                        'isCurrentYear',
+                        'Cannot set to "No" when related classes exist in Class Master. Complete all related classes first.'
+                    );
+                    // Revert to previous value
+                    this.value = previousIsCurrentYearValue;
+                    return;
+                }
+            }
+        }
+        
         // Store the new value as previous value
         this.setAttribute('data-previous-value', selectedValue);
     });
     
-    // NEW: Programme "Status" dropdown validation - UPDATED WITH REQUIREMENTS
+    // NEW: Academic Year "Status" dropdown validation - UPDATED FOR IMMEDIATE VALIDATION
+    document.getElementById('academicStatus').addEventListener('change', function() {
+        const selectedValue = this.value;
+        
+        // Store previous value for revert if validation fails
+        previousAcademicStatusValue = this.getAttribute('data-previous-value') || '';
+        
+        // Clear any previous validation errors
+        dropdownValidationTracker.removeError('academicStatus');
+        
+        // When records exist in Class Master, Status options "Inactive" and "Completed" should be selectable only if all related classes are completed
+        if (hasClassMasterRecords() && editingAcademicId) {
+            const hasRelatedClasses = hasRelatedAcademicYearClasses(editingAcademicId);
+            
+            if (hasRelatedClasses && (selectedValue === 'Inactive' || selectedValue === 'Completed')) {
+                // Check if all related classes are completed
+                const allCompleted = areAllRelatedClassesCompleted(editingAcademicId);
+                
+                if (!allCompleted) {
+                    dropdownValidationTracker.addError(
+                        'academicStatus',
+                        'Cannot set status to Inactive or Completed. All related Class Master records must be marked as Completed first.'
+                    );
+                    // Revert to previous value
+                    this.value = previousAcademicStatusValue;
+                    return;
+                }
+            }
+        }
+        
+        // Store the new value as previous value
+        this.setAttribute('data-previous-value', selectedValue);
+    });
+    
+    // NEW: Programme "Status" dropdown validation - UPDATED FOR IMMEDIATE VALIDATION
     document.getElementById('programmeStatus').addEventListener('change', function() {
         const selectedValue = this.value;
         
         // Store previous value for revert if validation fails
         previousProgrammeStatusValue = this.getAttribute('data-previous-value') || '';
         
-        // Check if user is trying to select "Inactive" or "Completed"
-        if (selectedValue === 'Inactive' || selectedValue === 'Completed') {
-            // Check if editing an existing program
-            if (editingProgrammeId) {
+        // Clear any previous validation errors
+        dropdownValidationTracker.removeError('programmeStatus');
+        
+        // When records exist in Class Master, Status options "Inactive" and "Completed" should be selectable only if all related classes are completed
+        if (hasClassMasterRecords() && editingProgrammeId) {
+            const hasRelatedClasses = hasRelatedProgramClasses(editingProgrammeId);
+            
+            if (hasRelatedClasses && (selectedValue === 'Inactive' || selectedValue === 'Completed')) {
                 // Check if all related classes are completed
-                if (!areAllClassesCompletedForProgram(editingProgrammeId)) {
-                    showCustomAlert(
-                        `Cannot set Status to "${selectedValue}" because there are classes in this program that are not completed. All related classes in Class Master must have Status "Completed".`,
-                        'Validation Error',
-                        'error'
-                    );
-                    // Revert to previous value
-                    this.value = previousProgrammeStatusValue;
-                    return;
-                }
-            } else {
-                // For new program (not editing), check if there are any classes in ANY program
-                // that are not completed (general validation for new programs)
-                const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
-                if (hasIncompleteClasses) {
-                    showCustomAlert(
-                        `Cannot set Status to "${selectedValue}" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".`,
-                        'Validation Error',
-                        'error'
+                const allCompleted = areAllClassesCompletedForProgram(editingProgrammeId);
+                
+                if (!allCompleted) {
+                    dropdownValidationTracker.addError(
+                        'programmeStatus',
+                        'Cannot set status to Inactive or Completed. All related Class Master records must be marked as Completed first.'
                     );
                     // Revert to previous value
                     this.value = previousProgrammeStatusValue;
@@ -1325,40 +1348,59 @@ function setupEventListeners() {
     });
 }
 
-// UPDATED: Update Term dropdown based on selected Class Code
-function updateTermDropdown(classCode) {
-    const termSelect = document.getElementById('classTerm');
-    const currentValue = termSelect.value;
+// NEW: Update Academic Year dropdown for Class Master with filtering rules
+function updateAcademicYearDropdownForClassMaster() {
+    const dropdown = document.getElementById('classAcademicYear');
+    const currentValue = dropdown.value;
     
-    // Clear existing options
-    termSelect.innerHTML = '<option value="">Select Term</option>';
+    // Clear existing options except the first one
+    dropdown.innerHTML = '<option value="">Select Academic Year</option>';
     
-    if (!classCode) {
-        termSelect.disabled = true;
-        return;
-    }
+    // RULE 4: Only show Academic Years that are Active AND Is Current Year = Yes
+    const availableAcademicYears = academicYears.filter(year => 
+        year.status === 'Active' && year.is_current === 'Yes'
+    );
     
-    // Get terms from mapping based on Class Code
-    const terms = termMapping[classCode] || [];
-    
-    // Add terms to dropdown based on the mapping
-    terms.forEach(term => {
+    availableAcademicYears.forEach(year => {
         const option = document.createElement('option');
-        option.value = term;
-        option.textContent = term;
-        termSelect.appendChild(option);
+        option.value = year.id;
+        option.textContent = year.name;
+        dropdown.appendChild(option);
     });
     
     // Restore previous selection if it still exists
-    if (currentValue && terms.includes(currentValue)) {
-        termSelect.value = currentValue;
+    if (currentValue && availableAcademicYears.some(year => year.id === currentValue)) {
+        dropdown.value = currentValue;
     }
-    
-    // Enable the dropdown
-    termSelect.disabled = false;
 }
 
-// UPDATED: Update Class Code dropdown based on selected Programme
+// NEW: Update Programme dropdown for Class Master with filtering rules
+function updateProgrammeDropdownForClassMaster() {
+    const dropdown = document.getElementById('classProgramme');
+    const currentValue = dropdown.value;
+    
+    // Clear existing options except the first one
+    dropdown.innerHTML = '<option value="">Select Program</option>';
+    
+    // RULE 5: Only show Programs that are Active (not Inactive or Completed)
+    const availableProgrammes = programmes.filter(programme => 
+        programme.status === 'Active'
+    );
+    
+    availableProgrammes.forEach(programme => {
+        const option = document.createElement('option');
+        option.value = programme.id;
+        option.textContent = `${programme.name} (${programme.id})`;
+        dropdown.appendChild(option);
+    });
+    
+    // Restore previous selection if it still exists
+    if (currentValue && availableProgrammes.some(programme => programme.id === currentValue)) {
+        dropdown.value = currentValue;
+    }
+}
+
+// Update Class Code dropdown based on selected Programme
 function updateClassCodeDropdown() {
     const programmeSelect = document.getElementById('classProgramme');
     const classCodeSelect = document.getElementById('classCode');
@@ -1418,57 +1460,37 @@ function updateClassCodeDropdown() {
     }
 }
 
-// Update Program dropdown in Class Master form - Show only ACTIVE program IDs (not Completed)
-function updateProgrammeDropdown() {
-    const programmeSelect = document.getElementById('classProgramme');
-    const currentValue = programmeSelect.value;
+// Update Term dropdown based on selected Class Code
+function updateTermDropdown(classCode) {
+    const termSelect = document.getElementById('classTerm');
+    const currentValue = termSelect.value;
     
-    // Clear existing options except the first one
-    programmeSelect.innerHTML = '<option value="">Select Program</option>';
+    // Clear existing options
+    termSelect.innerHTML = '<option value="">Select Term</option>';
     
-    // Get unique ACTIVE program IDs from programmes array (filter out Completed programs)
-    const activePrograms = programmes.filter(programme => 
-        programme.status !== 'Completed' && programme.status !== 'Inactive'
-    );
-    
-    // Add only ACTIVE programs to dropdown
-    activePrograms.forEach(programme => {
-        const option = document.createElement('option');
-        option.value = programme.id; // Use program ID as value
-        option.textContent = `${programme.name} (${programme.id})`; // Show name and ID
-        programmeSelect.appendChild(option);
-    });
-    
-    // Restore the previously selected value if it still exists
-    if (currentValue && activePrograms.some(programme => programme.id === currentValue)) {
-        programmeSelect.value = currentValue;
+    if (!classCode) {
+        termSelect.disabled = true;
+        return;
     }
-}
-
-// UPDATED: Update Academic Year dropdown - Show only Active AND Current academic years
-function updateAcademicYearDropdown() {
-    const dropdown = document.getElementById('classAcademicYear');
-    const currentValue = dropdown.value;
     
-    // Clear existing options except the first one
-    dropdown.innerHTML = '<option value="">Select Academic Year</option>';
+    // Get terms from mapping based on Class Code
+    const terms = termMapping[classCode] || [];
     
-    // NEW: Filter academic years - only Active AND Is Current = "Yes"
-    const availableAcademicYears = academicYears.filter(year => 
-        year.status === 'Active' && year.is_current === 'Yes'
-    );
-    
-    availableAcademicYears.forEach(year => {
+    // Add terms to dropdown based on the mapping
+    terms.forEach(term => {
         const option = document.createElement('option');
-        option.value = year.id;
-        option.textContent = year.name; // Show name, not ID
-        dropdown.appendChild(option);
+        option.value = term;
+        option.textContent = term;
+        termSelect.appendChild(option);
     });
     
     // Restore previous selection if it still exists
-    if (currentValue && availableAcademicYears.some(year => year.id === currentValue)) {
-        dropdown.value = currentValue;
+    if (currentValue && terms.includes(currentValue)) {
+        termSelect.value = currentValue;
     }
+    
+    // Enable the dropdown
+    termSelect.disabled = false;
 }
 
 // Save dashboard scroll position
@@ -1483,6 +1505,7 @@ function restoreDashboardScrollPosition() {
     }, 50);
 }
 
+// Handle login function
 function handleLogin() {
     console.log('Handling login for role:', currentRole);
     
@@ -1672,13 +1695,13 @@ function updateDashboard() {
     }
     
     // Update programme dropdown in class master
-    updateProgrammeDropdown();
+    updateProgrammeDropdownForClassMaster();
     
-    // UPDATED: Initialize Class Master form fields visibility
+    // Initialize Class Master form fields visibility
     initializeClassFormVisibility();
 }
 
-// UPDATED: Initialize Class Master form fields visibility
+// Initialize Class Master form fields visibility
 function initializeClassFormVisibility() {
     const classCodeSelect = document.getElementById('classCode');
     const academicYearSelect = document.getElementById('classAcademicYear');
@@ -1745,10 +1768,10 @@ function updateDashboardStats() {
     renderClassTable();
     
     // Update dropdowns
-    updateAcademicYearDropdown();
+    updateAcademicYearDropdownForClassMaster();
     
     // Update programme dropdown in class master
-    updateProgrammeDropdown();
+    updateProgrammeDropdownForClassMaster();
 }
 
 function resetUIBeforeApplyingRestrictions() {
@@ -1887,7 +1910,7 @@ function showModule(moduleName) {
         case 'class':
             classModule.style.display = 'block';
             renderClassTable();
-            // UPDATED: Initialize form visibility when showing class module
+            // Initialize form visibility when showing class module
             initializeClassFormVisibility();
             break;
     }
@@ -2033,10 +2056,14 @@ function showInstituteModule() {
 
 function showAcademicModule() {
     showModule('academic');
+    // Apply Class Master validation rules when showing academic module
+    applyClassMasterValidationRules();
 }
 
 function showProgrammeModule() {
     showModule('programme');
+    // Apply Class Master validation rules when showing programme module
+    applyClassMasterValidationRules();
 }
 
 function showClassModule() {
@@ -2246,7 +2273,7 @@ function renderDatabaseProgrammeTable() {
     }
 }
 
-// UPDATED: Render Database Class Table to show Academic Year Name instead of ID
+// Render Database Class Table to show Academic Year Name instead of ID
 function renderDatabaseClassTable() {
     const tbody = document.getElementById('databaseClassTableBody');
     tbody.innerHTML = '';
@@ -2260,7 +2287,7 @@ function renderDatabaseClassTable() {
             <td>${cls.programme_id}</td>
             <td>${cls.programme_name}</td>
             <td>${cls.class_code}</td>
-            <!-- UPDATED: Show Academic Year Name instead of ID -->
+            <!-- Show Academic Year Name instead of ID -->
             <td>${getAcademicYearNameById(cls.academic_year)}</td>
             <td>${cls.term}</td>
             <td><span class="${statusClass}">${cls.status}</span></td>
@@ -2628,13 +2655,13 @@ function exportToExcel() {
     const programmeWs = XLSX.utils.json_to_sheet(programmeData);
     XLSX.utils.book_append_sheet(wb, programmeWs, 'Programs');
     
-    // Class data - UPDATED: Show Academic Year Name instead of ID
+    // Class data - Show Academic Year Name instead of ID
     const classData = classes.map(cls => ({
         'Class ID': cls.id,
         'Program ID': cls.programme_id,
         'Program Name': cls.programme_name,
         'Class Code': cls.class_code,
-        'Academic Year': getAcademicYearNameById(cls.academic_year), // UPDATED: Show name instead of ID
+        'Academic Year': getAcademicYearNameById(cls.academic_year), // Show name instead of ID
         'TERM': cls.term,
         'Status': cls.status,
         'Created At': formatDateForDisplay(cls.created_at)
@@ -3124,7 +3151,7 @@ function loadProfilePhotos() {
     }
 }
 
-// Institute Master Functions - UPDATED: ID format changed to IID001, IID002, etc.
+// Institute Master Functions - ID format changed to IID001, IID002, etc.
 function showAddInstituteForm() {
     document.getElementById('instituteFormTitle').textContent = 'Add New Institute';
     document.getElementById('saveInstituteBtn').innerHTML = '<i class="fas fa-save"></i> Save Institute';
@@ -3172,7 +3199,7 @@ function saveInstitute() {
             showToast('Success', 'Institute updated successfully', 'success');
         }
     } else {
-        // Add new institute - UPDATED: ID format changed to IID001, IID002, etc.
+        // Add new institute - ID format changed to IID001, IID002, etc.
         const newInstitute = {
             id: `IID${String(institutes.length + 1).padStart(3, '0')}`,
             name,
@@ -3186,7 +3213,7 @@ function saveInstitute() {
         showToast('Success', 'Institute added successfully', 'success');
     }
     
-    // FIXED: Update dashboard stats after adding/updating
+    // Update dashboard stats after adding/updating
     updateDashboardStats();
     renderInstituteTable();
     renderDatabaseInstituteTable();
@@ -3270,7 +3297,7 @@ function deleteInstitute(id) {
     const index = institutes.findIndex(inst => inst.id === id);
     if (index !== -1) {
         institutes.splice(index, 1);
-        // FIXED: Update dashboard stats after deletion
+        // Update dashboard stats after deletion
         updateDashboardStats();
         renderInstituteTable();
         renderDatabaseInstituteTable();
@@ -3339,7 +3366,7 @@ function clearInstituteSearch() {
     renderInstituteTable();
 }
 
-// Academic Year Functions - UPDATED: Removed calendar icon and rearranged fields
+// Academic Year Functions - Updated with new validation rules and immediate validation
 function showAddAcademicForm() {
     document.getElementById('academicFormTitle').textContent = 'Add New Academic Year';
     document.getElementById('saveAcademicBtn').innerHTML = '<i class="fas fa-save"></i> Save Academic Year';
@@ -3351,6 +3378,20 @@ function showAddAcademicForm() {
     previousAcademicStatusValue = '';
     document.getElementById('isCurrentYear').setAttribute('data-previous-value', '');
     document.getElementById('academicStatus').setAttribute('data-previous-value', '');
+    
+    // Clear any validation errors
+    dropdownValidationTracker.clearAll();
+    
+    // Apply Class Master validation rules - UPDATED: Ensure Status dropdown is visible
+    applyClassMasterValidationRules();
+    
+    // NEW: Ensure Status dropdown is visible and enabled when adding new Academic Year
+    const academicStatus = document.getElementById('academicStatus');
+    if (academicStatus) {
+        academicStatus.disabled = false;
+        academicStatus.style.opacity = '1';
+        academicStatus.removeAttribute('title');
+    }
 }
 
 function showEditAcademicForm(academic) {
@@ -3369,15 +3410,34 @@ function showEditAcademicForm(academic) {
     previousAcademicStatusValue = academic.status || '';
     document.getElementById('isCurrentYear').setAttribute('data-previous-value', previousIsCurrentYearValue);
     document.getElementById('academicStatus').setAttribute('data-previous-value', previousAcademicStatusValue);
+    
+    // Clear any validation errors
+    dropdownValidationTracker.clearAll();
+    
+    // Apply Class Master validation rules
+    applyClassMasterValidationRules();
 }
 
-// UPDATED: Save Academic Year function with all required validations
+// Save Academic Year function with all required validations
 function saveAcademicYear() {
     const name = document.getElementById('yearName').value.trim();
     const startDateInput = document.getElementById('startDate').value;
     const endDateInput = document.getElementById('endDate').value;
     const isCurrent = document.getElementById('isCurrentYear').value;
     const status = document.getElementById('academicStatus').value;
+    
+    // Clear previous validation errors
+    dropdownValidationTracker.clearAll();
+    
+    // Run immediate validations
+    const isCurrentYearValid = validateAcademicYearCurrentYearImmediate();
+    const academicStatusValid = validateAcademicYearStatusImmediate();
+    
+    // If any immediate validation failed, don't proceed
+    if (!isCurrentYearValid || !academicStatusValid) {
+        showToast('Validation Error', 'Please fix the validation errors before saving', 'error');
+        return;
+    }
     
     // Validation
     if (!name || !startDateInput || !endDateInput || !isCurrent || !status) {
@@ -3389,41 +3449,7 @@ function saveAcademicYear() {
     const startDate = formatDateToDDMMYYYY(startDateInput);
     const endDate = formatDateToDDMMYYYY(endDateInput);
     
-    // Get the original academic year record if editing
-    let originalAcademicYear = null;
-    if (editingAcademicId) {
-        originalAcademicYear = academicYears.find(year => year.id === editingAcademicId);
-    }
-    
-    // VALIDATION 1: Check if changing status to Inactive or Completed
-    if (status === 'Inactive' || status === 'Completed') {
-        // Check if academic year has related classes in Class Master
-        if (editingAcademicId && hasRelatedAcademicYearClasses(editingAcademicId)) {
-            // Check if all related classes are completed
-            if (!areAllClassesCompletedForAcademicYear(editingAcademicId)) {
-                showCustomAlert(
-                    `Cannot set status to "${status}" because there are classes in this academic year that are not completed. All related classes in Class Master must have Status "Completed".`,
-                    'Validation Error',
-                    'error'
-                );
-                return;
-            }
-        } else if (!editingAcademicId) {
-            // For new academic year (not editing), check if there are any classes in ANY academic year
-            // that are not completed (general validation)
-            const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
-            if (hasIncompleteClasses) {
-                showCustomAlert(
-                    `Cannot set status to "${status}" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".`,
-                    'Validation Error',
-                    'error'
-                );
-                return;
-            }
-        }
-    }
-    
-    // VALIDATION 2: Check if setting Is Current Year = Yes while another academic year is already marked as Current
+    // RULE 2: Only one Academic Year can be marked as Current Year at a time
     if (isCurrent === 'Yes') {
         // Check if there is another academic year already marked as current
         const otherCurrentYear = academicYears.find(year => 
@@ -3432,25 +3458,31 @@ function saveAcademicYear() {
         );
         
         if (otherCurrentYear) {
-            showCustomAlert(
-                `Cannot set "${name}" as current year. "${otherCurrentYear.name}" is already marked as the current academic year.`,
-                'Validation Error',
-                'error'
+            dropdownValidationTracker.addError(
+                'isCurrentYear',
+                `Cannot mark "${name}" as current year. "${otherCurrentYear.name}" is already marked as current year. Please complete the existing current year first.`
             );
             return;
         }
     }
     
-    // VALIDATION 3: For new academic years, maintain existing behavior
-    // When adding new academic year with Is Current Year = Yes, set all others to No
-    if (!editingAcademicId && isCurrent === 'Yes') {
-        academicYears.forEach(year => {
-            year.is_current = 'No';
-        });
+    // When records exist in Class Master, Status options "Inactive" and "Completed" should be selectable only if all related classes are completed
+    if (hasClassMasterRecords() && editingAcademicId) {
+        const hasRelatedClasses = hasRelatedAcademicYearClasses(editingAcademicId);
+        
+        if (hasRelatedClasses && (status === 'Inactive' || status === 'Completed')) {
+            // Check if all related classes are completed
+            const allCompleted = areAllRelatedClassesCompleted(editingAcademicId);
+            
+            if (!allCompleted) {
+                dropdownValidationTracker.addError(
+                    'academicStatus',
+                    'Cannot set status to Inactive or Completed. All related Class Master records must be marked as Completed first.'
+                );
+                return;
+            }
+        }
     }
-    
-    // VALIDATION 4: For editing academic years, do NOT automatically change other years
-    // (This is already handled by validation 2 above)
     
     const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
     
@@ -3470,7 +3502,7 @@ function saveAcademicYear() {
             showToast('Success', 'Academic year updated successfully', 'success');
         }
     } else {
-        // Add new academic year - UPDATED: ID format changed to YID001, YID002, etc.
+        // Add new academic year - ID format changed to YID001, YID002, etc.
         const newAcademicYear = {
             id: `YID${String(academicYears.length + 1).padStart(3, '0')}`,
             name,
@@ -3485,11 +3517,11 @@ function saveAcademicYear() {
         showToast('Success', 'Academic year added successfully', 'success');
     }
     
-    // FIXED: Update dashboard stats after adding/updating
+    // Update dashboard stats after adding/updating
     updateDashboardStats();
     renderAcademicTable();
     renderDatabaseAcademicTable();
-    updateAcademicYearDropdown();
+    updateAcademicYearDropdownForClassMaster();
     resetAcademicForm();
 }
 
@@ -3506,12 +3538,18 @@ function resetAcademicForm() {
     previousAcademicStatusValue = '';
     document.getElementById('isCurrentYear').setAttribute('data-previous-value', '');
     document.getElementById('academicStatus').setAttribute('data-previous-value', '');
+    
+    // Clear validation errors
+    dropdownValidationTracker.clearAll();
 }
 
 function cancelAcademicForm() {
     resetAcademicForm();
     document.getElementById('academicFormTitle').textContent = 'Add New Academic Year';
     document.getElementById('saveAcademicBtn').innerHTML = '<i class="fas fa-save"></i> Save Academic Year';
+    
+    // Clear validation errors
+    dropdownValidationTracker.clearAll();
 }
 
 function renderAcademicTable() {
@@ -3571,16 +3609,16 @@ function deleteAcademicYear(id) {
         // Check if this year is used in any classes
         const usedInClasses = classes.some(cls => cls.academic_year === id);
         if (usedInClasses) {
-            showToast('Error', 'Cannot delete academic year that is used in classes', 'error');
+            showToast('Error', 'Cannot delete academic year used in classes', 'error');
             return;
         }
         
         academicYears.splice(index, 1);
-        // FIXED: Update dashboard stats after deletion
+        // Update dashboard stats after deletion
         updateDashboardStats();
         renderAcademicTable();
         renderDatabaseAcademicTable();
-        updateAcademicYearDropdown();
+        updateAcademicYearDropdownForClassMaster();
         showToast('Success', 'Academic year deleted successfully', 'success');
     }
 }
@@ -3645,8 +3683,7 @@ function clearAcademicSearch() {
     document.getElementById('searchAcademic').value = '';
     renderAcademicTable();
 }
-
-// Program Functions - UPDATED: ID format changed to PID001, PID002, etc.
+// Program Functions - Updated with new validation rules and immediate validation
 function showAddProgrammeForm() {
     document.getElementById('programmeFormTitle').textContent = 'Add New Program';
     document.getElementById('saveProgrammeBtn').innerHTML = '<i class="fas fa-save"></i> Save Program';
@@ -3656,6 +3693,20 @@ function showAddProgrammeForm() {
     // Reset previous value storage for programme status
     previousProgrammeStatusValue = '';
     document.getElementById('programmeStatus').setAttribute('data-previous-value', '');
+    
+    // Clear any validation errors
+    dropdownValidationTracker.clearAll();
+    
+    // Apply Class Master validation rules - UPDATED: Ensure Status dropdown is visible
+    applyClassMasterValidationRules();
+    
+    // NEW: Ensure Status dropdown is visible and enabled when adding new Program
+    const programmeStatus = document.getElementById('programmeStatus');
+    if (programmeStatus) {
+        programmeStatus.disabled = false;
+        programmeStatus.style.opacity = '1';
+        programmeStatus.removeAttribute('title');
+    }
 }
 
 function showEditProgrammeForm(programme) {
@@ -3672,18 +3723,27 @@ function showEditProgrammeForm(programme) {
     // Store previous value for validation
     previousProgrammeStatusValue = programme.status || '';
     document.getElementById('programmeStatus').setAttribute('data-previous-value', previousProgrammeStatusValue);
+    
+    // Clear any validation errors
+    dropdownValidationTracker.clearAll();
+    
+    // Apply Class Master validation rules
+    applyClassMasterValidationRules();
 }
 
 // Validate programme status change
 function validateProgrammeStatus(programmeId, newStatus) {
-    if (newStatus === 'Completed' || newStatus === 'Inactive') {
-        if (!areAllClassesCompletedForProgram(programmeId)) {
-            showCustomAlert(
-                `Cannot mark program as "${newStatus}". All related classes must be Completed first.`,
-                'Validation Error',
-                'error'
-            );
-            return false;
+    // RULE 3: When records exist in Class Master, Status must not be changeable
+    if (hasClassMasterRecords() && editingProgrammeId) {
+        const hasRelatedClasses = hasRelatedProgramClasses(editingProgrammeId);
+        
+        if (hasRelatedClasses) {
+            // Check if all related classes are completed
+            const allCompleted = areAllClassesCompletedForProgram(editingProgrammeId);
+            
+            if (!allCompleted) {
+                return false;
+            }
         }
     }
     
@@ -3697,37 +3757,31 @@ function saveProgramme() {
     const description = document.getElementById('programmeDescription').value.trim();
     const status = document.getElementById('programmeStatus').value;
     
+    // Clear previous validation errors
+    dropdownValidationTracker.clearAll();
+    
+    // Run immediate validation
+    const programmeStatusValid = validateProgrammeStatusImmediate();
+    
+    // If immediate validation failed, don't proceed
+    if (!programmeStatusValid) {
+        showToast('Validation Error', 'Please fix the validation errors before saving', 'error');
+        return;
+    }
+    
     // Validation
     if (!name || !code || !duration || !status) {
         showToast('Validation Error', 'Program name, code, duration and status are required', 'error');
         return;
     }
     
-    // Get original program if editing
-    let originalProgramme = null;
-    if (editingProgrammeId) {
-        originalProgramme = programmes.find(prog => prog.id === editingProgrammeId);
-        
-        // Check if status change is valid
-        if (originalProgramme && originalProgramme.status !== status) {
-            if (!validateProgrammeStatus(editingProgrammeId, status)) {
-                return; // Validation failed
-            }
-        }
-    } else {
-        // For new programs, check if Inactive or Completed status is valid
-        if (status === 'Inactive' || status === 'Completed') {
-            // Check if there are any classes in ANY program that are not completed
-            const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
-            if (hasIncompleteClasses) {
-                showCustomAlert(
-                    `Cannot set status to "${status}" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".`,
-                    'Validation Error',
-                    'error'
-                );
-                return;
-            }
-        }
+    // Validate status change
+    if (!validateProgrammeStatus(editingProgrammeId, status)) {
+        dropdownValidationTracker.addError(
+            'programmeStatus',
+            'Cannot change Program status. All related Class Master records must be marked as Completed first.'
+        );
+        return; // Validation failed
     }
     
     const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
@@ -3748,22 +3802,9 @@ function saveProgramme() {
             showToast('Success', 'Program updated successfully', 'success');
         }
     } else {
-        // Check for duplicate program name and generate unique ID
-        let programId;
-        const existingProgramId = getProgramIdByName(name);
-        
-        if (existingProgramId) {
-            // Duplicate program name found - generate new unique ID
-            programId = generateUniqueProgramId(name);
-            showToast('Info', `Duplicate program name detected. New Program ID generated: ${programId}`, 'info');
-        } else {
-            // Normal ID generation
-            programId = `PID${String(programmes.length + 1).padStart(3, '0')}`;
-        }
-        
-        // Add new program
+        // Add new program - ID format changed to PID001, PID002, etc.
         const newProgramme = {
-            id: programId,
+            id: `PID${String(programmes.length + 1).padStart(3, '0')}`,
             name,
             code,
             duration: parseInt(duration),
@@ -3776,12 +3817,12 @@ function saveProgramme() {
         showToast('Success', 'Program added successfully', 'success');
     }
     
-    // FIXED: Update dashboard stats after adding/updating
+    // Update dashboard stats after adding/updating
     updateDashboardStats();
     renderProgrammeTable();
     renderDatabaseProgrammeTable();
     // Update programme dropdown in class master
-    updateProgrammeDropdown();
+    updateProgrammeDropdownForClassMaster();
     resetProgrammeForm();
 }
 
@@ -3796,12 +3837,18 @@ function resetProgrammeForm() {
     // Reset previous value storage
     previousProgrammeStatusValue = '';
     document.getElementById('programmeStatus').setAttribute('data-previous-value', '');
+    
+    // Clear validation errors
+    dropdownValidationTracker.clearAll();
 }
 
 function cancelProgrammeForm() {
     resetProgrammeForm();
     document.getElementById('programmeFormTitle').textContent = 'Add New Program';
     document.getElementById('saveProgrammeBtn').innerHTML = '<i class="fas fa-save"></i> Save Program';
+    
+    // Clear validation errors
+    dropdownValidationTracker.clearAll();
 }
 
 function renderProgrammeTable() {
@@ -3861,17 +3908,17 @@ function deleteProgramme(id) {
         // Check if this program is used in any classes
         const usedInClasses = classes.some(cls => cls.programme_id === id);
         if (usedInClasses) {
-            showToast('Error', 'Cannot delete program that is used in classes', 'error');
+            showToast('Error', 'Cannot delete program used in classes', 'error');
             return;
         }
         
         programmes.splice(index, 1);
-        // FIXED: Update dashboard stats after deletion
+        // Update dashboard stats after deletion
         updateDashboardStats();
         renderProgrammeTable();
         renderDatabaseProgrammeTable();
         // Update programme dropdown in class master
-        updateProgrammeDropdown();
+        updateProgrammeDropdownForClassMaster();
         showToast('Success', 'Program deleted successfully', 'success');
     }
 }
@@ -3939,7 +3986,7 @@ function clearProgrammeSearch() {
     renderProgrammeTable();
 }
 
-// Class Functions - UPDATED: ID format changed to CID001, CID002, etc.
+// Class Functions - ID format changed to CID001, CID002, etc.
 function showAddClassForm() {
     document.getElementById('classFormTitle').textContent = 'Add New Class';
     document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Save Class';
@@ -4015,7 +4062,7 @@ function saveClass() {
             showToast('Success', 'Class updated successfully', 'success');
         }
     } else {
-        // Add new class - UPDATED: ID format changed to CID001, CID002, etc.
+        // Add new class - ID format changed to CID001, CID002, etc.
         const newClass = {
             id: `CID${String(classes.length + 1).padStart(3, '0')}`,
             class_code: classCode,
@@ -4031,7 +4078,7 @@ function saveClass() {
         showToast('Success', 'Class added successfully', 'success');
     }
     
-    // FIXED: Update dashboard stats after adding/updating
+    // Update dashboard stats after adding/updating
     updateDashboardStats();
     renderClassTable();
     renderDatabaseClassTable();
@@ -4049,7 +4096,7 @@ function resetClassForm() {
     document.getElementById('classStatus').value = '';
     editingClassId = null;
     
-    // UPDATED: Reset opacity for visual indication
+    // Reset opacity for visual indication
     document.getElementById('classCode').style.opacity = '0.5';
     document.getElementById('classAcademicYear').style.opacity = '0.5';
     document.getElementById('classTerm').style.opacity = '0.5';
@@ -4061,7 +4108,7 @@ function cancelClassForm() {
     document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Save Class';
 }
 
-// UPDATED: Render Class Table to show Academic Year Name instead of ID
+// Render Class Table to show Academic Year Name instead of ID
 function renderClassTable() {
     const tbody = document.getElementById('classTableBody');
     tbody.innerHTML = '';
@@ -4075,7 +4122,7 @@ function renderClassTable() {
             <td>${cls.programme_id}</td>
             <td>${cls.programme_name}</td>
             <td>${cls.class_code}</td>
-            <!-- UPDATED: Show Academic Year Name instead of ID -->
+            <!-- Show Academic Year Name instead of ID -->
             <td>${getAcademicYearNameById(cls.academic_year)}</td>
             <td>${cls.term}</td>
             <td><span class="${statusClass}">${cls.status}</span></td>
@@ -4119,7 +4166,7 @@ function deleteClass(id) {
     const index = classes.findIndex(cls => cls.id === id);
     if (index !== -1) {
         classes.splice(index, 1);
-        // FIXED: Update dashboard stats after deletion
+        // Update dashboard stats after deletion
         updateDashboardStats();
         renderClassTable();
         renderDatabaseClassTable();
@@ -4127,7 +4174,7 @@ function deleteClass(id) {
     }
 }
 
-// UPDATED: Filter Classes to show Academic Year Name instead of ID
+// Filter Classes to show Academic Year Name instead of ID
 function filterClasses() {
     const searchTerm = document.getElementById('searchClass').value.toLowerCase();
     const filtered = classes.filter(cls => 
@@ -4148,7 +4195,7 @@ function filterClasses() {
             <td>${cls.programme_id}</td>
             <td>${cls.programme_name}</td>
             <td>${cls.class_code}</td>
-            <!-- UPDATED: Show Academic Year Name instead of ID -->
+            <!-- Show Academic Year Name instead of ID -->
             <td>${getAcademicYearNameById(cls.academic_year)}</td>
             <td>${cls.term}</td>
             <td><span class="${statusClass}">${cls.status}</span></td>
@@ -4242,6 +4289,9 @@ function resetUIToDefaultState() {
     
     // Reset all forms
     resetAllForms();
+    
+    // Clear all validation errors
+    dropdownValidationTracker.clearAll();
     
     // Reset scroll position
     dashboardScrollPosition = 0;
@@ -4434,3 +4484,181 @@ function hideToast() {
         toastTimeout = null;
     }
 }
+
+// Initialize Principal Settings
+function initializePrincipalSettings() {
+    // Load saved principal settings
+    const savedSettings = localStorage.getItem('eduMasterPrincipalSettings');
+    if (savedSettings) {
+        try {
+            const parsed = JSON.parse(savedSettings);
+            if (parsed.displayName) principalSettingsName.value = parsed.displayName;
+            if (parsed.email) principalSettingsEmail.value = parsed.email;
+            if (parsed.mobile) principalSettingsMobile.value = parsed.mobile;
+        } catch (e) {
+            console.error('Error loading principal settings:', e);
+        }
+    }
+    
+    // Ensure Principal Settings forms are visible
+    setTimeout(ensurePrincipalSettingsVisibility, 100);
+}
+
+// DOM Elements
+const loginPage = document.getElementById('loginPage');
+const dashboard = document.getElementById('dashboard');
+const loginForm = document.getElementById('loginForm');
+const roleButtons = document.querySelectorAll('.role-btn');
+const togglePassword = document.getElementById('togglePassword');
+const passwordInput = document.getElementById('password');
+const usernameInput = document.getElementById('username');
+const loginButton = document.getElementById('loginButton');
+const loadingSpinner = document.getElementById('loadingSpinner');
+const logoutBtn = document.getElementById('logoutBtn');
+const usernameError = document.getElementById('usernameError');
+const passwordError = document.getElementById('passwordError');
+const toast = document.getElementById('toast');
+const toastTitle = document.getElementById('toastTitle');
+const toastMessage = document.getElementById('toastMessage');
+const closeToast = document.getElementById('closeToast');
+
+// Custom Alert Elements
+const customAlertOverlay = document.getElementById('customAlertOverlay');
+const customAlertIcon = document.getElementById('customAlertIcon');
+const customAlertTitle = document.getElementById('customAlertTitle');
+const customAlertMessage = document.getElementById('customAlertMessage');
+const customAlertCancel = document.getElementById('customAlertCancel');
+const customAlertConfirm = document.getElementById('customAlertConfirm');
+
+// Dashboard elements
+const userAvatar = document.getElementById('userAvatar');
+const avatarText = document.getElementById('avatarText');
+const dashboardUserName = document.getElementById('dashboardUserName');
+const dashboardUserRole = document.getElementById('dashboardUserRole');
+const welcomeBanner = document.getElementById('welcomeBanner');
+const successBanner = document.getElementById('successBanner');
+const welcomeTitle = document.getElementById('welcomeTitle');
+const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+const successSubtitle = document.getElementById('successSubtitle');
+const mainDashboard = document.getElementById('mainDashboard');
+
+// Stats elements
+const statInstitutes = document.getElementById('statInstitutes');
+const statYears = document.getElementById('statYears');
+const statProgrammes = document.getElementById('statProgrammes');
+const statClasses = document.getElementById('statClasses');
+const instituteChange = document.getElementById('instituteChange');
+const activeYearCount = document.getElementById('activeYearCount');
+const programmeChange = document.getElementById('programmeChange');
+const classChange = document.getElementById('classChange');
+
+// Quick action buttons
+const addInstituteBtn = document.getElementById('addInstituteBtn');
+const addAcademicYearBtn = document.getElementById('addAcademicYearBtn');
+const addProgrammeBtn = document.getElementById('addProgrammeBtn');
+const addClassBtn = document.getElementById('addClassBtn');
+const viewReportsBtn = document.getElementById('viewReportsBtn');
+const settingsBtn = document.getElementById('settingsBtn');
+
+// Module sections
+const instituteModule = document.getElementById('instituteModule');
+const academicModule = document.getElementById('academicModule');
+const programmeModule = document.getElementById('programmeModule');
+const classModule = document.getElementById('classModule');
+const reportsModule = document.getElementById('reportsModule');
+const settingsModule = document.getElementById('settingsModule');
+const principalSettingsModule = document.getElementById('principalSettingsModule');
+const databaseTablesSection = document.getElementById('databaseTablesSection');
+
+// Back buttons
+const backFromInstitute = document.getElementById('backFromInstitute');
+const backFromAcademic = document.getElementById('backFromAcademic');
+const backFromProgramme = document.getElementById('backFromProgramme');
+const backFromClass = document.getElementById('backFromClass');
+const backFromReports = document.getElementById('backFromReports');
+const backFromSettings = document.getElementById('backFromSettings');
+const backFromPrincipalSettings = document.getElementById('backFromPrincipalSettings');
+
+// Module cards
+const moduleCards = document.querySelectorAll('.module-card');
+
+// Database table elements
+const tableTabs = document.querySelectorAll('.table-tab');
+const tableContainers = document.querySelectorAll('.table-container');
+
+// Reports elements
+const exportPdfBtn = document.getElementById('exportPdfBtn');
+const exportExcelBtn = document.getElementById('exportExcelBtn');
+const reportTotalInstitutes = document.getElementById('reportTotalInstitutes');
+const reportTotalProgrammes = document.getElementById('reportTotalProgrammes');
+const reportTotalClasses = document.getElementById('reportTotalClasses');
+const reportActiveYears = document.getElementById('reportActiveYears');
+
+// Settings elements
+const settingsTabs = document.querySelectorAll('.settings-tab');
+const settingsPanels = document.querySelectorAll('.settings-panel');
+const profileName = document.getElementById('profileName');
+const profileEmail = document.getElementById('profileEmail');
+const profileRole = document.getElementById('profileRole');
+const profileMobile = document.getElementById('profileMobile');
+const saveProfileBtn = document.getElementById('saveProfileBtn');
+const currentPassword = document.getElementById('currentPassword');
+const newPassword = document.getElementById('newPassword');
+const confirmPassword = document.getElementById('confirmPassword');
+const changePasswordBtn = document.getElementById('changePasswordBtn');
+const currentUsername = document.getElementById('currentUsername');
+const newUsername = document.getElementById('newUsername');
+const confirmUsername = document.getElementById('confirmUsername');
+const changeUsernameBtn = document.getElementById('changeUsernameBtn');
+
+// Principal Management elements (Admin only)
+const principalProfileTab = document.getElementById('principalProfileTab');
+const principalSecurityTab = document.getElementById('principalSecurityTab');
+const principalProfilePanel = document.getElementById('principalProfilePanel');
+const principalSecurityPanel = document.getElementById('principalSecurityPanel');
+const principalDisplayName = document.getElementById('principalDisplayName');
+const principalRole = document.getElementById('principalRole');
+const principalEmail = document.getElementById('principalEmail');
+const principalMobile = document.getElementById('principalMobile');
+const savePrincipalBtn = document.getElementById('savePrincipalBtn');
+
+// Principal Security elements (Admin only)
+const principalCurrentUsername = document.getElementById('principalCurrentUsername');
+const principalNewUsername = document.getElementById('principalNewUsername');
+const principalConfirmUsername = document.getElementById('principalConfirmUsername');
+const changePrincipalUsernameBtn = document.getElementById('changePrincipalUsernameBtn');
+const principalCurrentPassword = document.getElementById('principalCurrentPassword');
+const principalNewPassword = document.getElementById('principalNewPassword');
+const principalConfirmPassword = document.getElementById('principalConfirmPassword');
+const changePrincipalPasswordBtn = document.getElementById('changePrincipalPasswordBtn');
+
+// Principal settings elements
+const principalSettingsTabs = document.querySelectorAll('.principal-settings-tab');
+const principalSettingsPanels = document.querySelectorAll('.principal-settings-panel');
+const principalSettingsName = document.getElementById('principalSettingsName');
+const principalSettingsEmail = document.getElementById('principalSettingsEmail');
+const principalSettingsRole = document.getElementById('principalSettingsRole');
+const principalSettingsMobile = document.getElementById('principalSettingsMobile');
+const savePrincipalSettingsBtn = document.getElementById('savePrincipalSettingsBtn');
+const principalCurrentUsernameField = document.getElementById('principalCurrentUsernameField');
+const principalNewUsernameField = document.getElementById('principalNewUsernameField');
+const principalConfirmUsernameField = document.getElementById('principalConfirmUsernameField');
+const changePrincipalUsernameBtnField = document.getElementById('changePrincipalUsernameBtnField');
+const principalCurrentPasswordField = document.getElementById('principalCurrentPasswordField');
+const principalNewPasswordField = document.getElementById('principalNewPasswordField');
+const principalConfirmPasswordField = document.getElementById('principalConfirmPasswordField');
+const changePrincipalPasswordBtnField = document.getElementById('changePrincipalPasswordBtnField');
+
+// Application state
+let currentUser = null;
+let toastTimeout = null;
+let currentRole = 'admin';
+let successBannerTimeout = null;
+let hasSubmitted = false;
+let charts = {};
+let profilePhotoUrl = null;
+let loginAnimationPlayed = false;
+
+// Scroll position tracking
+let dashboardScrollPosition = 0;
+    
