@@ -42,7 +42,15 @@
     <link rel="stylesheet" href="assets/CSS/style.css">
 
 </head>
-  <!-- Custom Alert Box -->
+  
+    
+    <!-- External JS -->
+    <script src="assets/JS/script.js"></script>
+   
+</body>
+</html>
+<body>
+    <!-- Custom Alert Box -->
     <div class="custom-alert-overlay" id="customAlertOverlay">
         <div class="custom-alert-box">
             <div class="custom-alert-icon" id="customAlertIcon">
@@ -416,7 +424,7 @@
                     </div>
                 </div>
                 
-                <!-- Class Table - UPDATED: Search box removed -->
+                <!-- Class Table - UPDATED: Class Name column removed -->
                 <div class="table-container" id="classTableContainer">
                     <!-- Search container removed -->
                     <div class="data-table-container">
@@ -427,11 +435,10 @@
                                         <th>Class ID</th>
                                         <th>Program ID</th>
                                         <th>Program Name</th>
-                                        <th>Class Name</th>
                                         <th>Class Code</th>
+                                        <!-- UPDATED: Changed from Academic Year ID to Academic Year Name -->
                                         <th>Academic Year</th>
-                                        <th>Semester</th>
-                                        <th>Max Students</th>
+                                        <th>TERM</th>
                                         <th>Status</th>
                                         <th>Created At</th>
                                         <th class="actions-header">Actions</th>
@@ -875,6 +882,7 @@
                     <div class="form-group">
                         <label class="form-label">Status</label>
                         <select class="search-input" id="instituteStatus">
+                            <option value="">Select Status</option>
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
                         </select>
@@ -920,8 +928,8 @@
             </div>
         </div>
         
-        <!-- Academic Year Master Module -->
-        <div class="dashboard-content module-section" id="academicModule">
+        <!-- Academic Year Master Module - UPDATED: Removed calendar icon and rearranged fields -->
+        <div class="dashboard-content module-section academic-form-adjustments" id="academicModule">
             <div class="module-header">
                 <button class="back-to-dashboard" id="backFromAcademic">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
@@ -948,22 +956,27 @@
                         <label class="form-label">End Date *</label>
                         <input type="date" class="search-input" id="endDate">
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Is Current Year</label>
                         <select class="search-input" id="isCurrentYear">
-                            <option value="No">No</option>
+                            <option value="">Choose Current Year</option>
                             <option value="Yes">Yes</option>
+                            <option value="No">No</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Status</label>
                         <select class="search-input" id="academicStatus">
+                            <option value="">Select Status</option>
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
                             <option value="Completed">Completed</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <!-- Empty column for layout -->
                     </div>
                 </div>
                 <div class="form-actions">
@@ -1006,7 +1019,7 @@
             </div>
         </div>
         
-        <!-- Program Master Module -->
+        <!-- Program Master Module - UPDATED: Default option added to Status dropdown -->
         <div class="dashboard-content module-section" id="programmeModule">
             <div class="module-header">
                 <button class="back-to-dashboard" id="backFromProgramme">
@@ -1022,7 +1035,14 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Program Name *</label>
-                        <input type="text" class="search-input" id="programmeName" placeholder="Enter program name">
+                        <select class="search-input" id="programmeName">
+                            <option value="">Select Program</option>
+                            <option value="Computer Engineering">Computer Engineering</option>
+                            <option value="Civil Engineering">Civil Engineering</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Electrical Engineering">Electrical Engineering</option>
+                            <option value="Electronic and Telecommunication Engineering">Electronic and Telecommunication Engineering</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Program Code *</label>
@@ -1043,8 +1063,10 @@
                     <div class="form-group">
                         <label class="form-label">Status</label>
                         <select class="search-input" id="programmeStatus">
+                            <option value="">Select Status</option>
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
+                            <option value="Completed">Completed</option>
                         </select>
                     </div>
                 </div>
@@ -1088,7 +1110,7 @@
             </div>
         </div>
         
-        <!-- Class Master Module -->
+        <!-- Class Master Module - UPDATED: Dependency logic implemented with term mapping -->
         <div class="dashboard-content module-section" id="classModule">
             <div class="module-header">
                 <button class="back-to-dashboard" id="backFromClass">
@@ -1103,44 +1125,43 @@
                 <h3 class="mb-4" id="classFormTitle">Add New Class</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Class Name *</label>
-                        <input type="text" class="search-input" id="className" placeholder="Enter class name">
+                        <label class="form-label">Program *</label>
+                        <select class="search-input" id="classProgramme">
+                            <option value="">Select Program</option>
+                            <!-- Options will be populated dynamically from programmes array - ONLY ACTIVE PROGRAMS -->
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Class Code *</label>
-                        <input type="text" class="search-input" id="classCode" placeholder="Enter class code">
+                        <select class="search-input" id="classCode" disabled>
+                            <option value="">Select Program first</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Program *</label>
-                        <select class="search-input" id="classProgramme">
-                            <!-- Options will be populated by JavaScript -->
-                        </select>
-                    </div>
                     <div class="form-group">
                         <label class="form-label">Academic Year *</label>
-                        <select class="search-input" id="classAcademicYear">
-                            <!-- Options will be populated by JavaScript -->
+                        <select class="search-input" id="classAcademicYear" disabled>
+                            <option value="">Select Class Code first</option>
+                            <!-- Options will be populated by JavaScript - ONLY ACTIVE ACADEMIC YEARS -->
                         </select>
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Semester *</label>
-                        <input type="text" class="search-input" id="classSemester" placeholder="e.g., Semester 1">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Max Students</label>
-                        <input type="number" class="search-input" id="classMaxStudents" placeholder="Enter maximum students" value="60" min="1" max="200">
+                        <label class="form-label">TERM *</label>
+                        <select class="search-input" id="classTerm" disabled>
+                            <option value="">Select Academic Year first</option>
+                            <!-- Options will be populated based on Class Code -->
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Status</label>
                         <select class="search-input" id="classStatus">
+                            <option value="">Select Status</option>
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
+                            <option value="Completed">Completed</option>
                         </select>
                     </div>
                 </div>
@@ -1155,7 +1176,7 @@
             </div>
             
             <div class="search-container">
-                <input type="text" class="search-input" id="searchClass" placeholder="Search classes by name, code, or program...">
+                <input type="text" class="search-input" id="searchClass" placeholder="Search classes by program or code...">
                 <button class="btn btn-primary" id="clearClassSearch">
                     <i class="fas fa-times"></i> Clear
                 </button>
@@ -1169,11 +1190,10 @@
                                 <th>Class ID</th>
                                 <th>Program ID</th>
                                 <th>Program Name</th>
-                                <th>Class Name</th>
                                 <th>Class Code</th>
+                                <!-- UPDATED: Changed from Academic Year ID to Academic Year Name -->
                                 <th>Academic Year</th>
-                                <th>Semester</th>
-                                <th>Max Students</th>
+                                <th>TERM</th>
                                 <th>Status</th>
                                 <th>Created At</th>
                                 <th class="actions-header">Actions</th>
