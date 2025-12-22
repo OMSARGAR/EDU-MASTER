@@ -36,6 +36,168 @@ let academicYears = [];
 let programmes = [];
 let classes = [];
 
+// Class Code options mapping - UPDATED FOR ALL PROGRAMS
+const classCodeOptions = {
+    'Computer Engineering': ['FY-CO', 'SY-CO', 'TY-CO'],
+    'Civil Engineering': ['FY-CIVIL', 'SY-CIVIL', 'TY-CIVIL'],
+    'Mechanical Engineering': ['FY-MECH', 'SY-MECH', 'TY-MECH'],
+    'Electrical Engineering': ['FY-EJ', 'SY-EJ', 'TY-EJ'],
+    'Electronic and Telecommunication Engineering': ['FY-ENTC', 'SY-ENTC', 'TY-ENTC']
+};
+
+// Term mapping based on class code - UPDATED FOR ALL PROGRAMS
+const termMapping = {
+    // Computer Engineering
+    'FY-CO': ['TERM 1', 'TERM 2'],
+    'SY-CO': ['TERM 3', 'TERM 4'],
+    'TY-CO': ['TERM 5', 'TERM 6'],
+    
+    // Civil Engineering
+    'FY-CIVIL': ['TERM 1', 'TERM 2'],
+    'SY-CIVIL': ['TERM 3', 'TERM 4'],
+    'TY-CIVIL': ['TERM 5', 'TERM 6'],
+    
+    // Mechanical Engineering
+    'FY-MECH': ['TERM 1', 'TERM 2'],
+    'SY-MECH': ['TERM 3', 'TERM 4'],
+    'TY-MECH': ['TERM 5', 'TERM 6'],
+    
+    // Electrical Engineering
+    'FY-EJ': ['TERM 1', 'TERM 2'],
+    'SY-EJ': ['TERM 3', 'TERM 4'],
+    'TY-EJ': ['TERM 5', 'TERM 6'],
+    
+    // Electronic and Telecommunication Engineering
+    'FY-ENTC': ['TERM 1', 'TERM 2'],
+    'SY-ENTC': ['TERM 3', 'TERM 4'],
+    'TY-ENTC': ['TERM 5', 'TERM 6']
+};
+
+// Helper function to check if all classes for a program are completed
+function areAllClassesCompletedForProgram(programmeId) {
+    // Get all classes for this program
+    const programClasses = classes.filter(cls => cls.programme_id === programmeId);
+    
+    // If no classes exist, return true (can be marked as completed)
+    if (programClasses.length === 0) return true;
+    
+    // Check if all classes have status "Completed"
+    return programClasses.every(cls => cls.status === 'Completed');
+}
+
+// Helper function to check if all classes for an academic year are completed
+function areAllClassesCompletedForAcademicYear(academicYearId) {
+    // Get all classes for this academic year
+    const yearClasses = classes.filter(cls => cls.academic_year === academicYearId);
+    
+    // If no classes exist, return true
+    if (yearClasses.length === 0) return true;
+    
+    // Check if all classes have status "Completed"
+    return yearClasses.every(cls => cls.status === 'Completed');
+}
+
+// Helper function to check if program name already exists
+function getProgramIdByName(programmeName) {
+    const program = programmes.find(prog => prog.name === programmeName);
+    return program ? program.id : null;
+}
+
+// Helper function to generate unique Program ID for duplicate names
+function generateUniqueProgramId(programmeName) {
+    // Get all programs with the same name
+    const sameNamePrograms = programmes.filter(prog => 
+        prog.name.toLowerCase() === programmeName.toLowerCase()
+    );
+    
+    if (sameNamePrograms.length === 0) {
+        // No existing program with this name, generate normal ID
+        return `PID${String(programmes.length + 1).padStart(3, '0')}`;
+    }
+    
+    // Find the highest number suffix
+    let maxSuffix = 0;
+    sameNamePrograms.forEach(prog => {
+        // Extract number from ID (e.g., "PID001" -> 1)
+        const match = prog.id.match(/PID(\d+)/);
+        if (match) {
+            const num = parseInt(match[1]);
+            if (num > maxSuffix) maxSuffix = num;
+        }
+    });
+    
+    // Generate new ID with next available number
+    return `PID${String(maxSuffix + 1).padStart(3, '0')}`;
+}
+
+// Helper function to check if a program has any related classes
+function hasRelatedClasses(programmeId) {
+    return classes.some(cls => cls.programme_id === programmeId);
+}
+
+// Helper function to check if an academic year has any related classes
+function hasRelatedAcademicYearClasses(academicYearId) {
+    return classes.some(cls => cls.academic_year === academicYearId);
+}
+
+// Date format function - NEW: Convert date to DD-MM-YYYY format
+function formatDateToDDMMYYYY(dateStr) {
+    if (!dateStr) return '';
+    
+    // Check if date is in YYYY-MM-DD format (from date input)
+    if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
+        const [year, month, day] = dateStr.split('-');
+        return `${day}-${month}-${year}`;
+    }
+    
+    // Check if date is already in DD-MM-YYYY format
+    if (dateStr.includes('-') && dateStr.split('-')[0].length === 2) {
+        return dateStr;
+    }
+    
+    // Try to parse the date
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+        return dateStr; // Return original if can't parse
+    }
+    
+    // Format as DD-MM-YYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}-${month}-${year}`;
+}
+
+// Convert DD-MM-YYYY to YYYY-MM-DD for date inputs
+function formatDateToYYYYMMDD(dateStr) {
+    if (!dateStr) return '';
+    
+    // Check if already in YYYY-MM-DD format
+    if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
+        return dateStr;
+    }
+    
+    // Parse DD-MM-YYYY format
+    const parts = dateStr.split('-');
+    if (parts.length === 3 && parts[0].length === 2) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    
+    return dateStr;
+}
+
+// Format date for display in tables - NEW
+function formatDateForDisplay(dateStr) {
+    return formatDateToDDMMYYYY(dateStr);
+}
+
+// Helper function to get academic year name by ID
+function getAcademicYearNameById(id) {
+    const year = academicYears.find(year => year.id === id);
+    return year ? year.name : id; // fallback to ID if not found
+}
+
 // User profile photos storage
 let userProfilePhotos = {
     admin: null,
@@ -229,6 +391,13 @@ let loginAnimationPlayed = false;
 
 // Scroll position tracking
 let dashboardScrollPosition = 0;
+
+// NEW: Store previous academic year dropdown values for validation
+let previousIsCurrentYearValue = '';
+let previousAcademicStatusValue = '';
+
+// NEW: Store previous programme status dropdown value for validation
+let previousProgrammeStatusValue = '';
 
 // Custom Alert System Functions
 function showCustomAlert(message, title = 'Alert', type = 'info') {
@@ -865,6 +1034,251 @@ function setupEventListeners() {
     document.getElementById('searchClass').addEventListener('input', filterClasses);
     document.getElementById('clearClassSearch').addEventListener('click', clearClassSearch);
     
+    // UPDATED: Class Programme dropdown change event with new logic
+    document.getElementById('classProgramme').addEventListener('change', function() {
+        const classCodeSelect = document.getElementById('classCode');
+        const academicYearSelect = document.getElementById('classAcademicYear');
+        const termSelect = document.getElementById('classTerm');
+        
+        if (this.value) {
+            // Get the selected program
+            const selectedProgram = programmes.find(prog => prog.id === this.value);
+            
+            if (selectedProgram) {
+                // Enable Class Code dropdown and populate with program-specific options
+                classCodeSelect.disabled = false;
+                updateClassCodeDropdown();
+                
+                // NEW: Enable Academic Year dropdown and populate with active academic years
+                academicYearSelect.disabled = false;
+                updateAcademicYearDropdown();
+                
+                // Disable and reset Term dropdown (waiting for Class Code selection)
+                termSelect.disabled = true;
+                termSelect.innerHTML = '<option value="">Select Class Code first</option>';
+                termSelect.value = '';
+                
+                // Make fields visible by enabling them
+                classCodeSelect.style.opacity = '1';
+                academicYearSelect.style.opacity = '1';
+                termSelect.style.opacity = '0.5'; // Still disabled
+            }
+        } else {
+            // Disable all dependent dropdowns and reset them
+            classCodeSelect.disabled = true;
+            classCodeSelect.innerHTML = '<option value="">Select Program first</option>';
+            classCodeSelect.value = '';
+            classCodeSelect.style.opacity = '0.5';
+            
+            academicYearSelect.disabled = true;
+            academicYearSelect.innerHTML = '<option value="">Select Program first</option>';
+            academicYearSelect.value = '';
+            academicYearSelect.style.opacity = '0.5';
+            
+            termSelect.disabled = true;
+            termSelect.innerHTML = '<option value="">Select Program first</option>';
+            termSelect.value = '';
+            termSelect.style.opacity = '0.5';
+        }
+    });
+    
+    // UPDATED: Class Code dropdown change event with new term mapping logic
+    document.getElementById('classCode').addEventListener('change', function() {
+        const termSelect = document.getElementById('classTerm');
+        
+        if (this.value) {
+            // Enable Term dropdown and populate with term options based on selected Class Code
+            termSelect.disabled = false;
+            updateTermDropdown(this.value);
+            termSelect.style.opacity = '1';
+        } else {
+            // Disable Term dropdown
+            termSelect.disabled = true;
+            termSelect.innerHTML = '<option value="">Select Class Code first</option>';
+            termSelect.value = '';
+            termSelect.style.opacity = '0.5';
+        }
+    });
+    
+    // NEW: Academic Year "Is Current Year" dropdown validation
+    document.getElementById('isCurrentYear').addEventListener('change', function() {
+        const selectedValue = this.value;
+        const statusValue = document.getElementById('academicStatus').value;
+        
+        // Store previous value for revert if validation fails
+        previousIsCurrentYearValue = this.getAttribute('data-previous-value') || '';
+        
+        // Check if user is trying to select "No"
+        if (selectedValue === 'No') {
+            // Check if status is "Inactive" or "Completed" (or trying to set it)
+            if (statusValue === 'Inactive' || statusValue === 'Completed') {
+                // Check if editing an existing academic year
+                if (editingAcademicId) {
+                    // Check if all related classes are completed
+                    if (!areAllClassesCompletedForAcademicYear(editingAcademicId)) {
+                        showCustomAlert(
+                            'Cannot set "Is Current Year" to "No" with Status "Inactive" or "Completed" because there are classes in this academic year that are not completed. All related classes in Class Master must have Status "Completed".',
+                            'Validation Error',
+                            'error'
+                        );
+                        // Revert to previous value
+                        this.value = previousIsCurrentYearValue;
+                        return;
+                    }
+                } else {
+                    // For new academic year (not editing), check if there are any classes in ANY academic year
+                    // that are not completed (general validation)
+                    const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
+                    if (hasIncompleteClasses) {
+                        showCustomAlert(
+                            'Cannot set "Is Current Year" to "No" with Status "Inactive" or "Completed" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".',
+                            'Validation Error',
+                            'error'
+                        );
+                        // Revert to previous value
+                        this.value = previousIsCurrentYearValue;
+                        return;
+                    }
+                }
+            }
+        }
+        
+        // Store the new value as previous value
+        this.setAttribute('data-previous-value', selectedValue);
+    });
+    
+    // NEW: Academic Year "Status" dropdown validation - UPDATED WITH REQUIREMENTS
+    document.getElementById('academicStatus').addEventListener('change', function() {
+        const selectedValue = this.value;
+        const isCurrentYearValue = document.getElementById('isCurrentYear').value;
+        
+        // Store previous value for revert if validation fails
+        previousAcademicStatusValue = this.getAttribute('data-previous-value') || '';
+        
+        // Check if user is trying to select "Inactive" or "Completed"
+        if (selectedValue === 'Inactive' || selectedValue === 'Completed') {
+            // Case 1: When Is Current Year is "No"
+            if (isCurrentYearValue === 'No') {
+                // Check if editing an existing academic year
+                if (editingAcademicId) {
+                    // Check if all related classes are completed
+                    if (!areAllClassesCompletedForAcademicYear(editingAcademicId)) {
+                        showCustomAlert(
+                            `Cannot set Status to "${selectedValue}" when "Is Current Year" is "No" because there are classes in this academic year that are not completed. All related classes in Class Master must have Status "Completed".`,
+                            'Validation Error',
+                            'error'
+                        );
+                        // Revert to previous value
+                        this.value = previousAcademicStatusValue;
+                        return;
+                    }
+                } else {
+                    // For new academic year (not editing), check if there are any classes in ANY academic year
+                    // that are not completed (general validation)
+                    const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
+                    if (hasIncompleteClasses) {
+                        showCustomAlert(
+                            `Cannot set Status to "${selectedValue}" when "Is Current Year" is "No" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".`,
+                            'Validation Error',
+                            'error'
+                        );
+                        // Revert to previous value
+                        this.value = previousAcademicStatusValue;
+                        return;
+                    }
+                }
+            }
+            // Case 2: When Is Current Year is "Yes" - Allow "Inactive" or "Completed" with validation
+            else if (isCurrentYearValue === 'Yes') {
+                // Check if editing an existing academic year
+                if (editingAcademicId) {
+                    // Check if all related classes are completed
+                    if (!areAllClassesCompletedForAcademicYear(editingAcademicId)) {
+                        showCustomAlert(
+                            `Cannot set Status to "${selectedValue}" because there are classes in this academic year that are not completed. All related classes in Class Master must have Status "Completed".`,
+                            'Validation Error',
+                            'error'
+                        );
+                        // Revert to previous value
+                        this.value = previousAcademicStatusValue;
+                        return;
+                    }
+                } else {
+                    // For new academic year (not editing), check if there are any classes in ANY academic year
+                    // that are not completed (general validation)
+                    const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
+                    if (hasIncompleteClasses) {
+                        showCustomAlert(
+                            `Cannot set Status to "${selectedValue}" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".`,
+                            'Validation Error',
+                            'error'
+                        );
+                        // Revert to previous value
+                        this.value = previousAcademicStatusValue;
+                        return;
+                    }
+                }
+            }
+            // Case 3: When Is Current Year is not selected yet (empty)
+            else {
+                showCustomAlert(
+                    'Please select "Is Current Year" option first before setting Status to "Inactive" or "Completed".',
+                    'Validation Error',
+                    'error'
+                );
+                // Revert to previous value
+                this.value = previousAcademicStatusValue;
+                return;
+            }
+        }
+        
+        // Store the new value as previous value
+        this.setAttribute('data-previous-value', selectedValue);
+    });
+    
+    // NEW: Programme "Status" dropdown validation - UPDATED WITH REQUIREMENTS
+    document.getElementById('programmeStatus').addEventListener('change', function() {
+        const selectedValue = this.value;
+        
+        // Store previous value for revert if validation fails
+        previousProgrammeStatusValue = this.getAttribute('data-previous-value') || '';
+        
+        // Check if user is trying to select "Inactive" or "Completed"
+        if (selectedValue === 'Inactive' || selectedValue === 'Completed') {
+            // Check if editing an existing program
+            if (editingProgrammeId) {
+                // Check if all related classes are completed
+                if (!areAllClassesCompletedForProgram(editingProgrammeId)) {
+                    showCustomAlert(
+                        `Cannot set Status to "${selectedValue}" because there are classes in this program that are not completed. All related classes in Class Master must have Status "Completed".`,
+                        'Validation Error',
+                        'error'
+                    );
+                    // Revert to previous value
+                    this.value = previousProgrammeStatusValue;
+                    return;
+                }
+            } else {
+                // For new program (not editing), check if there are any classes in ANY program
+                // that are not completed (general validation for new programs)
+                const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
+                if (hasIncompleteClasses) {
+                    showCustomAlert(
+                        `Cannot set Status to "${selectedValue}" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".`,
+                        'Validation Error',
+                        'error'
+                    );
+                    // Revert to previous value
+                    this.value = previousProgrammeStatusValue;
+                    return;
+                }
+            }
+        }
+        
+        // Store the new value as previous value
+        this.setAttribute('data-previous-value', selectedValue);
+    });
+    
     // Input validation on blur
     usernameInput.addEventListener('blur', function() {
         if (hasSubmitted) {
@@ -909,6 +1323,152 @@ function setupEventListeners() {
             hideCustomAlert();
         }
     });
+}
+
+// UPDATED: Update Term dropdown based on selected Class Code
+function updateTermDropdown(classCode) {
+    const termSelect = document.getElementById('classTerm');
+    const currentValue = termSelect.value;
+    
+    // Clear existing options
+    termSelect.innerHTML = '<option value="">Select Term</option>';
+    
+    if (!classCode) {
+        termSelect.disabled = true;
+        return;
+    }
+    
+    // Get terms from mapping based on Class Code
+    const terms = termMapping[classCode] || [];
+    
+    // Add terms to dropdown based on the mapping
+    terms.forEach(term => {
+        const option = document.createElement('option');
+        option.value = term;
+        option.textContent = term;
+        termSelect.appendChild(option);
+    });
+    
+    // Restore previous selection if it still exists
+    if (currentValue && terms.includes(currentValue)) {
+        termSelect.value = currentValue;
+    }
+    
+    // Enable the dropdown
+    termSelect.disabled = false;
+}
+
+// UPDATED: Update Class Code dropdown based on selected Programme
+function updateClassCodeDropdown() {
+    const programmeSelect = document.getElementById('classProgramme');
+    const classCodeSelect = document.getElementById('classCode');
+    const selectedProgrammeId = programmeSelect.value;
+    
+    // Clear existing options
+    classCodeSelect.innerHTML = '';
+    
+    if (!selectedProgrammeId) {
+        classCodeSelect.disabled = true;
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Select Program first';
+        classCodeSelect.appendChild(option);
+        return;
+    }
+    
+    // Get the selected program object
+    const selectedProgramme = programmes.find(prog => prog.id === selectedProgrammeId);
+    
+    if (!selectedProgramme) {
+        classCodeSelect.disabled = true;
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Program not found';
+        classCodeSelect.appendChild(option);
+        return;
+    }
+    
+    // Enable dropdown
+    classCodeSelect.disabled = false;
+    
+    // Add default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Select Class Code';
+    classCodeSelect.appendChild(defaultOption);
+    
+    // Add program-specific options from classCodeOptions mapping
+    const programName = selectedProgramme.name;
+    if (classCodeOptions[programName]) {
+        classCodeOptions[programName].forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = code;
+            classCodeSelect.appendChild(option);
+        });
+    } else {
+        // If program not in mapping, show generic options
+        const genericOptions = ['FY', 'SY', 'TY'];
+        genericOptions.forEach(code => {
+            const option = document.createElement('option');
+            option.value = `${code}-${selectedProgramme.code}`;
+            option.textContent = `${code}-${selectedProgramme.code}`;
+            classCodeSelect.appendChild(option);
+        });
+    }
+}
+
+// Update Program dropdown in Class Master form - Show only ACTIVE program IDs (not Completed)
+function updateProgrammeDropdown() {
+    const programmeSelect = document.getElementById('classProgramme');
+    const currentValue = programmeSelect.value;
+    
+    // Clear existing options except the first one
+    programmeSelect.innerHTML = '<option value="">Select Program</option>';
+    
+    // Get unique ACTIVE program IDs from programmes array (filter out Completed programs)
+    const activePrograms = programmes.filter(programme => 
+        programme.status !== 'Completed' && programme.status !== 'Inactive'
+    );
+    
+    // Add only ACTIVE programs to dropdown
+    activePrograms.forEach(programme => {
+        const option = document.createElement('option');
+        option.value = programme.id; // Use program ID as value
+        option.textContent = `${programme.name} (${programme.id})`; // Show name and ID
+        programmeSelect.appendChild(option);
+    });
+    
+    // Restore the previously selected value if it still exists
+    if (currentValue && activePrograms.some(programme => programme.id === currentValue)) {
+        programmeSelect.value = currentValue;
+    }
+}
+
+// UPDATED: Update Academic Year dropdown - Show only Active AND Current academic years
+function updateAcademicYearDropdown() {
+    const dropdown = document.getElementById('classAcademicYear');
+    const currentValue = dropdown.value;
+    
+    // Clear existing options except the first one
+    dropdown.innerHTML = '<option value="">Select Academic Year</option>';
+    
+    // NEW: Filter academic years - only Active AND Is Current = "Yes"
+    const availableAcademicYears = academicYears.filter(year => 
+        year.status === 'Active' && year.is_current === 'Yes'
+    );
+    
+    availableAcademicYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year.id;
+        option.textContent = year.name; // Show name, not ID
+        dropdown.appendChild(option);
+    });
+    
+    // Restore previous selection if it still exists
+    if (currentValue && availableAcademicYears.some(year => year.id === currentValue)) {
+        dropdown.value = currentValue;
+    }
 }
 
 // Save dashboard scroll position
@@ -1110,6 +1670,34 @@ function updateDashboard() {
     if (principalCurrentUsername) {
         principalCurrentUsername.value = '';
     }
+    
+    // Update programme dropdown in class master
+    updateProgrammeDropdown();
+    
+    // UPDATED: Initialize Class Master form fields visibility
+    initializeClassFormVisibility();
+}
+
+// UPDATED: Initialize Class Master form fields visibility
+function initializeClassFormVisibility() {
+    const classCodeSelect = document.getElementById('classCode');
+    const academicYearSelect = document.getElementById('classAcademicYear');
+    const termSelect = document.getElementById('classTerm');
+    
+    // Initially, all dependent fields should be disabled and less visible
+    classCodeSelect.disabled = true;
+    academicYearSelect.disabled = true;
+    termSelect.disabled = true;
+    
+    // Set initial opacity to indicate disabled state
+    classCodeSelect.style.opacity = '0.5';
+    academicYearSelect.style.opacity = '0.5';
+    termSelect.style.opacity = '0.5';
+    
+    // Reset dropdowns
+    classCodeSelect.innerHTML = '<option value="">Select Program first</option>';
+    academicYearSelect.innerHTML = '<option value="">Select Program first</option>';
+    termSelect.innerHTML = '<option value="">Select Program first</option>';
 }
 
 function updateUserAvatar() {
@@ -1157,8 +1745,10 @@ function updateDashboardStats() {
     renderClassTable();
     
     // Update dropdowns
-    updateProgrammeDropdown();
     updateAcademicYearDropdown();
+    
+    // Update programme dropdown in class master
+    updateProgrammeDropdown();
 }
 
 function resetUIBeforeApplyingRestrictions() {
@@ -1297,6 +1887,8 @@ function showModule(moduleName) {
         case 'class':
             classModule.style.display = 'block';
             renderClassTable();
+            // UPDATED: Initialize form visibility when showing class module
+            initializeClassFormVisibility();
             break;
     }
     
@@ -1471,8 +2063,8 @@ function renderDatabaseInstituteTable() {
             <td>${institute.code}</td>
             <td>${institute.address}</td>
             <td><span class="${institute.status === 'Active' ? 'status-active' : 'status-inactive'}">${institute.status}</span></td>
-            <td>${institute.created_at}</td>
-            <td>${institute.updated_at}</td>
+            <td>${formatDateForDisplay(institute.created_at)}</td>
+            <td>${formatDateForDisplay(institute.updated_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-institute-db" data-id="${institute.id}">
@@ -1536,14 +2128,16 @@ function renderDatabaseAcademicTable() {
     
     academicYears.forEach(year => {
         const row = document.createElement('tr');
+        const statusClass = year.status === 'Active' ? 'status-active' : 
+                           year.status === 'Completed' ? 'status-completed' : 'status-inactive';
         row.innerHTML = `
             <td>${year.id}</td>
             <td>${year.name}</td>
-            <td>${year.start_date}</td>
-            <td>${year.end_date}</td>
+            <td>${formatDateForDisplay(year.start_date)}</td>
+            <td>${formatDateForDisplay(year.end_date)}</td>
             <td><span class="${year.is_current === 'Yes' ? 'status-active' : 'status-inactive'}">${year.is_current}</span></td>
-            <td><span class="${year.status === 'Active' ? 'status-active' : 'status-inactive'}">${year.status}</span></td>
-            <td>${year.created_at}</td>
+            <td><span class="${statusClass}">${year.status}</span></td>
+            <td>${formatDateForDisplay(year.created_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-academic-db" data-id="${year.id}">
@@ -1595,6 +2189,8 @@ function renderDatabaseProgrammeTable() {
     tbody.innerHTML = '';
     
     programmes.forEach(programme => {
+        const statusClass = programme.status === 'Active' ? 'status-active' : 
+                          programme.status === 'Completed' ? 'status-completed' : 'status-inactive';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${programme.id}</td>
@@ -1602,8 +2198,8 @@ function renderDatabaseProgrammeTable() {
             <td>${programme.name}</td>
             <td>${programme.duration}</td>
             <td>${programme.description}</td>
-            <td><span class="${programme.status === 'Active' ? 'status-active' : 'status-inactive'}">${programme.status}</span></td>
-            <td>${programme.created_at}</td>
+            <td><span class="${statusClass}">${programme.status}</span></td>
+            <td>${formatDateForDisplay(programme.created_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-programme-db" data-id="${programme.id}">
@@ -1650,23 +2246,25 @@ function renderDatabaseProgrammeTable() {
     }
 }
 
+// UPDATED: Render Database Class Table to show Academic Year Name instead of ID
 function renderDatabaseClassTable() {
     const tbody = document.getElementById('databaseClassTableBody');
     tbody.innerHTML = '';
     
     classes.forEach(cls => {
+        const statusClass = cls.status === 'Active' ? 'status-active' : 
+                          cls.status === 'Completed' ? 'status-completed' : 'status-inactive';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${cls.id}</td>
             <td>${cls.programme_id}</td>
             <td>${cls.programme_name}</td>
-            <td>${cls.class_name}</td>
             <td>${cls.class_code}</td>
-            <td>${cls.academic_year}</td>
-            <td>${cls.semester}</td>
-            <td>${cls.max_students}</td>
-            <td><span class="${cls.status === 'Active' ? 'status-active' : 'status-inactive'}">${cls.status}</span></td>
-            <td>${cls.created_at}</td>
+            <!-- UPDATED: Show Academic Year Name instead of ID -->
+            <td>${getAcademicYearNameById(cls.academic_year)}</td>
+            <td>${cls.term}</td>
+            <td><span class="${statusClass}">${cls.status}</span></td>
+            <td>${formatDateForDisplay(cls.created_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-class-db" data-id="${cls.id}">
@@ -1819,19 +2417,28 @@ function initializeCharts() {
         }
     });
     
-    // Program Statistics Chart (Bar Chart)
+    // Program Statistics Chart (Bar Chart) - UPDATED: Ensure zero values when no data
     const programmeCtx = document.getElementById('programmeChart').getContext('2d');
-    const programmeNames = programmes.map(p => p.name);
-    const programmeStatusCounts = programmes.map(p => p.status === 'Active' ? 1 : 0);
+    
+    // Count programs by status - always show all three categories
+    const programmeCounts = {
+        'Active': programmes.filter(p => p.status === 'Active').length,
+        'Completed': programmes.filter(p => p.status === 'Completed').length,
+        'Inactive': programmes.filter(p => p.status === 'Inactive').length
+    };
     
     charts.programmeChart = new Chart(programmeCtx, {
         type: 'bar',
         data: {
-            labels: programmeNames,
+            labels: ['Active', 'Completed', 'Inactive'],
             datasets: [{
-                label: 'Active Status',
-                data: programmeStatusCounts,
-                backgroundColor: '#4f46e5',
+                label: 'Number of Programs',
+                data: [
+                    programmeCounts.Active,
+                    programmeCounts.Completed,
+                    programmeCounts.Inactive
+                ],
+                backgroundColor: ['#4f46e5', '#f59e0b', '#ef4444'],
                 borderWidth: 1
             }]
         },
@@ -1842,7 +2449,12 @@ function initializeCharts() {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        stepSize: 1
+                        stepSize: 1,
+                        callback: function(value) {
+                            if (value % 1 === 0) {
+                                return value;
+                            }
+                        }
                     }
                 }
             },
@@ -1852,7 +2464,7 @@ function initializeCharts() {
                 },
                 title: {
                     display: true,
-                    text: 'Program Active Status'
+                    text: 'Program Statistics'
                 }
             }
         }
@@ -1896,7 +2508,7 @@ function initializeCharts() {
     const classDistributionCtx = document.getElementById('classDistributionChart').getContext('2d');
     const programmeClassCounts = {};
     programmes.forEach(programme => {
-        const count = classes.filter(c => c.programme_id === programme.id).length;
+        const count = classes.filter(c => c.programme_name === programme.name).length;
         programmeClassCounts[programme.name] = count;
     });
     
@@ -1984,8 +2596,8 @@ function exportToExcel() {
         'Institute Code': inst.code,
         'Address': inst.address,
         'Status': inst.status,
-        'Created At': inst.created_at,
-        'Updated At': inst.updated_at
+        'Created At': formatDateForDisplay(inst.created_at),
+        'Updated At': formatDateForDisplay(inst.updated_at)
     }));
     const instituteWs = XLSX.utils.json_to_sheet(instituteData);
     XLSX.utils.book_append_sheet(wb, instituteWs, 'Institutes');
@@ -1994,11 +2606,11 @@ function exportToExcel() {
     const academicData = academicYears.map(year => ({
         'Year ID': year.id,
         'Year Name': year.name,
-        'Start Date': year.start_date,
-        'End Date': year.end_date,
+        'Start Date': formatDateForDisplay(year.start_date),
+        'End Date': formatDateForDisplay(year.end_date),
         'Is Current': year.is_current,
         'Status': year.status,
-        'Created At': year.created_at
+        'Created At': formatDateForDisplay(year.created_at)
     }));
     const academicWs = XLSX.utils.json_to_sheet(academicData);
     XLSX.utils.book_append_sheet(wb, academicWs, 'Academic Years');
@@ -2011,23 +2623,21 @@ function exportToExcel() {
         'Duration (Years)': prog.duration,
         'Description': prog.description,
         'Status': prog.status,
-        'Created At': prog.created_at
+        'Created At': formatDateForDisplay(prog.created_at)
     }));
     const programmeWs = XLSX.utils.json_to_sheet(programmeData);
     XLSX.utils.book_append_sheet(wb, programmeWs, 'Programs');
     
-    // Class data
+    // Class data - UPDATED: Show Academic Year Name instead of ID
     const classData = classes.map(cls => ({
         'Class ID': cls.id,
         'Program ID': cls.programme_id,
         'Program Name': cls.programme_name,
-        'Class Name': cls.class_name,
         'Class Code': cls.class_code,
-        'Academic Year': cls.academic_year,
-        'Semester': cls.semester,
-        'Max Students': cls.max_students,
+        'Academic Year': getAcademicYearNameById(cls.academic_year), // UPDATED: Show name instead of ID
+        'TERM': cls.term,
         'Status': cls.status,
-        'Created At': cls.created_at
+        'Created At': formatDateForDisplay(cls.created_at)
     }));
     const classWs = XLSX.utils.json_to_sheet(classData);
     XLSX.utils.book_append_sheet(wb, classWs, 'Classes');
@@ -2057,7 +2667,7 @@ function updateProfileSettings() {
     profileRole.value = currentUser.roleName;
     profileMobile.value = currentUser.mobile || '';
     
-    // Update current username in security panel (set to empty as per requirement)
+    // Pre-fill current username in security panel (set to empty as per requirement)
     if (currentUsername) {
         currentUsername.value = '';
     }
@@ -2514,7 +3124,7 @@ function loadProfilePhotos() {
     }
 }
 
-// Institute Master Functions
+// Institute Master Functions - UPDATED: ID format changed to IID001, IID002, etc.
 function showAddInstituteForm() {
     document.getElementById('instituteFormTitle').textContent = 'Add New Institute';
     document.getElementById('saveInstituteBtn').innerHTML = '<i class="fas fa-save"></i> Save Institute';
@@ -2540,12 +3150,12 @@ function saveInstitute() {
     const status = document.getElementById('instituteStatus').value;
     
     // Validation
-    if (!name || !code || !address) {
+    if (!name || !code || !address || !status) {
         showToast('Validation Error', 'Please fill in all required fields', 'error');
         return;
     }
     
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
     
     if (editingInstituteId) {
         // Update existing institute
@@ -2562,9 +3172,9 @@ function saveInstitute() {
             showToast('Success', 'Institute updated successfully', 'success');
         }
     } else {
-        // Add new institute
+        // Add new institute - UPDATED: ID format changed to IID001, IID002, etc.
         const newInstitute = {
-            id: `NIST${String(institutes.length + 1).padStart(3, '0')}`,
+            id: `IID${String(institutes.length + 1).padStart(3, '0')}`,
             name,
             code,
             address,
@@ -2587,7 +3197,7 @@ function resetInstituteForm() {
     document.getElementById('instituteName').value = '';
     document.getElementById('instituteCode').value = '';
     document.getElementById('instituteAddress').value = '';
-    document.getElementById('instituteStatus').value = 'Active';
+    document.getElementById('instituteStatus').value = '';
     editingInstituteId = null;
 }
 
@@ -2609,8 +3219,8 @@ function renderInstituteTable() {
             <td>${institute.code}</td>
             <td>${institute.address}</td>
             <td><span class="${institute.status === 'Active' ? 'status-active' : 'status-inactive'}">${institute.status}</span></td>
-            <td>${institute.created_at}</td>
-            <td>${institute.updated_at}</td>
+            <td>${formatDateForDisplay(institute.created_at)}</td>
+            <td>${formatDateForDisplay(institute.updated_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-institute" data-id="${institute.id}">
@@ -2687,8 +3297,8 @@ function filterInstitutes() {
             <td>${institute.code}</td>
             <td>${institute.address}</td>
             <td><span class="${institute.status === 'Active' ? 'status-active' : 'status-inactive'}">${institute.status}</span></td>
-            <td>${institute.created_at}</td>
-            <td>${institute.updated_at}</td>
+            <td>${formatDateForDisplay(institute.created_at)}</td>
+            <td>${formatDateForDisplay(institute.updated_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-institute" data-id="${institute.id}">
@@ -2729,12 +3339,18 @@ function clearInstituteSearch() {
     renderInstituteTable();
 }
 
-// Academic Year Functions
+// Academic Year Functions - UPDATED: Removed calendar icon and rearranged fields
 function showAddAcademicForm() {
     document.getElementById('academicFormTitle').textContent = 'Add New Academic Year';
     document.getElementById('saveAcademicBtn').innerHTML = '<i class="fas fa-save"></i> Save Academic Year';
     editingAcademicId = null;
     resetAcademicForm();
+    
+    // Reset previous value storage for dropdowns
+    previousIsCurrentYearValue = '';
+    previousAcademicStatusValue = '';
+    document.getElementById('isCurrentYear').setAttribute('data-previous-value', '');
+    document.getElementById('academicStatus').setAttribute('data-previous-value', '');
 }
 
 function showEditAcademicForm(academic) {
@@ -2743,35 +3359,100 @@ function showEditAcademicForm(academic) {
     editingAcademicId = academic.id;
     
     document.getElementById('yearName').value = academic.name;
-    document.getElementById('startDate').value = academic.start_date;
-    document.getElementById('endDate').value = academic.end_date;
-    document.getElementById('isCurrentYear').value = academic.is_current || 'No';
+    document.getElementById('startDate').value = formatDateToYYYYMMDD(academic.start_date);
+    document.getElementById('endDate').value = formatDateToYYYYMMDD(academic.end_date);
+    document.getElementById('isCurrentYear').value = academic.is_current || '';
     document.getElementById('academicStatus').value = academic.status;
+    
+    // Store previous values for validation
+    previousIsCurrentYearValue = academic.is_current || '';
+    previousAcademicStatusValue = academic.status || '';
+    document.getElementById('isCurrentYear').setAttribute('data-previous-value', previousIsCurrentYearValue);
+    document.getElementById('academicStatus').setAttribute('data-previous-value', previousAcademicStatusValue);
 }
 
+// UPDATED: Save Academic Year function with all required validations
 function saveAcademicYear() {
     const name = document.getElementById('yearName').value.trim();
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
+    const startDateInput = document.getElementById('startDate').value;
+    const endDateInput = document.getElementById('endDate').value;
     const isCurrent = document.getElementById('isCurrentYear').value;
     const status = document.getElementById('academicStatus').value;
     
     // Validation
-    if (!name || !startDate || !endDate) {
-        showToast('Validation Error', 'Year name, start date, and end date are required', 'error');
+    if (!name || !startDateInput || !endDateInput || !isCurrent || !status) {
+        showToast('Validation Error', 'Please fill in all required fields', 'error');
         return;
     }
     
-    // If setting as current year, unset other current years
-    if (isCurrent === 'Yes') {
-        academicYears.forEach(year => {
-            if (year.id !== editingAcademicId) {
-                year.is_current = 'No';
+    // Convert to DD-MM-YYYY format for storage
+    const startDate = formatDateToDDMMYYYY(startDateInput);
+    const endDate = formatDateToDDMMYYYY(endDateInput);
+    
+    // Get the original academic year record if editing
+    let originalAcademicYear = null;
+    if (editingAcademicId) {
+        originalAcademicYear = academicYears.find(year => year.id === editingAcademicId);
+    }
+    
+    // VALIDATION 1: Check if changing status to Inactive or Completed
+    if (status === 'Inactive' || status === 'Completed') {
+        // Check if academic year has related classes in Class Master
+        if (editingAcademicId && hasRelatedAcademicYearClasses(editingAcademicId)) {
+            // Check if all related classes are completed
+            if (!areAllClassesCompletedForAcademicYear(editingAcademicId)) {
+                showCustomAlert(
+                    `Cannot set status to "${status}" because there are classes in this academic year that are not completed. All related classes in Class Master must have Status "Completed".`,
+                    'Validation Error',
+                    'error'
+                );
+                return;
             }
+        } else if (!editingAcademicId) {
+            // For new academic year (not editing), check if there are any classes in ANY academic year
+            // that are not completed (general validation)
+            const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
+            if (hasIncompleteClasses) {
+                showCustomAlert(
+                    `Cannot set status to "${status}" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".`,
+                    'Validation Error',
+                    'error'
+                );
+                return;
+            }
+        }
+    }
+    
+    // VALIDATION 2: Check if setting Is Current Year = Yes while another academic year is already marked as Current
+    if (isCurrent === 'Yes') {
+        // Check if there is another academic year already marked as current
+        const otherCurrentYear = academicYears.find(year => 
+            year.is_current === 'Yes' && 
+            (!editingAcademicId || year.id !== editingAcademicId)
+        );
+        
+        if (otherCurrentYear) {
+            showCustomAlert(
+                `Cannot set "${name}" as current year. "${otherCurrentYear.name}" is already marked as the current academic year.`,
+                'Validation Error',
+                'error'
+            );
+            return;
+        }
+    }
+    
+    // VALIDATION 3: For new academic years, maintain existing behavior
+    // When adding new academic year with Is Current Year = Yes, set all others to No
+    if (!editingAcademicId && isCurrent === 'Yes') {
+        academicYears.forEach(year => {
+            year.is_current = 'No';
         });
     }
     
-    const today = new Date().toISOString().split('T')[0];
+    // VALIDATION 4: For editing academic years, do NOT automatically change other years
+    // (This is already handled by validation 2 above)
+    
+    const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
     
     if (editingAcademicId) {
         // Update existing academic year
@@ -2789,9 +3470,9 @@ function saveAcademicYear() {
             showToast('Success', 'Academic year updated successfully', 'success');
         }
     } else {
-        // Add new academic year
+        // Add new academic year - UPDATED: ID format changed to YID001, YID002, etc.
         const newAcademicYear = {
-            id: `YE${new Date().getFullYear()}`,
+            id: `YID${String(academicYears.length + 1).padStart(3, '0')}`,
             name,
             start_date: startDate,
             end_date: endDate,
@@ -2813,16 +3494,18 @@ function saveAcademicYear() {
 }
 
 function resetAcademicForm() {
-    const today = new Date().toISOString().split('T')[0];
-    const nextYear = new Date();
-    nextYear.setFullYear(nextYear.getFullYear() + 1);
-    
     document.getElementById('yearName').value = '';
-    document.getElementById('startDate').value = today;
-    document.getElementById('endDate').value = nextYear.toISOString().split('T')[0];
-    document.getElementById('isCurrentYear').value = 'No';
-    document.getElementById('academicStatus').value = 'Active';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    document.getElementById('isCurrentYear').value = '';
+    document.getElementById('academicStatus').value = '';
     editingAcademicId = null;
+    
+    // Reset previous value storage
+    previousIsCurrentYearValue = '';
+    previousAcademicStatusValue = '';
+    document.getElementById('isCurrentYear').setAttribute('data-previous-value', '');
+    document.getElementById('academicStatus').setAttribute('data-previous-value', '');
 }
 
 function cancelAcademicForm() {
@@ -2836,15 +3519,17 @@ function renderAcademicTable() {
     tbody.innerHTML = '';
     
     academicYears.forEach(year => {
+        const statusClass = year.status === 'Active' ? 'status-active' : 
+                           year.status === 'Completed' ? 'status-completed' : 'status-inactive';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${year.id}</td>
             <td>${year.name}</td>
-            <td>${year.start_date}</td>
-            <td>${year.end_date}</td>
+            <td>${formatDateForDisplay(year.start_date)}</td>
+            <td>${formatDateForDisplay(year.end_date)}</td>
             <td><span class="${year.is_current === 'Yes' ? 'status-active' : 'status-inactive'}">${year.is_current}</span></td>
-            <td><span class="${year.status === 'Active' ? 'status-active' : 'status-inactive'}">${year.status}</span></td>
-            <td>${year.created_at}</td>
+            <td><span class="${statusClass}">${year.status}</span></td>
+            <td>${formatDateForDisplay(year.created_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-academic" data-id="${year.id}">
@@ -2910,15 +3595,17 @@ function filterAcademicYears() {
     tbody.innerHTML = '';
     
     filtered.forEach(year => {
+        const statusClass = year.status === 'Active' ? 'status-active' : 
+                           year.status === 'Completed' ? 'status-completed' : 'status-inactive';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${year.id}</td>
             <td>${year.name}</td>
-            <td>${year.start_date}</td>
-            <td>${year.end_date}</td>
+            <td>${formatDateForDisplay(year.start_date)}</td>
+            <td>${formatDateForDisplay(year.end_date)}</td>
             <td><span class="${year.is_current === 'Yes' ? 'status-active' : 'status-inactive'}">${year.is_current}</span></td>
-            <td><span class="${year.status === 'Active' ? 'status-active' : 'status-inactive'}">${year.status}</span></td>
-            <td>${year.created_at}</td>
+            <td><span class="${statusClass}">${year.status}</span></td>
+            <td>${formatDateForDisplay(year.created_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-academic" data-id="${year.id}">
@@ -2959,12 +3646,16 @@ function clearAcademicSearch() {
     renderAcademicTable();
 }
 
-// Program Functions
+// Program Functions - UPDATED: ID format changed to PID001, PID002, etc.
 function showAddProgrammeForm() {
     document.getElementById('programmeFormTitle').textContent = 'Add New Program';
     document.getElementById('saveProgrammeBtn').innerHTML = '<i class="fas fa-save"></i> Save Program';
     editingProgrammeId = null;
     resetProgrammeForm();
+    
+    // Reset previous value storage for programme status
+    previousProgrammeStatusValue = '';
+    document.getElementById('programmeStatus').setAttribute('data-previous-value', '');
 }
 
 function showEditProgrammeForm(programme) {
@@ -2977,6 +3668,26 @@ function showEditProgrammeForm(programme) {
     document.getElementById('programmeDuration').value = programme.duration;
     document.getElementById('programmeDescription').value = programme.description;
     document.getElementById('programmeStatus').value = programme.status;
+    
+    // Store previous value for validation
+    previousProgrammeStatusValue = programme.status || '';
+    document.getElementById('programmeStatus').setAttribute('data-previous-value', previousProgrammeStatusValue);
+}
+
+// Validate programme status change
+function validateProgrammeStatus(programmeId, newStatus) {
+    if (newStatus === 'Completed' || newStatus === 'Inactive') {
+        if (!areAllClassesCompletedForProgram(programmeId)) {
+            showCustomAlert(
+                `Cannot mark program as "${newStatus}". All related classes must be Completed first.`,
+                'Validation Error',
+                'error'
+            );
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 function saveProgramme() {
@@ -2987,12 +3698,39 @@ function saveProgramme() {
     const status = document.getElementById('programmeStatus').value;
     
     // Validation
-    if (!name || !code || !duration) {
-        showToast('Validation Error', 'Program name, code, and duration are required', 'error');
+    if (!name || !code || !duration || !status) {
+        showToast('Validation Error', 'Program name, code, duration and status are required', 'error');
         return;
     }
     
-    const today = new Date().toISOString().split('T')[0];
+    // Get original program if editing
+    let originalProgramme = null;
+    if (editingProgrammeId) {
+        originalProgramme = programmes.find(prog => prog.id === editingProgrammeId);
+        
+        // Check if status change is valid
+        if (originalProgramme && originalProgramme.status !== status) {
+            if (!validateProgrammeStatus(editingProgrammeId, status)) {
+                return; // Validation failed
+            }
+        }
+    } else {
+        // For new programs, check if Inactive or Completed status is valid
+        if (status === 'Inactive' || status === 'Completed') {
+            // Check if there are any classes in ANY program that are not completed
+            const hasIncompleteClasses = classes.some(cls => cls.status !== 'Completed');
+            if (hasIncompleteClasses) {
+                showCustomAlert(
+                    `Cannot set status to "${status}" because there are classes in the system that are not completed. All related classes in Class Master must have Status "Completed".`,
+                    'Validation Error',
+                    'error'
+                );
+                return;
+            }
+        }
+    }
+    
+    const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
     
     if (editingProgrammeId) {
         // Update existing program
@@ -3010,9 +3748,22 @@ function saveProgramme() {
             showToast('Success', 'Program updated successfully', 'success');
         }
     } else {
+        // Check for duplicate program name and generate unique ID
+        let programId;
+        const existingProgramId = getProgramIdByName(name);
+        
+        if (existingProgramId) {
+            // Duplicate program name found - generate new unique ID
+            programId = generateUniqueProgramId(name);
+            showToast('Info', `Duplicate program name detected. New Program ID generated: ${programId}`, 'info');
+        } else {
+            // Normal ID generation
+            programId = `PID${String(programmes.length + 1).padStart(3, '0')}`;
+        }
+        
         // Add new program
         const newProgramme = {
-            id: `P${String(programmes.length + 8001)}`,
+            id: programId,
             name,
             code,
             duration: parseInt(duration),
@@ -3029,6 +3780,7 @@ function saveProgramme() {
     updateDashboardStats();
     renderProgrammeTable();
     renderDatabaseProgrammeTable();
+    // Update programme dropdown in class master
     updateProgrammeDropdown();
     resetProgrammeForm();
 }
@@ -3038,8 +3790,12 @@ function resetProgrammeForm() {
     document.getElementById('programmeCode').value = '';
     document.getElementById('programmeDuration').value = '3';
     document.getElementById('programmeDescription').value = '';
-    document.getElementById('programmeStatus').value = 'Active';
+    document.getElementById('programmeStatus').value = '';
     editingProgrammeId = null;
+    
+    // Reset previous value storage
+    previousProgrammeStatusValue = '';
+    document.getElementById('programmeStatus').setAttribute('data-previous-value', '');
 }
 
 function cancelProgrammeForm() {
@@ -3053,6 +3809,8 @@ function renderProgrammeTable() {
     tbody.innerHTML = '';
     
     programmes.forEach(programme => {
+        const statusClass = programme.status === 'Active' ? 'status-active' : 
+                          programme.status === 'Completed' ? 'status-completed' : 'status-inactive';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${programme.id}</td>
@@ -3060,8 +3818,8 @@ function renderProgrammeTable() {
             <td>${programme.name}</td>
             <td>${programme.duration}</td>
             <td>${programme.description}</td>
-            <td><span class="${programme.status === 'Active' ? 'status-active' : 'status-inactive'}">${programme.status}</span></td>
-            <td>${programme.created_at}</td>
+            <td><span class="${statusClass}">${programme.status}</span></td>
+            <td>${formatDateForDisplay(programme.created_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-programme" data-id="${programme.id}">
@@ -3112,6 +3870,7 @@ function deleteProgramme(id) {
         updateDashboardStats();
         renderProgrammeTable();
         renderDatabaseProgrammeTable();
+        // Update programme dropdown in class master
         updateProgrammeDropdown();
         showToast('Success', 'Program deleted successfully', 'success');
     }
@@ -3129,6 +3888,8 @@ function filterProgrammes() {
     tbody.innerHTML = '';
     
     filtered.forEach(programme => {
+        const statusClass = programme.status === 'Active' ? 'status-active' : 
+                          programme.status === 'Completed' ? 'status-completed' : 'status-inactive';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${programme.id}</td>
@@ -3136,8 +3897,8 @@ function filterProgrammes() {
             <td>${programme.name}</td>
             <td>${programme.duration}</td>
             <td>${programme.description}</td>
-            <td><span class="${programme.status === 'Active' ? 'status-active' : 'status-inactive'}">${programme.status}</span></td>
-            <td>${programme.created_at}</td>
+            <td><span class="${statusClass}">${programme.status}</span></td>
+            <td>${formatDateForDisplay(programme.created_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-programme" data-id="${programme.id}">
@@ -3178,7 +3939,7 @@ function clearProgrammeSearch() {
     renderProgrammeTable();
 }
 
-// Class Functions
+// Class Functions - UPDATED: ID format changed to CID001, CID002, etc.
 function showAddClassForm() {
     document.getElementById('classFormTitle').textContent = 'Add New Class';
     document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Save Class';
@@ -3191,26 +3952,43 @@ function showEditClassForm(cls) {
     document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Update Class';
     editingClassId = cls.id;
     
-    document.getElementById('className').value = cls.class_name;
-    document.getElementById('classCode').value = cls.class_code;
-    document.getElementById('classProgramme').value = cls.programme_id;
-    document.getElementById('classAcademicYear').value = cls.academic_year;
-    document.getElementById('classSemester').value = cls.semester;
-    document.getElementById('classMaxStudents').value = cls.max_students;
+    // Find the program for this class
+    const programme = programmes.find(prog => prog.id === cls.programme_id);
+    if (programme) {
+        document.getElementById('classProgramme').value = programme.id;
+        // Trigger update of class code dropdown
+        const programmeEvent = new Event('change');
+        document.getElementById('classProgramme').dispatchEvent(programmeEvent);
+        
+        // Set class code after a short delay to ensure dropdown is populated
+        setTimeout(() => {
+            document.getElementById('classCode').value = cls.class_code;
+            // Trigger change event for class code
+            const classCodeEvent = new Event('change');
+            document.getElementById('classCode').dispatchEvent(classCodeEvent);
+            
+            // Set academic year
+            document.getElementById('classAcademicYear').value = cls.academic_year;
+            
+            // Set term
+            setTimeout(() => {
+                document.getElementById('classTerm').value = cls.term;
+            }, 100);
+        }, 200);
+    }
+    
     document.getElementById('classStatus').value = cls.status;
 }
 
 function saveClass() {
-    const className = document.getElementById('className').value.trim();
-    const classCode = document.getElementById('classCode').value.trim();
     const programmeId = document.getElementById('classProgramme').value;
+    const classCode = document.getElementById('classCode').value;
     const academicYear = document.getElementById('classAcademicYear').value;
-    const semester = document.getElementById('classSemester').value.trim();
-    const maxStudents = document.getElementById('classMaxStudents').value;
+    const term = document.getElementById('classTerm').value;
     const status = document.getElementById('classStatus').value;
     
     // Validation
-    if (!className || !classCode || !programmeId || !academicYear || !semester) {
+    if (!programmeId || !classCode || !academicYear || !term || !status) {
         showToast('Validation Error', 'Please fill in all required fields', 'error');
         return;
     }
@@ -3218,7 +3996,7 @@ function saveClass() {
     const programme = programmes.find(prog => prog.id === programmeId);
     const academicYearObj = academicYears.find(year => year.id === academicYear);
     
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
     
     if (editingClassId) {
         // Update existing class
@@ -3226,29 +4004,25 @@ function saveClass() {
         if (index !== -1) {
             classes[index] = {
                 ...classes[index],
-                class_name: className,
                 class_code: classCode,
                 programme_id: programmeId,
                 programme_name: programme ? programme.name : classes[index].programme_name,
                 academic_year: academicYear,
-                semester: semester,
-                max_students: parseInt(maxStudents),
+                term: term,
                 status,
                 updated_at: today
             };
             showToast('Success', 'Class updated successfully', 'success');
         }
     } else {
-        // Add new class
+        // Add new class - UPDATED: ID format changed to CID001, CID002, etc.
         const newClass = {
-            id: `CL${String(classes.length + 3001)}`,
-            class_name: className,
+            id: `CID${String(classes.length + 1).padStart(3, '0')}`,
             class_code: classCode,
             programme_id: programmeId,
-            programme_name: programme ? programme.name : 'Unknown Program',
+            programme_name: programme ? programme.name : '',
             academic_year: academicYear,
-            semester: semester,
-            max_students: parseInt(maxStudents),
+            term: term,
             status,
             created_at: today,
             updated_at: today
@@ -3265,14 +4039,20 @@ function saveClass() {
 }
 
 function resetClassForm() {
-    document.getElementById('className').value = '';
-    document.getElementById('classCode').value = '';
-    document.getElementById('classProgramme').value = programmes.length > 0 ? programmes[0].id : '';
-    document.getElementById('classAcademicYear').value = academicYears.length > 0 ? academicYears[0].id : '';
-    document.getElementById('classSemester').value = '';
-    document.getElementById('classMaxStudents').value = '60';
-    document.getElementById('classStatus').value = 'Active';
+    document.getElementById('classProgramme').value = '';
+    document.getElementById('classCode').innerHTML = '<option value="">Select Program first</option>';
+    document.getElementById('classCode').disabled = true;
+    document.getElementById('classAcademicYear').value = '';
+    document.getElementById('classAcademicYear').disabled = true;
+    document.getElementById('classTerm').value = '';
+    document.getElementById('classTerm').disabled = true;
+    document.getElementById('classStatus').value = '';
     editingClassId = null;
+    
+    // UPDATED: Reset opacity for visual indication
+    document.getElementById('classCode').style.opacity = '0.5';
+    document.getElementById('classAcademicYear').style.opacity = '0.5';
+    document.getElementById('classTerm').style.opacity = '0.5';
 }
 
 function cancelClassForm() {
@@ -3281,23 +4061,25 @@ function cancelClassForm() {
     document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Save Class';
 }
 
+// UPDATED: Render Class Table to show Academic Year Name instead of ID
 function renderClassTable() {
     const tbody = document.getElementById('classTableBody');
     tbody.innerHTML = '';
     
     classes.forEach(cls => {
+        const statusClass = cls.status === 'Active' ? 'status-active' : 
+                          cls.status === 'Completed' ? 'status-completed' : 'status-inactive';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${cls.id}</td>
             <td>${cls.programme_id}</td>
             <td>${cls.programme_name}</td>
-            <td>${cls.class_name}</td>
             <td>${cls.class_code}</td>
-            <td>${cls.academic_year}</td>
-            <td>${cls.semester}</td>
-            <td>${cls.max_students}</td>
-            <td><span class="${cls.status === 'Active' ? 'status-active' : 'status-inactive'}">${cls.status}</span></td>
-            <td>${cls.created_at}</td>
+            <!-- UPDATED: Show Academic Year Name instead of ID -->
+            <td>${getAcademicYearNameById(cls.academic_year)}</td>
+            <td>${cls.term}</td>
+            <td><span class="${statusClass}">${cls.status}</span></td>
+            <td>${formatDateForDisplay(cls.created_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-class" data-id="${cls.id}">
@@ -3345,31 +4127,32 @@ function deleteClass(id) {
     }
 }
 
+// UPDATED: Filter Classes to show Academic Year Name instead of ID
 function filterClasses() {
     const searchTerm = document.getElementById('searchClass').value.toLowerCase();
     const filtered = classes.filter(cls => 
-        cls.class_name.toLowerCase().includes(searchTerm) ||
         cls.class_code.toLowerCase().includes(searchTerm) ||
         cls.programme_name.toLowerCase().includes(searchTerm) ||
-        cls.semester.toLowerCase().includes(searchTerm)
+        cls.term.toLowerCase().includes(searchTerm)
     );
     
     const tbody = document.getElementById('classTableBody');
     tbody.innerHTML = '';
     
     filtered.forEach(cls => {
+        const statusClass = cls.status === 'Active' ? 'status-active' : 
+                          cls.status === 'Completed' ? 'status-completed' : 'status-inactive';
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${cls.id}</td>
             <td>${cls.programme_id}</td>
             <td>${cls.programme_name}</td>
-            <td>${cls.class_name}</td>
             <td>${cls.class_code}</td>
-            <td>${cls.academic_year}</td>
-            <td>${cls.semester}</td>
-            <td>${cls.max_students}</td>
-            <td><span class="${cls.status === 'Active' ? 'status-active' : 'status-inactive'}">${cls.status}</span></td>
-            <td>${cls.created_at}</td>
+            <!-- UPDATED: Show Academic Year Name instead of ID -->
+            <td>${getAcademicYearNameById(cls.academic_year)}</td>
+            <td>${cls.term}</td>
+            <td><span class="${statusClass}">${cls.status}</span></td>
+            <td>${formatDateForDisplay(cls.created_at)}</td>
             <td class="actions">
                 ${currentUser && currentUser.role === 'admin' ? `
                     <button class="btn btn-primary btn-sm edit-class" data-id="${cls.id}">
@@ -3408,30 +4191,6 @@ function filterClasses() {
 function clearClassSearch() {
     document.getElementById('searchClass').value = '';
     renderClassTable();
-}
-
-function updateProgrammeDropdown() {
-    const dropdown = document.getElementById('classProgramme');
-    dropdown.innerHTML = '';
-    
-    programmes.forEach(programme => {
-        const option = document.createElement('option');
-        option.value = programme.id;
-        option.textContent = `${programme.name} (${programme.code})`;
-        dropdown.appendChild(option);
-    });
-}
-
-function updateAcademicYearDropdown() {
-    const dropdown = document.getElementById('classAcademicYear');
-    dropdown.innerHTML = '';
-    
-    academicYears.forEach(year => {
-        const option = document.createElement('option');
-        option.value = year.id;
-        option.textContent = `${year.name}`;
-        dropdown.appendChild(option);
-    });
 }
 
 function resetAllForms() {
@@ -3667,7 +4426,7 @@ function showToast(title, message, type = 'success') {
         hideToast();
     }, 3000);
 }
-
+    
 function hideToast() {
     toast.classList.remove('show');
     if (toastTimeout) {
