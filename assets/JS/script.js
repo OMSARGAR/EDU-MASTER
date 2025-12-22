@@ -1,4 +1,5 @@
-// Store credentials in localStorage for persistence
+<script>
+        // Store credentials in localStorage for persistence
 let storedCredentials = {
     admin: JSON.parse(localStorage.getItem('eduMasterAdminCredentials')) || {
         username: 'admin',
@@ -4434,3 +4435,5 @@ function hideToast() {
         toastTimeout = null;
     }
 }
+     </script>
+   
