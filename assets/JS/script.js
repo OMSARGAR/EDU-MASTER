@@ -1,4664 +1,2613 @@
 // Store credentials in localStorage for persistence
-let storedCredentials = {
-    admin: JSON.parse(localStorage.getItem('eduMasterAdminCredentials')) || {
-        username: 'admin',
-        password: 'admin123',
-        name: 'System Administrator',
-        email: 'admin@edumaster.edu',
-        mobile: '+91 9876543210',
-        role: 'admin',
-        avatar: 'A',
-        accessLevel: 'full',
-        roleName: 'System Administrator'
-    },
-    principal: JSON.parse(localStorage.getItem('eduMasterPrincipalCredentials')) || {
-        username: 'principal',
-        password: 'principal123',
-        name: 'Dr. Ranjit Deshmukh',
-        email: 'principal@edumaster.edu',
-        mobile: '+91 9876543210',
-        role: 'principal',
-        avatar: 'P',
-        accessLevel: 'view-only',
-        roleName: 'Principal'
-    }
-};
+        let storedCredentials = {
+            admin: JSON.parse(localStorage.getItem('eduMasterAdminCredentials')) || {
+                username: 'admin',
+                password: 'admin123',
+                name: 'System Administrator',
+                email: 'admin@edumaster.edu',
+                mobile: '+91 9876543210',
+                role: 'admin',
+                avatar: 'A',
+                accessLevel: 'full',
+                roleName: 'System Administrator'
+            }
+        };
 
-// Save credentials to localStorage
-function saveCredentialsToStorage() {
-    localStorage.setItem('eduMasterAdminCredentials', JSON.stringify(storedCredentials.admin));
-    localStorage.setItem('eduMasterPrincipalCredentials', JSON.stringify(storedCredentials.principal));
-}
+        // Data arrays
+        let institutes = JSON.parse(localStorage.getItem('eduMasterInstitutes')) || [];
+        let academicYears = JSON.parse(localStorage.getItem('eduMasterAcademicYears')) || [];
+        let programmes = JSON.parse(localStorage.getItem('eduMasterProgrammes')) || [];
+        let classes = JSON.parse(localStorage.getItem('eduMasterClasses')) || [];
+        let hods = JSON.parse(localStorage.getItem('eduMasterHods')) || [];
+        let students = JSON.parse(localStorage.getItem('eduMasterStudents')) || [];
+        let faculties = JSON.parse(localStorage.getItem('eduMasterFaculties')) || [];
+        let feedbacks = JSON.parse(localStorage.getItem('eduMasterFeedbacks')) || [];
+        let feedbackResponses = JSON.parse(localStorage.getItem('eduMasterFeedbackResponses')) || [];
 
-// Data storage arrays - EMPTY AS PER REQUIREMENT
-let institutes = [];
-let academicYears = [];
-let programmes = [];
-let classes = [];
+        // Save to localStorage functions
+        function saveInstitutes() { localStorage.setItem('eduMasterInstitutes', JSON.stringify(institutes)); }
+        function saveAcademicYears() { localStorage.setItem('eduMasterAcademicYears', JSON.stringify(academicYears)); }
+        function saveProgrammes() { localStorage.setItem('eduMasterProgrammes', JSON.stringify(programmes)); }
+        function saveClasses() { localStorage.setItem('eduMasterClasses', JSON.stringify(classes)); }
+        function saveHods() { localStorage.setItem('eduMasterHods', JSON.stringify(hods)); }
+        function saveStudents() { localStorage.setItem('eduMasterStudents', JSON.stringify(students)); }
+        function saveFaculties() { localStorage.setItem('eduMasterFaculties', JSON.stringify(faculties)); }
+        function saveFeedbacks() { localStorage.setItem('eduMasterFeedbacks', JSON.stringify(feedbacks)); }
+        function saveFeedbackResponses() { localStorage.setItem('eduMasterFeedbackResponses', JSON.stringify(feedbackResponses)); }
 
-// Class Code options mapping - UPDATED FOR ALL PROGRAMS
-const classCodeOptions = {
-    'Computer Engineering': ['FY-CO', 'SY-CO', 'TY-CO'],
-    'Civil Engineering': ['FY-CIVIL', 'SY-CIVIL', 'TY-CIVIL'],
-    'Mechanical Engineering': ['FY-MECH', 'SY-MECH', 'TY-MECH'],
-    'Electrical Engineering': ['FY-EJ', 'SY-EJ', 'TY-EJ'],
-    'Electronic and Telecommunication Engineering': ['FY-ENTC', 'SY-ENTC', 'TY-ENTC']
-};
-
-// Term mapping based on class code - UPDATED FOR ALL PROGRAMS
-const termMapping = {
-    // Computer Engineering
-    'FY-CO': ['TERM 1', 'TERM 2'],
-    'SY-CO': ['TERM 3', 'TERM 4'],
-    'TY-CO': ['TERM 5', 'TERM 6'],
-    
-    // Civil Engineering
-    'FY-CIVIL': ['TERM 1', 'TERM 2'],
-    'SY-CIVIL': ['TERM 3', 'TERM 4'],
-    'TY-CIVIL': ['TERM 5', 'TERM 6'],
-    
-    // Mechanical Engineering
-    'FY-MECH': ['TERM 1', 'TERM 2'],
-    'SY-MECH': ['TERM 3', 'TERM 4'],
-    'TY-MECH': ['TERM 5', 'TERM 6'],
-    
-    // Electrical Engineering
-    'FY-EJ': ['TERM 1', 'TERM 2'],
-    'SY-EJ': ['TERM 3', 'TERM 4'],
-    'TY-EJ': ['TERM 5', 'TERM 6'],
-    
-    // Electronic and Telecommunication Engineering
-    'FY-ENTC': ['TERM 1', 'TERM 2'],
-    'SY-ENTC': ['TERM 3', 'TERM 4'],
-    'TY-ENTC': ['TERM 5', 'TERM 6']
-};
-
-// NEW: Function to check if Class Master has any records
-function hasClassMasterRecords() {
-    return classes.length > 0;
-}
-
-// NEW: Function to check if all related classes in Class Master are completed for a specific academic year
-function areAllRelatedClassesCompleted(academicYearId) {
-    // Get all classes related to this academic year
-    const relatedClasses = classes.filter(cls => cls.academic_year === academicYearId);
-    
-    // If no classes exist, return true (no restriction)
-    if (relatedClasses.length === 0) {
-        return true;
-    }
-    
-    // Check if ALL related classes have status "Completed"
-    const allCompleted = relatedClasses.every(cls => cls.status === 'Completed');
-    
-    return allCompleted;
-}
-
-// NEW: Function to check if all classes for a program are completed
-function areAllClassesCompletedForProgram(programmeId) {
-    // Get all classes for this program
-    const programClasses = classes.filter(cls => cls.programme_id === programmeId);
-    
-    // If no classes exist, return true (can be marked as completed)
-    if (programClasses.length === 0) return true;
-    
-    // Check if all classes have status "Completed"
-    return programClasses.every(cls => cls.status === 'Completed');
-}
-
-// NEW: Function to check if academic year has any related classes
-function hasRelatedAcademicYearClasses(academicYearId) {
-    return classes.some(cls => cls.academic_year === academicYearId);
-}
-
-// NEW: Function to check if program has any related classes
-function hasRelatedProgramClasses(programmeId) {
-    return classes.some(cls => cls.programme_id === programmeId);
-}
-
-// Helper function to get academic year name by ID
-function getAcademicYearNameById(id) {
-    const year = academicYears.find(year => year.id === id);
-    return year ? year.name : id; // fallback to ID if not found
-}
-
-// Date format function - NEW: Convert date to DD-MM-YYYY format
-function formatDateToDDMMYYYY(dateStr) {
-    if (!dateStr) return '';
-    
-    // Check if date is in YYYY-MM-DD format (from date input)
-    if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
-        const [year, month, day] = dateStr.split('-');
-        return `${day}-${month}-${year}`;
-    }
-    
-    // Check if date is already in DD-MM-YYYY format
-    if (dateStr.includes('-') && dateStr.split('-')[0].length === 2) {
-        return dateStr;
-    }
-    
-    // Try to parse the date
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) {
-        return dateStr; // Return original if can't parse
-    }
-    
-    // Format as DD-MM-YYYY
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    
-    return `${day}-${month}-${year}`;
-}
-
-// Convert DD-MM-YYYY to YYYY-MM-DD for date inputs
-function formatDateToYYYYMMDD(dateStr) {
-    if (!dateStr) return '';
-    
-    // Check if already in YYYY-MM-DD format
-    if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
-        return dateStr;
-    }
-    
-    // Parse DD-MM-YYYY format
-    const parts = dateStr.split('-');
-    if (parts.length === 3 && parts[0].length === 2) {
-        return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
-    
-    return dateStr;
-}
-
-// Format date for display in tables - NEW
-function formatDateForDisplay(dateStr) {
-    return formatDateToDDMMYYYY(dateStr);
-}
-
-// User profile photos storage
-let userProfilePhotos = {
-    admin: null,
-    principal: null
-};
-
-// Principal credentials management
-let principalCredentials = JSON.parse(localStorage.getItem('eduMasterPrincipalCredentials')) || {
-    username: 'principal',
-    password: 'principal123',
-    displayName: 'Dr. Ranjit Deshmukh',
-    email: 'principal@edumaster.edu',
-    mobile: '+91 9876543210',
-    lastChanged: new Date().toISOString().split('T')[0]
-};
-
-// Principal settings storage
-let principalSettings = {
-    displayName: 'Dr. Ranjit Deshmukh',
-    username: 'principal',
-    email: 'principal@edumaster.edu',
-    mobile: '+91 9876543210',
-    profilePhoto: null,
-    lastUpdated: new Date().toISOString()
-};
-
-// Editing states
-let editingInstituteId = null;
-let editingAcademicId = null;
-let editingProgrammeId = null;
-let editingClassId = null;
-
-// Custom Alert System
-let customAlertResolve = null;
-let customAlertPromise = null;
-
-// NEW: Store previous academic year dropdown values for validation
-let previousIsCurrentYearValue = '';
-let previousAcademicStatusValue = '';
-
-// NEW: Store previous programme status dropdown value for validation
-let previousProgrammeStatusValue = '';
-
-// NEW: Immediate validation system for dropdowns
-const dropdownValidationTracker = {
-    // Track validation state for dropdowns
-    errors: new Map(),
-    
-    // Add error for a dropdown
-    addError(dropdownId, message) {
-        this.errors.set(dropdownId, message);
-        this.showError(dropdownId, message);
-    },
-    
-    // Remove error for a dropdown
-    removeError(dropdownId) {
-        this.errors.delete(dropdownId);
-        this.hideError(dropdownId);
-    },
-    
-    // Show error in UI
-    showError(dropdownId, message) {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
-        
-        // Create or get error message element
-        let errorElement = dropdown.parentElement.querySelector('.dropdown-error-message');
-        if (!errorElement) {
-            errorElement = document.createElement('div');
-            errorElement.className = 'dropdown-error-message';
-            dropdown.parentElement.appendChild(errorElement);
+        // Helper functions
+        function getAcademicYearNameById(id) {
+            const year = academicYears.find(y => y.id === id);
+            return year ? year.name : id;
         }
-        
-        errorElement.textContent = message;
-        errorElement.style.display = 'block';
-        errorElement.classList.add('show');
-        
-        // Highlight dropdown
-        dropdown.classList.add('error');
-        
-        // Add shake animation
-        dropdown.style.animation = 'shake 0.5s';
-        setTimeout(() => {
-            dropdown.style.animation = '';
-        }, 500);
-    },
-    
-    // Hide error in UI
-    hideError(dropdownId) {
-        const dropdown = document.getElementById(dropdownId);
-        if (!dropdown) return;
-        
-        const errorElement = dropdown.parentElement.querySelector('.dropdown-error-message');
-        if (errorElement) {
-            errorElement.style.display = 'none';
-            errorElement.classList.remove('show');
+
+        function formatDateToDDMMYYYY(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) {
+                const [year, month, day] = dateStr.split('-');
+                return `${day}-${month}-${year}`;
+            }
+            if (dateStr.includes('-') && dateStr.split('-')[0].length === 2) return dateStr;
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
         }
-        
-        dropdown.classList.remove('error');
-    },
-    
-    // Clear all errors
-    clearAll() {
-        this.errors.clear();
-        document.querySelectorAll('.dropdown-error-message').forEach(el => {
-            el.style.display = 'none';
-            el.classList.remove('show');
+
+        function formatDateToYYYYMMDD(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('-') && dateStr.split('-')[0].length === 4) return dateStr;
+            const parts = dateStr.split('-');
+            if (parts.length === 3 && parts[0].length === 2) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function formatDateForDisplay(dateStr) {
+            return formatDateToDDMMYYYY(dateStr);
+        }
+
+        // Custom Alert System
+        let customAlertResolve = null;
+        function showCustomAlert(message, title = 'Alert', type = 'info') {
+            return new Promise((resolve) => {
+                document.getElementById('customAlertTitle').textContent = title;
+                document.getElementById('customAlertMessage').textContent = message;
+                const icon = document.getElementById('customAlertIcon');
+                icon.className = 'custom-alert-icon';
+                let iconClass = 'fas fa-info-circle';
+                switch(type) {
+                    case 'success':
+                        icon.classList.add('success');
+                        iconClass = 'fas fa-check-circle';
+                        break;
+                    case 'warning':
+                        icon.classList.add('warning');
+                        iconClass = 'fas fa-exclamation-triangle';
+                        break;
+                    case 'error':
+                        icon.classList.add('error');
+                        iconClass = 'fas fa-times-circle';
+                        break;
+                    default:
+                        icon.classList.add('info');
+                        iconClass = 'fas fa-info-circle';
+                }
+                icon.innerHTML = `<i class="${iconClass}"></i>`;
+                document.getElementById('customAlertCancel').style.display = 'none';
+                document.getElementById('customAlertConfirm').textContent = 'OK';
+                document.getElementById('customAlertOverlay').classList.add('show');
+                const handleConfirm = () => {
+                    hideCustomAlert();
+                    resolve(true);
+                };
+                const handleCancel = () => {
+                    hideCustomAlert();
+                    resolve(false);
+                };
+                const handleKeyDown = (e) => {
+                    if (e.key === 'Escape') handleConfirm();
+                    else if (e.key === 'Enter') handleConfirm();
+                };
+                document.getElementById('customAlertConfirm').onclick = handleConfirm;
+                document.getElementById('customAlertCancel').onclick = handleCancel;
+                const handleOverlayClick = (e) => {
+                    if (e.target === document.getElementById('customAlertOverlay')) handleConfirm();
+                };
+                document.getElementById('customAlertOverlay').addEventListener('click', handleOverlayClick);
+                document.addEventListener('keydown', handleKeyDown);
+                customAlertResolve = () => {
+                    document.getElementById('customAlertOverlay').removeEventListener('click', handleOverlayClick);
+                    document.removeEventListener('keydown', handleKeyDown);
+                    document.getElementById('customAlertConfirm').onclick = null;
+                    document.getElementById('customAlertCancel').onclick = null;
+                };
+            });
+        }
+
+        function showCustomConfirm(message, title = 'Confirm', type = 'warning') {
+            return new Promise((resolve) => {
+                document.getElementById('customAlertTitle').textContent = title;
+                document.getElementById('customAlertMessage').textContent = message;
+                const icon = document.getElementById('customAlertIcon');
+                icon.className = 'custom-alert-icon';
+                let iconClass = 'fas fa-question-circle';
+                switch(type) {
+                    case 'success':
+                        icon.classList.add('success');
+                        iconClass = 'fas fa-check-circle';
+                        break;
+                    case 'warning':
+                        icon.classList.add('warning');
+                        iconClass = 'fas fa-exclamation-triangle';
+                        break;
+                    case 'error':
+                        icon.classList.add('error');
+                        iconClass = 'fas fa-times-circle';
+                        break;
+                    default:
+                        icon.classList.add('info');
+                        iconClass = 'fas fa-question-circle';
+                }
+                icon.innerHTML = `<i class="${iconClass}"></i>`;
+                document.getElementById('customAlertCancel').style.display = 'inline-flex';
+                document.getElementById('customAlertConfirm').textContent = 'Confirm';
+                document.getElementById('customAlertCancel').textContent = 'Cancel';
+                document.getElementById('customAlertOverlay').classList.add('show');
+                const handleConfirm = () => {
+                    hideCustomAlert();
+                    resolve(true);
+                };
+                const handleCancel = () => {
+                    hideCustomAlert();
+                    resolve(false);
+                };
+                const handleKeyDown = (e) => {
+                    if (e.key === 'Escape') handleCancel();
+                    else if (e.key === 'Enter') handleConfirm();
+                };
+                document.getElementById('customAlertConfirm').onclick = handleConfirm;
+                document.getElementById('customAlertCancel').onclick = handleCancel;
+                const handleOverlayClick = (e) => {
+                    if (e.target === document.getElementById('customAlertOverlay')) handleCancel();
+                };
+                document.getElementById('customAlertOverlay').addEventListener('click', handleOverlayClick);
+                document.addEventListener('keydown', handleKeyDown);
+                customAlertResolve = () => {
+                    document.getElementById('customAlertOverlay').removeEventListener('click', handleOverlayClick);
+                    document.removeEventListener('keydown', handleKeyDown);
+                    document.getElementById('customAlertConfirm').onclick = null;
+                    document.getElementById('customAlertCancel').onclick = null;
+                };
+            });
+        }
+
+        function hideCustomAlert() {
+            document.getElementById('customAlertOverlay').classList.remove('show');
+            if (customAlertResolve) {
+                customAlertResolve();
+                customAlertResolve = null;
+            }
+        }
+
+        window.alert = function(message) { return showCustomAlert(message, 'Alert', 'info'); };
+        window.confirm = function(message) { return showCustomConfirm(message, 'Confirm', 'warning'); };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            updateDashboardStats();
+            renderDatabaseTables();
+            updateProfileSettings();
+            populateAcademicYearDropdown();
+
+            // Default student role: show department selector
+            currentRole = 'student';
+            document.getElementById('departmentSelector').classList.remove('hidden');
         });
-        document.querySelectorAll('.search-input.error').forEach(el => {
-            el.classList.remove('error');
-        });
-    },
-    
-    // Check if any errors exist
-    hasErrors() {
-        return this.errors.size > 0;
-    }
-};
 
-// Custom Alert System Functions
-function showCustomAlert(message, title = 'Alert', type = 'info') {
-    return new Promise((resolve) => {
-        // Set alert content
-        customAlertTitle.textContent = title;
-        customAlertMessage.textContent = message;
-        
-        // Set icon based on type
-        customAlertIcon.className = 'custom-alert-icon';
-        let iconClass = 'fas fa-info-circle';
-        
-        switch(type) {
-            case 'success':
-                customAlertIcon.classList.add('success');
-                iconClass = 'fas fa-check-circle';
-                break;
-            case 'warning':
-                customAlertIcon.classList.add('warning');
-                iconClass = 'fas fa-exclamation-triangle';
-                break;
-            case 'error':
-                customAlertIcon.classList.add('error');
-                iconClass = 'fas fa-times-circle';
-                break;
-            case 'info':
-            default:
-                customAlertIcon.classList.add('info');
-                iconClass = 'fas fa-info-circle';
-                break;
-        }
-        
-        customAlertIcon.innerHTML = `<i class="${iconClass}"></i>`;
-        
-        // Show only OK button for alerts
-        customAlertCancel.style.display = 'none';
-        customAlertConfirm.textContent = 'OK';
-        
-        // Show the alert
-        customAlertOverlay.classList.add('show');
-        
-        // Set up event listeners
-        const handleConfirm = () => {
-            hideCustomAlert();
-            resolve(true);
-        };
-        
-        const handleCancel = () => {
-            hideCustomAlert();
-            resolve(false);
-        };
-        
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
-                handleConfirm();
-            } else if (e.key === 'Enter') {
-                handleConfirm();
-            }
-        };
-        
-        // Add event listeners
-        customAlertConfirm.onclick = handleConfirm;
-        customAlertCancel.onclick = handleCancel;
-        
-        // Close on overlay click
-        const handleOverlayClick = (e) => {
-            if (e.target === customAlertOverlay) {
-                handleConfirm();
-            }
-        };
-        
-        customAlertOverlay.addEventListener('click', handleOverlayClick);
-        document.addEventListener('keydown', handleKeyDown);
-        
-        // Store cleanup function
-        customAlertResolve = () => {
-            customAlertOverlay.removeEventListener('click', handleOverlayClick);
-            document.removeEventListener('keydown', handleKeyDown);
-            customAlertConfirm.onclick = null;
-            customAlertCancel.onclick = null;
-        };
-    });
-}
-
-function showCustomConfirm(message, title = 'Confirm', type = 'warning') {
-    return new Promise((resolve) => {
-        // Set alert content
-        customAlertTitle.textContent = title;
-        customAlertMessage.textContent = message;
-        
-        // Set icon based on type
-        customAlertIcon.className = 'custom-alert-icon';
-        let iconClass = 'fas fa-question-circle';
-        
-        switch(type) {
-            case 'success':
-                customAlertIcon.classList.add('success');
-                iconClass = 'fas fa-check-circle';
-                break;
-            case 'warning':
-                customAlertIcon.classList.add('warning');
-                iconClass = 'fas fa-exclamation-triangle';
-                break;
-            case 'error':
-                customAlertIcon.classList.add('error');
-                iconClass = 'fas fa-times-circle';
-                break;
-            case 'info':
-            default:
-                customAlertIcon.classList.add('info');
-                iconClass = 'fas fa-question-circle';
-                break;
-        }
-        
-        customAlertIcon.innerHTML = `<i class="${iconClass}"></i>`;
-        
-        // Show both buttons for confirm
-        customAlertCancel.style.display = 'inline-flex';
-        customAlertConfirm.textContent = 'Confirm';
-        customAlertCancel.textContent = 'Cancel';
-        
-        // Show the alert
-        customAlertOverlay.classList.add('show');
-        
-        // Set up event listeners
-        const handleConfirm = () => {
-            hideCustomAlert();
-            resolve(true);
-        };
-        
-        const handleCancel = () => {
-            hideCustomAlert();
-            resolve(false);
-        };
-        
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
-                handleCancel();
-            } else if (e.key === 'Enter') {
-                handleConfirm();
-            }
-        };
-        
-        // Add event listeners
-        customAlertConfirm.onclick = handleConfirm;
-        customAlertCancel.onclick = handleCancel;
-        
-        // Close on overlay click
-        const handleOverlayClick = (e) => {
-            if (e.target === customAlertOverlay) {
-                handleCancel();
-            }
-        };
-        
-        customAlertOverlay.addEventListener('click', handleOverlayClick);
-        document.addEventListener('keydown', handleKeyDown);
-        
-        // Store cleanup function
-        customAlertResolve = () => {
-            customAlertOverlay.removeEventListener('click', handleOverlayClick);
-            document.removeEventListener('keydown', handleKeyDown);
-            customAlertConfirm.onclick = null;
-            customAlertCancel.onclick = null;
-        };
-    });
-}
-
-function hideCustomAlert() {
-    customAlertOverlay.classList.remove('show');
-    if (customAlertResolve) {
-        customAlertResolve();
-        customAlertResolve = null;
-    }
-}
-
-// Replace default alert and confirm
-window.alert = function(message) {
-    return showCustomAlert(message, 'Alert', 'info');
-};
-
-window.confirm = function(message) {
-    return showCustomConfirm(message, 'Confirm', 'warning');
-};
-
-// Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('EDU MASTER App Loaded');
-    
-    // Initialize particles.js
-    initParticles();
-    
-    // Initialize animations
-    if (!loginAnimationPlayed) {
-        loginAnimationPlayed = true;
-        setTimeout(() => {
-            document.querySelector('.login-wrapper').style.animation = 'fadeInUp 0.5s ease-out forwards';
-        }, 100);
-    }
-    
-    // Set up all event listeners
-    setupEventListeners();
-    
-    // Update dashboard stats
-    updateDashboardStats();
-    
-    // Render database tables
-    renderDatabaseTables();
-    
-    // Load profile photos from localStorage
-    loadProfilePhotos();
-    
-    // Load principal credentials from localStorage
-    loadPrincipalCredentialsFromStorage();
-    
-    // Load principal settings from localStorage
-    loadPrincipalSettingsFromStorage();
-    
-    // Initialize Principal Settings
-    initializePrincipalSettings();
-    
-    // Add CSS for dropdown error messages
-    addDropdownErrorStyles();
-    
-    // Focus on username field
-    setTimeout(() => {
-        usernameInput.focus();
-    }, 300);
-    
-    // Add animation reset for logout
-    const originalHandleLogout = handleLogout;
-    handleLogout = function() {
-        loginAnimationPlayed = false;
-        originalHandleLogout.call(this);
-    };
-});
-
-// Add CSS for dropdown error messages
-function addDropdownErrorStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .dropdown-error-message {
-            color: var(--danger);
-            font-size: 0.85rem;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            margin-top: 6px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(5px);
-            transition: opacity var(--transition-fast), transform var(--transition-fast);
-            height: 20px;
-        }
-        
-        .dropdown-error-message.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        
-        .search-input.error {
-            border-color: var(--danger) !important;
-            background-color: rgba(239, 68, 68, 0.05) !important;
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both !important;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Particles.js initialization
-function initParticles() {
-    particlesJS('particles-js', {
-        particles: {
-            number: {
-                value: 80,
-                density: {
-                    enable: true,
-                    value_area: 800
+        function populateAcademicYearDropdown() {
+            const select = document.getElementById('studentAcademicYear');
+            select.innerHTML = '<option value="">Select Academic Year</option>';
+            academicYears.forEach(year => {
+                if (year.status === 'Active') {
+                    const option = document.createElement('option');
+                    option.value = year.id;
+                    option.textContent = year.name;
+                    select.appendChild(option);
                 }
-            },
-            color: {
-                value: "#ffffff"
-            },
-            shape: {
-                type: "circle",
-                stroke: {
-                    width: 0,
-                    color: "#000000"
-                }
-            },
-            opacity: {
-                value: 0.5,
-                random: true,
-                anim: {
-                    enable: true,
-                    speed: 1,
-                    opacity_min: 0.1,
-                    sync: false
-                }
-            },
-            size: {
-                value: 3,
-                random: true,
-                anim: {
-                    enable: true,
-                    speed: 2,
-                    size_min: 0.1,
-                    sync: false
-                }
-            },
-            line_linked: {
-                enable: true,
-                distance: 150,
-                color: "#ffffff",
-                opacity: 0.4,
-                width: 1
-            },
-            move: {
-                enable: true,
-                speed: 1,
-                direction: "none",
-                random: true,
-                straight: false,
-                out_mode: "out",
-                bounce: false,
-                attract: {
-                    enable: false,
-                    rotateX: 600,
-                    rotateY: 1200
-                }
-            }
-        },
-        interactivity: {
-            detect_on: "canvas",
-            events: {
-                onhover: {
-                    enable: true,
-                    mode: "repulse"
-                },
-                onclick: {
-                    enable: true,
-                    mode: "push"
-                },
-                resize: true
-            },
-            modes: {
-                grab: {
-                    distance: 400,
-                    line_linked: {
-                        opacity: 1
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Role selection
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentRole = this.dataset.role;
+                    // Show/hide department selector using hidden class (keeps height)
+                    const deptSelector = document.getElementById('departmentSelector');
+                    if (currentRole === 'student' || currentRole === 'hod') {
+                        deptSelector.classList.remove('hidden');
+                    } else {
+                        deptSelector.classList.add('hidden');
                     }
-                },
-                bubble: {
-                    distance: 400,
-                    size: 40,
-                    duration: 2,
-                    opacity: 8,
-                    speed: 3
-                },
-                repulse: {
-                    distance: 100,
-                    duration: 0.4
-                },
-                push: {
-                    particles_nb: 4
-                },
-                remove: {
-                    particles_nb: 2
-                }
-            },
-            retina_detect: true
-        },
-        retina_detect: true
-    });
-}
+                    // Clear all fields on role switch
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                    document.getElementById('loginDepartment').value = '';
+                    clearErrors();
+                });
+            });
 
-// NEW: Apply Class Master validation rules when showing forms - UPDATED FOR IMMEDIATE VALIDATION
-function applyClassMasterValidationRules() {
-    const hasRecords = hasClassMasterRecords();
-    
-    // Get form elements
-    const academicStatus = document.getElementById('academicStatus');
-    const isCurrentYear = document.getElementById('isCurrentYear');
-    const programmeStatus = document.getElementById('programmeStatus');
-    
-    // Always ensure Status dropdown is visible and enabled when adding new records
-    if (editingAcademicId === null && academicStatus) {
-        academicStatus.disabled = false;
-        academicStatus.style.opacity = '1';
-        academicStatus.removeAttribute('title');
-    }
-    
-    if (editingProgrammeId === null && programmeStatus) {
-        programmeStatus.disabled = false;
-        programmeStatus.style.opacity = '1';
-        programmeStatus.removeAttribute('title');
-    }
-    
-    // RULE 1: When no records in Class Master
-    if (!hasRecords) {
-        // RULE 1a & 1b: All options must be selectable in Academic Year
-        if (academicStatus) {
-            academicStatus.disabled = false;
-            academicStatus.style.opacity = '1';
-            academicStatus.removeAttribute('title');
-        }
-        if (isCurrentYear) {
-            isCurrentYear.disabled = false;
-            isCurrentYear.style.opacity = '1';
-            isCurrentYear.removeAttribute('title');
-        }
-        // RULE 1c: All options must be selectable in Programme
-        if (programmeStatus) {
-            programmeStatus.disabled = false;
-            programmeStatus.style.opacity = '1';
-            programmeStatus.removeAttribute('title');
-        }
-    } 
-    // RULE 3: When records exist in Class Master
-    else {
-        // Check if we're editing existing records
-        const isEditingAcademic = editingAcademicId !== null;
-        const isEditingProgramme = editingProgrammeId !== null;
-        
-        if (isEditingAcademic) {
-            // When editing Academic Year, always show all status options
-            if (academicStatus) {
-                academicStatus.disabled = false;
-                academicStatus.style.opacity = '1';
-                academicStatus.removeAttribute('title');
-                
-                // Store the current value as previous value for validation
-                previousAcademicStatusValue = academicStatus.value;
-                academicStatus.setAttribute('data-previous-value', previousAcademicStatusValue);
-            }
-        }
-        
-        if (isEditingProgramme) {
-            // When editing Programme, always show all status options
-            if (programmeStatus) {
-                programmeStatus.disabled = false;
-                programmeStatus.style.opacity = '1';
-                programmeStatus.removeAttribute('title');
-                
-                // Store the current value as previous value for validation
-                previousProgrammeStatusValue = programmeStatus.value;
-                programmeStatus.setAttribute('data-previous-value', previousProgrammeStatusValue);
-            }
-        }
-    }
-}
-
-// NEW: Validate Academic Year Is Current Year dropdown immediately
-function validateAcademicYearCurrentYearImmediate() {
-    const isCurrentYear = document.getElementById('isCurrentYear');
-    const selectedValue = isCurrentYear ? isCurrentYear.value : '';
-    
-    if (!isCurrentYear) return true;
-    
-    // Clear previous error
-    dropdownValidationTracker.removeError('isCurrentYear');
-    
-    // If selecting "No" and there are records in Class Master
-    if (selectedValue === 'No' && hasClassMasterRecords() && editingAcademicId) {
-        const hasRelatedClasses = hasRelatedAcademicYearClasses(editingAcademicId);
-        
-        if (hasRelatedClasses) {
-            // Check if all related classes are completed
-            const allCompleted = areAllRelatedClassesCompleted(editingAcademicId);
-            
-            if (!allCompleted) {
-                dropdownValidationTracker.addError(
-                    'isCurrentYear',
-                    'Cannot set to "No" when related classes exist in Class Master. Complete all related classes first.'
-                );
-                return false;
-            }
-        }
-    }
-    
-    return true;
-}
-
-// NEW: Validate Academic Year Status dropdown immediately
-function validateAcademicYearStatusImmediate() {
-    const academicStatus = document.getElementById('academicStatus');
-    const selectedValue = academicStatus ? academicStatus.value : '';
-    
-    if (!academicStatus) return true;
-    
-    // Clear previous error
-    dropdownValidationTracker.removeError('academicStatus');
-    
-    // When records exist in Class Master, Status must not be changeable to Inactive or Completed unless all related classes are completed
-    if (hasClassMasterRecords() && editingAcademicId) {
-        const hasRelatedClasses = hasRelatedAcademicYearClasses(editingAcademicId);
-        
-        if (hasRelatedClasses && (selectedValue === 'Inactive' || selectedValue === 'Completed')) {
-            // Check if all related classes are completed
-            const allCompleted = areAllRelatedClassesCompleted(editingAcademicId);
-            
-            if (!allCompleted) {
-                dropdownValidationTracker.addError(
-                    'academicStatus',
-                    'Cannot set status to Inactive or Completed. All related Class Master records must be marked as Completed first.'
-                );
-                return false;
-            }
-        }
-    }
-    
-    return true;
-}
-
-// NEW: Validate Programme Status dropdown immediately
-function validateProgrammeStatusImmediate() {
-    const programmeStatus = document.getElementById('programmeStatus');
-    const selectedValue = programmeStatus ? programmeStatus.value : '';
-    
-    if (!programmeStatus) return true;
-    
-    // Clear previous error
-    dropdownValidationTracker.removeError('programmeStatus');
-    
-    // When records exist in Class Master, Status must not be changeable to Inactive or Completed unless all related classes are completed
-    if (hasClassMasterRecords() && editingProgrammeId) {
-        const hasRelatedClasses = hasRelatedProgramClasses(editingProgrammeId);
-        
-        if (hasRelatedClasses && (selectedValue === 'Inactive' || selectedValue === 'Completed')) {
-            // Check if all related classes are completed
-            const allCompleted = areAllClassesCompletedForProgram(editingProgrammeId);
-            
-            if (!allCompleted) {
-                dropdownValidationTracker.addError(
-                    'programmeStatus',
-                    'Cannot set status to Inactive or Completed. All related Class Master records must be marked as Completed first.'
-                );
-                return false;
-            }
-        }
-    }
-    
-    return true;
-}
-
-// Setup event listeners with immediate validation
-function setupEventListeners() {
-    console.log('Setting up event listeners...');
-    
-    // Role selection buttons
-    roleButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const selectedRole = this.dataset.role;
-            
-            // Update active role
-            roleButtons.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            currentRole = selectedRole;
-            
-            // Clear any previous errors
-            clearErrors();
-        });
-    });
-    
-    // Toggle password visibility
-    togglePassword.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-        
-        // Refocus password input
-        passwordInput.focus();
-    });
-    
-    // Login form submission
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('Login form submitted');
-        hasSubmitted = true;
-        handleLogin();
-    });
-    
-    // Login button click
-    loginButton.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('Login button clicked');
-        hasSubmitted = true;
-        handleLogin();
-    });
-    
-    // Logout button
-    logoutBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('Logout clicked');
-        handleLogout();
-    });
-    
-    // Close toast
-    closeToast.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        hideToast();
-    });
-    
-    // Module card clicks - DISABLED as per requirement
-    moduleCards.forEach(card => {
-        card.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            // Do nothing - click functionality disabled as per requirement
-            console.log('Module card click disabled:', this.dataset.module);
-        });
-    });
-    
-    // Back buttons
-    backFromInstitute.addEventListener('click', function() {
-        showMainDashboard();
-        setTimeout(() => {
-            document.getElementById('quickActionsSection').scrollIntoView({ behavior: 'smooth' });
-        }, 50);
-    });
-    
-    backFromAcademic.addEventListener('click', function() {
-        showMainDashboard();
-        setTimeout(() => {
-            document.getElementById('quickActionsSection').scrollIntoView({ behavior: 'smooth' });
-        }, 50);
-    });
-    
-    backFromProgramme.addEventListener('click', function() {
-        showMainDashboard();
-        setTimeout(() => {
-            document.getElementById('quickActionsSection').scrollIntoView({ behavior: 'smooth' });
-        }, 50);
-    });
-    
-    backFromClass.addEventListener('click', function() {
-        showMainDashboard();
-        setTimeout(() => {
-            document.getElementById('quickActionsSection').scrollIntoView({ behavior: 'smooth' });
-        }, 50);
-    });
-    
-    backFromReports.addEventListener('click', function() {
-        showMainDashboard();
-        setTimeout(() => {
-            document.getElementById('quickActionsSection').scrollIntoView({ behavior: 'smooth' });
-        }, 50);
-    });
-    
-    backFromSettings.addEventListener('click', function() {
-        showMainDashboard();
-        setTimeout(() => {
-            document.getElementById('quickActionsSection').scrollIntoView({ behavior: 'smooth' });
-        }, 50);
-    });
-    
-    backFromPrincipalSettings.addEventListener('click', function() {
-        showMainDashboard();
-        setTimeout(() => {
-            document.getElementById('quickActionsSection').scrollIntoView({ behavior: 'smooth' });
-        }, 50);
-    });
-    
-    // Quick action buttons
-    addInstituteBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        saveDashboardScrollPosition();
-        showInstituteModule();
-        showAddInstituteForm();
-        // Scroll to top of module
-        setTimeout(() => {
-            dashboard.scrollTop = 0;
-        }, 10);
-    });
-    
-    addAcademicYearBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        saveDashboardScrollPosition();
-        showAcademicModule();
-        showAddAcademicForm();
-        setTimeout(() => {
-            dashboard.scrollTop = 0;
-        }, 10);
-    });
-    
-    addProgrammeBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        saveDashboardScrollPosition();
-        showProgrammeModule();
-        showAddProgrammeForm();
-        setTimeout(() => {
-            dashboard.scrollTop = 0;
-        }, 10);
-    });
-    
-    addClassBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        saveDashboardScrollPosition();
-        showClassModule();
-        showAddClassForm();
-        setTimeout(() => {
-            dashboard.scrollTop = 0;
-        }, 10);
-    });
-    
-    viewReportsBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        saveDashboardScrollPosition();
-        showReportsModule();
-        setTimeout(() => {
-            dashboard.scrollTop = 0;
-        }, 10);
-    });
-    
-    // FIX: Remove Settings option completely for Principal
-    settingsBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Only show settings for Admin, not for Principal
-        if (currentUser && currentUser.role === 'admin') {
-            saveDashboardScrollPosition();
-            showSettingsModule();
-            setTimeout(() => {
-                dashboard.scrollTop = 0;
-            }, 10);
-        }
-    });
-    
-    // Table tabs
-    tableTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const tableId = this.getAttribute('data-table');
-            switchTableTab(tableId);
-        });
-    });
-    
-    // Settings tabs
-    settingsTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const panelId = this.getAttribute('data-panel');
-            switchSettingsTab(panelId);
-        });
-    });
-    
-    // Principal Settings tabs
-    principalSettingsTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const panelId = this.getAttribute('data-panel');
-            switchPrincipalSettingsTab(panelId);
-            // Ensure visibility after switching tabs
-            setTimeout(ensurePrincipalSettingsVisibility, 10);
-        });
-    });
-    
-    // Save profile
-    saveProfileBtn.addEventListener('click', saveProfile);
-    
-    // Change password
-    changePasswordBtn.addEventListener('click', changePassword);
-    
-    // Change username
-    changeUsernameBtn.addEventListener('click', changeUsername);
-    
-    // Principal management buttons
-    savePrincipalBtn.addEventListener('click', savePrincipalCredentials);
-    
-    // Principal Security buttons
-    changePrincipalUsernameBtn.addEventListener('click', changePrincipalUsernameAdmin);
-    changePrincipalPasswordBtn.addEventListener('click', changePrincipalPasswordAdmin);
-    
-    // Principal settings buttons
-    savePrincipalSettingsBtn.addEventListener('click', savePrincipalSettings);
-    changePrincipalUsernameBtnField.addEventListener('click', changePrincipalUsername);
-    changePrincipalPasswordBtnField.addEventListener('click', changePrincipalPassword);
-    
-    // Export buttons
-    exportPdfBtn.addEventListener('click', exportToPDF);
-    exportExcelBtn.addEventListener('click', exportToExcel);
-    
-    // Institute form actions
-    document.getElementById('saveInstituteBtn').addEventListener('click', saveInstitute);
-    document.getElementById('cancelInstituteBtn').addEventListener('click', cancelInstituteForm);
-    document.getElementById('searchInstitute').addEventListener('input', filterInstitutes);
-    document.getElementById('clearInstituteSearch').addEventListener('click', clearInstituteSearch);
-    
-    // Academic form actions - Updated with new validation rules
-    document.getElementById('saveAcademicBtn').addEventListener('click', saveAcademicYear);
-    document.getElementById('cancelAcademicBtn').addEventListener('click', cancelAcademicForm);
-    document.getElementById('searchAcademic').addEventListener('input', filterAcademicYears);
-    document.getElementById('clearAcademicSearch').addEventListener('click', clearAcademicSearch);
-    
-    // Programme form actions - Updated with new validation rules
-    document.getElementById('saveProgrammeBtn').addEventListener('click', saveProgramme);
-    document.getElementById('cancelProgrammeBtn').addEventListener('click', cancelProgrammeForm);
-    document.getElementById('searchProgramme').addEventListener('input', filterProgrammes);
-    document.getElementById('clearProgrammeSearch').addEventListener('click', clearProgrammeSearch);
-    
-    // Class form actions
-    document.getElementById('saveClassBtn').addEventListener('click', saveClass);
-    document.getElementById('cancelClassBtn').addEventListener('click', cancelClassForm);
-    document.getElementById('searchClass').addEventListener('input', filterClasses);
-    document.getElementById('clearClassSearch').addEventListener('click', clearClassSearch);
-    
-    // UPDATED: Class Programme dropdown change event with new logic
-    document.getElementById('classProgramme').addEventListener('change', function() {
-        const classCodeSelect = document.getElementById('classCode');
-        const academicYearSelect = document.getElementById('classAcademicYear');
-        const termSelect = document.getElementById('classTerm');
-        
-        if (this.value) {
-            // Get the selected program
-            const selectedProgram = programmes.find(prog => prog.id === this.value);
-            
-            if (selectedProgram) {
-                // Enable Class Code dropdown and populate with program-specific options
-                classCodeSelect.disabled = false;
-                updateClassCodeDropdown();
-                
-                // NEW: Enable Academic Year dropdown and populate with active academic years
-                academicYearSelect.disabled = false;
-                updateAcademicYearDropdownForClassMaster();
-                
-                // Disable and reset Term dropdown (waiting for Class Code selection)
-                termSelect.disabled = true;
-                termSelect.innerHTML = '<option value="">Select Class Code first</option>';
-                termSelect.value = '';
-                
-                // Make fields visible by enabling them
-                classCodeSelect.style.opacity = '1';
-                academicYearSelect.style.opacity = '1';
-                termSelect.style.opacity = '0.5'; // Still disabled
-            }
-        } else {
-            // Disable all dependent dropdowns and reset them
-            classCodeSelect.disabled = true;
-            classCodeSelect.innerHTML = '<option value="">Select Program first</option>';
-            classCodeSelect.value = '';
-            classCodeSelect.style.opacity = '0.5';
-            
-            academicYearSelect.disabled = true;
-            academicYearSelect.innerHTML = '<option value="">Select Program first</option>';
-            academicYearSelect.value = '';
-            academicYearSelect.style.opacity = '0.5';
-            
-            termSelect.disabled = true;
-            termSelect.innerHTML = '<option value="">Select Program first</option>';
-            termSelect.value = '';
-            termSelect.style.opacity = '0.5';
-        }
-    });
-    
-    // UPDATED: Class Code dropdown change event with new term mapping logic
-    document.getElementById('classCode').addEventListener('change', function() {
-        const termSelect = document.getElementById('classTerm');
-        
-        if (this.value) {
-            // Enable Term dropdown and populate with term options based on selected Class Code
-            termSelect.disabled = false;
-            updateTermDropdown(this.value);
-            termSelect.style.opacity = '1';
-        } else {
-            // Disable Term dropdown
-            termSelect.disabled = true;
-            termSelect.innerHTML = '<option value="">Select Class Code first</option>';
-            termSelect.value = '';
-            termSelect.style.opacity = '0.5';
-        }
-    });
-    
-    // NEW: Academic Year "Is Current Year" dropdown validation - UPDATED FOR IMMEDIATE VALIDATION
-    document.getElementById('isCurrentYear').addEventListener('change', function() {
-        const selectedValue = this.value;
-        
-        // Store previous value for revert if validation fails
-        previousIsCurrentYearValue = this.getAttribute('data-previous-value') || '';
-        
-        // Clear any previous validation errors
-        dropdownValidationTracker.removeError('isCurrentYear');
-        
-        // RULE 2: Only one Academic Year can be marked as Current Year at a time
-        if (selectedValue === 'Yes') {
-            // Check if there is another academic year already marked as current
-            const otherCurrentYear = academicYears.find(year => 
-                year.is_current === 'Yes' && 
-                (!editingAcademicId || year.id !== editingAcademicId)
-            );
-            
-            if (otherCurrentYear) {
-                dropdownValidationTracker.addError(
-                    'isCurrentYear',
-                    `Cannot mark this year as current. "${otherCurrentYear.name}" is already marked as current year.`
-                );
-                // Revert to previous value
-                this.value = previousIsCurrentYearValue;
-                return;
-            }
-        }
-        
-        // NEW: Validate immediately when selecting "No" and records exist in Class Master
-        if (selectedValue === 'No' && hasClassMasterRecords() && editingAcademicId) {
-            const hasRelatedClasses = hasRelatedAcademicYearClasses(editingAcademicId);
-            
-            if (hasRelatedClasses) {
-                // Check if all related classes are completed
-                const allCompleted = areAllRelatedClassesCompleted(editingAcademicId);
-                
-                if (!allCompleted) {
-                    dropdownValidationTracker.addError(
-                        'isCurrentYear',
-                        'Cannot set to "No" when related classes exist in Class Master. Complete all related classes first.'
-                    );
-                    // Revert to previous value
-                    this.value = previousIsCurrentYearValue;
-                    return;
-                }
-            }
-        }
-        
-        // Store the new value as previous value
-        this.setAttribute('data-previous-value', selectedValue);
-    });
-    
-    // NEW: Academic Year "Status" dropdown validation - UPDATED FOR IMMEDIATE VALIDATION
-    document.getElementById('academicStatus').addEventListener('change', function() {
-        const selectedValue = this.value;
-        
-        // Store previous value for revert if validation fails
-        previousAcademicStatusValue = this.getAttribute('data-previous-value') || '';
-        
-        // Clear any previous validation errors
-        dropdownValidationTracker.removeError('academicStatus');
-        
-        // When records exist in Class Master, Status options "Inactive" and "Completed" should be selectable only if all related classes are completed
-        if (hasClassMasterRecords() && editingAcademicId) {
-            const hasRelatedClasses = hasRelatedAcademicYearClasses(editingAcademicId);
-            
-            if (hasRelatedClasses && (selectedValue === 'Inactive' || selectedValue === 'Completed')) {
-                // Check if all related classes are completed
-                const allCompleted = areAllRelatedClassesCompleted(editingAcademicId);
-                
-                if (!allCompleted) {
-                    dropdownValidationTracker.addError(
-                        'academicStatus',
-                        'Cannot set status to Inactive or Completed. All related Class Master records must be marked as Completed first.'
-                    );
-                    // Revert to previous value
-                    this.value = previousAcademicStatusValue;
-                    return;
-                }
-            }
-        }
-        
-        // Store the new value as previous value
-        this.setAttribute('data-previous-value', selectedValue);
-    });
-    
-    // NEW: Programme "Status" dropdown validation - UPDATED FOR IMMEDIATE VALIDATION
-    document.getElementById('programmeStatus').addEventListener('change', function() {
-        const selectedValue = this.value;
-        
-        // Store previous value for revert if validation fails
-        previousProgrammeStatusValue = this.getAttribute('data-previous-value') || '';
-        
-        // Clear any previous validation errors
-        dropdownValidationTracker.removeError('programmeStatus');
-        
-        // When records exist in Class Master, Status options "Inactive" and "Completed" should be selectable only if all related classes are completed
-        if (hasClassMasterRecords() && editingProgrammeId) {
-            const hasRelatedClasses = hasRelatedProgramClasses(editingProgrammeId);
-            
-            if (hasRelatedClasses && (selectedValue === 'Inactive' || selectedValue === 'Completed')) {
-                // Check if all related classes are completed
-                const allCompleted = areAllClassesCompletedForProgram(editingProgrammeId);
-                
-                if (!allCompleted) {
-                    dropdownValidationTracker.addError(
-                        'programmeStatus',
-                        'Cannot set status to Inactive or Completed. All related Class Master records must be marked as Completed first.'
-                    );
-                    // Revert to previous value
-                    this.value = previousProgrammeStatusValue;
-                    return;
-                }
-            }
-        }
-        
-        // Store the new value as previous value
-        this.setAttribute('data-previous-value', selectedValue);
-    });
-    
-    // Input validation on blur
-    usernameInput.addEventListener('blur', function() {
-        if (hasSubmitted) {
-            validateUsername();
-        }
-    });
-    
-    passwordInput.addEventListener('blur', function() {
-        if (hasSubmitted) {
-            validatePassword();
-        }
-    });
-    
-    // Clear errors on input
-    usernameInput.addEventListener('input', function() {
-        if (this.value.trim()) {
-            clearError('username');
-            this.classList.remove('error');
-        }
-    });
-    
-    passwordInput.addEventListener('input', function() {
-        if (this.value.trim()) {
-            clearError('password');
-            this.classList.remove('error');
-        }
-    });
-    
-    // Enter key to submit
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            const activeElement = document.activeElement;
-            if (activeElement === usernameInput || activeElement === passwordInput) {
+            // Toggle password
+            document.getElementById('togglePassword').addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+                passwordInput.focus();
+            });
+
+            // Login
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 hasSubmitted = true;
                 handleLogin();
-            }
-        }
-        
-        if (e.key === 'Escape') {
-            hideToast();
-            hideCustomAlert();
-        }
-    });
-}
-
-// NEW: Update Academic Year dropdown for Class Master with filtering rules
-function updateAcademicYearDropdownForClassMaster() {
-    const dropdown = document.getElementById('classAcademicYear');
-    const currentValue = dropdown.value;
-    
-    // Clear existing options except the first one
-    dropdown.innerHTML = '<option value="">Select Academic Year</option>';
-    
-    // RULE 4: Only show Academic Years that are Active AND Is Current Year = Yes
-    const availableAcademicYears = academicYears.filter(year => 
-        year.status === 'Active' && year.is_current === 'Yes'
-    );
-    
-    availableAcademicYears.forEach(year => {
-        const option = document.createElement('option');
-        option.value = year.id;
-        option.textContent = year.name;
-        dropdown.appendChild(option);
-    });
-    
-    // Restore previous selection if it still exists
-    if (currentValue && availableAcademicYears.some(year => year.id === currentValue)) {
-        dropdown.value = currentValue;
-    }
-}
-
-// NEW: Update Programme dropdown for Class Master with filtering rules
-function updateProgrammeDropdownForClassMaster() {
-    const dropdown = document.getElementById('classProgramme');
-    const currentValue = dropdown.value;
-    
-    // Clear existing options except the first one
-    dropdown.innerHTML = '<option value="">Select Program</option>';
-    
-    // RULE 5: Only show Programs that are Active (not Inactive or Completed)
-    const availableProgrammes = programmes.filter(programme => 
-        programme.status === 'Active'
-    );
-    
-    availableProgrammes.forEach(programme => {
-        const option = document.createElement('option');
-        option.value = programme.id;
-        option.textContent = `${programme.name} (${programme.id})`;
-        dropdown.appendChild(option);
-    });
-    
-    // Restore previous selection if it still exists
-    if (currentValue && availableProgrammes.some(programme => programme.id === currentValue)) {
-        dropdown.value = currentValue;
-    }
-}
-
-// Update Class Code dropdown based on selected Programme
-function updateClassCodeDropdown() {
-    const programmeSelect = document.getElementById('classProgramme');
-    const classCodeSelect = document.getElementById('classCode');
-    const selectedProgrammeId = programmeSelect.value;
-    
-    // Clear existing options
-    classCodeSelect.innerHTML = '';
-    
-    if (!selectedProgrammeId) {
-        classCodeSelect.disabled = true;
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'Select Program first';
-        classCodeSelect.appendChild(option);
-        return;
-    }
-    
-    // Get the selected program object
-    const selectedProgramme = programmes.find(prog => prog.id === selectedProgrammeId);
-    
-    if (!selectedProgramme) {
-        classCodeSelect.disabled = true;
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'Program not found';
-        classCodeSelect.appendChild(option);
-        return;
-    }
-    
-    // Enable dropdown
-    classCodeSelect.disabled = false;
-    
-    // Add default option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'Select Class Code';
-    classCodeSelect.appendChild(defaultOption);
-    
-    // Add program-specific options from classCodeOptions mapping
-    const programName = selectedProgramme.name;
-    if (classCodeOptions[programName]) {
-        classCodeOptions[programName].forEach(code => {
-            const option = document.createElement('option');
-            option.value = code;
-            option.textContent = code;
-            classCodeSelect.appendChild(option);
-        });
-    } else {
-        // If program not in mapping, show generic options
-        const genericOptions = ['FY', 'SY', 'TY'];
-        genericOptions.forEach(code => {
-            const option = document.createElement('option');
-            option.value = `${code}-${selectedProgramme.code}`;
-            option.textContent = `${code}-${selectedProgramme.code}`;
-            classCodeSelect.appendChild(option);
-        });
-    }
-}
-
-// Update Term dropdown based on selected Class Code
-function updateTermDropdown(classCode) {
-    const termSelect = document.getElementById('classTerm');
-    const currentValue = termSelect.value;
-    
-    // Clear existing options
-    termSelect.innerHTML = '<option value="">Select Term</option>';
-    
-    if (!classCode) {
-        termSelect.disabled = true;
-        return;
-    }
-    
-    // Get terms from mapping based on Class Code
-    const terms = termMapping[classCode] || [];
-    
-    // Add terms to dropdown based on the mapping
-    terms.forEach(term => {
-        const option = document.createElement('option');
-        option.value = term;
-        option.textContent = term;
-        termSelect.appendChild(option);
-    });
-    
-    // Restore previous selection if it still exists
-    if (currentValue && terms.includes(currentValue)) {
-        termSelect.value = currentValue;
-    }
-    
-    // Enable the dropdown
-    termSelect.disabled = false;
-}
-
-// Save dashboard scroll position
-function saveDashboardScrollPosition() {
-    dashboardScrollPosition = dashboard.scrollTop;
-}
-
-// Restore dashboard scroll position
-function restoreDashboardScrollPosition() {
-    setTimeout(() => {
-        dashboard.scrollTop = dashboardScrollPosition;
-    }, 50);
-}
-
-// Handle login function
-function handleLogin() {
-    console.log('Handling login for role:', currentRole);
-    
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-    
-    console.log('Login attempt with username:', username);
-    
-    // Clear previous errors
-    clearErrors();
-    
-    // Validate inputs
-    let isValid = true;
-    
-    if (!username) {
-        showError('username', 'Username is required');
-        isValid = false;
-    }
-    
-    if (!password) {
-        showError('password', 'Password is required');
-        isValid = false;
-    }
-    
-    if (!isValid) {
-        console.log('Validation failed');
-        return;
-    }
-    
-    // Show loading state
-    loginButton.disabled = true;
-    loadingSpinner.style.display = 'block';
-    loginButton.querySelector('span').textContent = 'AUTHENTICATING...';
-    
-    // Simulate API call delay
-    setTimeout(() => {
-        // Check credentials against stored credentials
-        let authenticated = false;
-        let userData = null;
-        
-        if (currentRole === 'admin') {
-            // Check against stored admin credentials
-            if (username === storedCredentials.admin.username && password === storedCredentials.admin.password) {
-                authenticated = true;
-                userData = storedCredentials.admin;
-            }
-        } else if (currentRole === 'principal') {
-            // Check against stored principal credentials
-            if (username === storedCredentials.principal.username && password === storedCredentials.principal.password) {
-                authenticated = true;
-                userData = storedCredentials.principal;
-            }
-        }
-        
-        if (authenticated && userData) {
-            console.log('Login successful for user:', userData.name);
-            currentUser = userData;
-            
-            // Update UI for success
-            usernameInput.classList.add('success');
-            passwordInput.classList.add('success');
-            
-            // Show success toast
-            showToast('Login Successful', `Welcome back, ${userData.name}!`, 'success');
-            
-            // Transition to dashboard after delay
-            setTimeout(() => {
-                transitionToDashboard();
-                resetLoginForm();
-            }, 500);
-        } else {
-            console.log('Login failed - invalid credentials');
-            
-            // Failed login - show error
-            usernameInput.classList.add('error');
-            passwordInput.classList.add('error');
-            
-            showError('username', 'Invalid username or password');
-            showError('password', 'Please check your credentials');
-            
-            // Shake animation
-            usernameInput.style.animation = 'shake 0.5s';
-            passwordInput.style.animation = 'shake 0.5s';
-            setTimeout(() => {
-                usernameInput.style.animation = '';
-                passwordInput.style.animation = '';
-            }, 500);
-            
-            showToast('Login Failed', 'Invalid username or password', 'error');
-            resetLoginButton();
-        }
-    }, 500);
-}
-
-function transitionToDashboard() {
-    console.log('Transitioning to dashboard for user:', currentUser.name);
-    
-    // Update dashboard with user data
-    updateDashboard();
-    
-    // Show success message
-    showSuccessMessage();
-    
-    // Fade out login page
-    loginPage.style.opacity = '0';
-    loginPage.style.transition = 'opacity 0.3s ease';
-    
-    setTimeout(() => {
-        loginPage.style.display = 'none';
-        dashboard.style.display = 'block';
-        
-        // Fade in dashboard
-        dashboard.style.opacity = '0';
-        dashboard.style.transition = 'opacity 0.3s ease';
-        
-        setTimeout(() => {
-            dashboard.style.opacity = '1';
-            // Scroll to top initially
-            dashboard.scrollTop = 0;
-        }, 50);
-    }, 300);
-}
-
-function showSuccessMessage() {
-    // Show success banner
-    successBanner.style.display = 'block';
-    welcomeBanner.style.display = 'none';
-    successSubtitle.textContent = `Welcome ${currentUser.name} to EDU MASTER Dashboard`;
-    
-    // Add pulse animation
-    successBanner.style.animation = 'successPulse 2s ease-in-out';
-    
-    // Hide success banner after 3 seconds and show welcome banner
-    if (successBannerTimeout) clearTimeout(successBannerTimeout);
-    successBannerTimeout = setTimeout(() => {
-        successBanner.style.display = 'none';
-        welcomeBanner.style.display = 'block';
-    }, 3000);
-}
-
-function updateDashboard() {
-    console.log('Updating dashboard for user:', currentUser);
-    
-    if (!currentUser) return;
-    
-    // Update user info
-    updateUserAvatar();
-    dashboardUserName.textContent = currentUser.name;
-    dashboardUserRole.textContent = currentUser.roleName;
-    
-    // Update welcome message based on role
-    if (currentUser.role === 'admin') {
-        welcomeTitle.textContent = `Welcome back, ${currentUser.name}!`;
-        welcomeSubtitle.textContent = 'You have full access to manage institutes, programs, classes, and academic years.';
-    } else {
-        welcomeTitle.textContent = `Welcome, ${currentUser.name}!`;
-        welcomeSubtitle.textContent = 'You have view-only access to institutes, programs, classes, and academic years.';
-    }
-    
-    // Update stats
-    updateDashboardStats();
-    
-    // Render database tables
-    renderDatabaseTables();
-    
-    // Apply role-based UI restrictions
-    resetUIBeforeApplyingRestrictions();
-    applyRoleRestrictions();
-    
-    // Update profile settings
-    updateProfileSettings();
-    
-    // Update principal settings
-    updatePrincipalSettings();
-    
-    // Update principal management panel if admin
-    updatePrincipalManagementPanel();
-    
-    // Pre-fill current username in security panel (set to empty as per requirement)
-    if (currentUsername) {
-        currentUsername.value = '';
-    }
-    
-    // Pre-fill principal current username in admin settings - EMPTY as per requirement
-    if (principalCurrentUsername) {
-        principalCurrentUsername.value = '';
-    }
-    
-    // Update programme dropdown in class master
-    updateProgrammeDropdownForClassMaster();
-    
-    // Initialize Class Master form fields visibility
-    initializeClassFormVisibility();
-}
-
-// Initialize Class Master form fields visibility
-function initializeClassFormVisibility() {
-    const classCodeSelect = document.getElementById('classCode');
-    const academicYearSelect = document.getElementById('classAcademicYear');
-    const termSelect = document.getElementById('classTerm');
-    
-    // Initially, all dependent fields should be disabled and less visible
-    classCodeSelect.disabled = true;
-    academicYearSelect.disabled = true;
-    termSelect.disabled = true;
-    
-    // Set initial opacity to indicate disabled state
-    classCodeSelect.style.opacity = '0.5';
-    academicYearSelect.style.opacity = '0.5';
-    termSelect.style.opacity = '0.5';
-    
-    // Reset dropdowns
-    classCodeSelect.innerHTML = '<option value="">Select Program first</option>';
-    academicYearSelect.innerHTML = '<option value="">Select Program first</option>';
-    termSelect.innerHTML = '<option value="">Select Program first</option>';
-}
-
-function updateUserAvatar() {
-    if (currentUser.role === 'principal' && principalSettings.profilePhoto) {
-        userAvatar.innerHTML = `<img src="${principalSettings.profilePhoto}" alt="Profile Photo">`;
-        avatarText.style.display = 'none';
-    } else {
-        const photoUrl = userProfilePhotos[currentUser.role];
-        if (photoUrl) {
-            userAvatar.innerHTML = `<img src="${photoUrl}" alt="Profile Photo">`;
-            avatarText.style.display = 'none';
-        } else {
-            avatarText.textContent = currentUser.avatar || currentUser.name.charAt(0).toUpperCase();
-            avatarText.style.display = 'flex';
-        }
-    }
-}
-
-function updateDashboardStats() {
-    // Update counters - FIXED: Ensure correct counting
-    statInstitutes.textContent = institutes.length;
-    statYears.textContent = academicYears.length;
-    statProgrammes.textContent = programmes.length;
-    statClasses.textContent = classes.length;
-    
-    // Update change indicators
-    instituteChange.textContent = institutes.length;
-    programmeChange.textContent = programmes.length;
-    classChange.textContent = classes.length;
-    
-    // Count active academic years
-    const activeYears = academicYears.filter(year => year.is_current === 'Yes').length;
-    activeYearCount.textContent = activeYears;
-    
-    // Update reports summary cards
-    reportTotalInstitutes.textContent = institutes.length;
-    reportTotalProgrammes.textContent = programmes.length;
-    reportTotalClasses.textContent = classes.length;
-    reportActiveYears.textContent = activeYears;
-    
-    // Render tables
-    renderInstituteTable();
-    renderAcademicTable();
-    renderProgrammeTable();
-    renderClassTable();
-    
-    // Update dropdowns
-    updateAcademicYearDropdownForClassMaster();
-    
-    // Update programme dropdown in class master
-    updateProgrammeDropdownForClassMaster();
-}
-
-function resetUIBeforeApplyingRestrictions() {
-    console.log('Resetting UI before applying restrictions for:', currentUser.role);
-    
-    // Reset all form cards to visible (will be hidden if needed in applyRoleRestrictions)
-    const formCards = document.querySelectorAll('.form-card');
-    formCards.forEach(card => {
-        card.style.display = 'block';
-    });
-    
-    // Reset all action columns to visible
-    const actionHeaders = document.querySelectorAll('.actions-header');
-    const actionCells = document.querySelectorAll('.data-table .actions');
-    
-    actionHeaders.forEach(header => header.style.display = 'table-cell');
-    actionCells.forEach(cell => cell.style.display = 'flex');
-    
-    // Reset quick action buttons
-    const addButtons = document.querySelectorAll('.quick-action-btn');
-    addButtons.forEach(btn => {
-        btn.style.display = 'flex';
-    });
-    
-    // Reset settings button
-    settingsBtn.style.display = 'flex';
-    
-    // Reset principal profile and security tabs
-    if (currentUser && currentUser.role === 'admin') {
-        principalProfileTab.style.display = 'block';
-        principalSecurityTab.style.display = 'block';
-    }
-}
-
-function applyRoleRestrictions() {
-    if (!currentUser) return;
-    
-    const isPrincipal = currentUser.role === 'principal';
-    
-    // Hide/show Add buttons in Quick Actions
-    const addButtons = document.querySelectorAll('.quick-action-btn');
-    addButtons.forEach(btn => {
-        if (isPrincipal && btn.id.includes('add')) {
-            btn.style.display = 'none';
-        } else {
-            btn.style.display = 'flex';
-        }
-    });
-    
-    // FIX: Remove Settings button completely for Principal
-    if (isPrincipal) {
-        settingsBtn.style.display = 'none';
-    } else {
-        settingsBtn.style.display = 'flex';
-    }
-    
-    // Hide/show form cards in modules
-    const formCards = document.querySelectorAll('.form-card');
-    formCards.forEach(card => {
-        if (isPrincipal) {
-            card.style.display = 'none';
-        } else {
-            card.style.display = 'block';
-        }
-    });
-    
-    // Hide/show action columns in tables
-    const actionHeaders = document.querySelectorAll('.actions-header');
-    const actionCells = document.querySelectorAll('.data-table .actions');
-    
-    if (isPrincipal) {
-        actionHeaders.forEach(header => header.style.display = 'none');
-        actionCells.forEach(cell => cell.style.display = 'none');
-    } else {
-        actionHeaders.forEach(header => header.style.display = 'table-cell');
-        actionCells.forEach(cell => cell.style.display = 'flex');
-    }
-    
-    // DATABASE TABLES SECTION - NOW VISIBLE FOR PRINCIPAL WITH READ-ONLY ACCESS
-    // Show database tables for both admin and principal
-    databaseTablesSection.style.display = 'block';
-    
-    // Add principal-view class for styling differences
-    if (isPrincipal) {
-        databaseTablesSection.classList.add('principal-view');
-        // Hide action buttons in database tables for principal
-        document.querySelectorAll('.database-tables-section .btn').forEach(btn => {
-            btn.style.display = 'none';
-        });
-    } else {
-        databaseTablesSection.classList.remove('principal-view');
-        // Show action buttons for admin
-        document.querySelectorAll('.database-tables-section .btn').forEach(btn => {
-            btn.style.display = 'inline-flex';
-        });
-    }
-    
-    // Show/hide Principal Profile and Security tabs for Admin
-    if (currentUser.role === 'admin') {
-        principalProfileTab.style.display = 'block';
-        principalSecurityTab.style.display = 'block';
-    } else {
-        principalProfileTab.style.display = 'none';
-        principalSecurityTab.style.display = 'none';
-        // Ensure we're not on principal panel if principal logs in
-        if (document.querySelector('.settings-tab[data-panel="principalProfile"]').classList.contains('active') ||
-            document.querySelector('.settings-tab[data-panel="principalSecurity"]').classList.contains('active')) {
-            switchSettingsTab('adminProfile');
-        }
-    }
-}
-
-function showModule(moduleName) {
-    // Hide main dashboard
-    mainDashboard.style.display = 'none';
-    
-    // Hide all modules
-    document.querySelectorAll('.module-section').forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    // Show selected module
-    switch(moduleName) {
-        case 'institute':
-            instituteModule.style.display = 'block';
-            renderInstituteTable();
-            break;
-        case 'academic':
-            academicModule.style.display = 'block';
-            renderAcademicTable();
-            break;
-        case 'programme':
-            programmeModule.style.display = 'block';
-            renderProgrammeTable();
-            break;
-        case 'class':
-            classModule.style.display = 'block';
-            renderClassTable();
-            // Initialize form visibility when showing class module
-            initializeClassFormVisibility();
-            break;
-    }
-    
-    // Scroll to top of module
-    setTimeout(() => {
-        dashboard.scrollTop = 0;
-    }, 10);
-}
-
-function showReportsModule() {
-    // Hide main dashboard
-    mainDashboard.style.display = 'none';
-    
-    // Hide all modules
-    document.querySelectorAll('.module-section').forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    // Show reports module
-    reportsModule.style.display = 'block';
-    
-    // Initialize reports
-    initializeReports();
-    
-    // Scroll to top
-    setTimeout(() => {
-        dashboard.scrollTop = 0;
-    }, 10);
-}
-
-function showSettingsModule() {
-    // Hide main dashboard
-    mainDashboard.style.display = 'none';
-    
-    // Hide all modules
-    document.querySelectorAll('.module-section').forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    // Show settings module
-    settingsModule.style.display = 'block';
-    
-    // Update profile settings
-    updateProfileSettings();
-    
-    // Apply role restrictions to ensure correct UI state
-    applyRoleRestrictions();
-    
-    // Scroll to top
-    setTimeout(() => {
-        dashboard.scrollTop = 0;
-    }, 10);
-}
-
-function showPrincipalSettingsModule() {
-    // Hide main dashboard
-    mainDashboard.style.display = 'none';
-    
-    // Hide all modules
-    document.querySelectorAll('.module-section').forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    // Show principal settings module
-    principalSettingsModule.style.display = 'block';
-    
-    // Ensure all fields are visible
-    ensurePrincipalSettingsVisibility();
-    
-    // Update principal settings
-    updatePrincipalSettings();
-    
-    // Scroll to top
-    setTimeout(() => {
-        dashboard.scrollTop = 0;
-    }, 10);
-}
-
-function ensurePrincipalSettingsVisibility() {
-    console.log('Ensuring Principal Settings visibility...');
-    
-    // Force display of all form elements in principal settings
-    const principalFormGroups = document.querySelectorAll('#principalProfilePanel .form-group, #principalSecurityPanel .form-group');
-    principalFormGroups.forEach(group => {
-        group.style.display = 'block';
-        group.style.visibility = 'visible';
-        group.style.opacity = '1';
-    });
-    
-    // Force display of all input fields
-    const principalInputs = document.querySelectorAll('#principalProfilePanel .search-input, #principalSecurityPanel .search-input');
-    principalInputs.forEach(input => {
-        input.style.display = 'block';
-        input.style.visibility = 'visible';
-        input.style.opacity = '1';
-    });
-    
-    // Force display of all buttons
-    const principalButtons = document.querySelectorAll('#principalProfilePanel .btn, #principalSecurityPanel .btn');
-    principalButtons.forEach(button => {
-        button.style.display = 'inline-flex';
-        button.style.visibility = 'visible';
-        button.style.opacity = '1';
-    });
-    
-    // Ensure form rows are displayed properly
-    const principalFormRows = document.querySelectorAll('#principalProfilePanel .form-row, #principalSecurityPanel .form-row');
-    principalFormRows.forEach(row => {
-        row.style.display = 'grid';
-        row.style.visibility = 'visible';
-        row.style.opacity = '1';
-    });
-}
-
-function showMainDashboard() {
-    // Show main dashboard
-    mainDashboard.style.display = 'block';
-    
-    // Hide all modules
-    document.querySelectorAll('.module-section').forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    // Reset all forms
-    resetAllForms();
-    
-    // Update stats
-    updateDashboardStats();
-    
-    // Render database tables
-    renderDatabaseTables();
-    
-    // Ensure database tables section remains in the same position
-    databaseTablesSection.style.display = 'block';
-    databaseTablesSection.style.position = 'relative';
-    databaseTablesSection.style.marginTop = '30px';
-}
-
-function showInstituteModule() {
-    showModule('institute');
-}
-
-function showAcademicModule() {
-    showModule('academic');
-    // Apply Class Master validation rules when showing academic module
-    applyClassMasterValidationRules();
-}
-
-function showProgrammeModule() {
-    showModule('programme');
-    // Apply Class Master validation rules when showing programme module
-    applyClassMasterValidationRules();
-}
-
-function showClassModule() {
-    showModule('class');
-}
-
-// Database Tables Functions
-function renderDatabaseTables() {
-    renderDatabaseInstituteTable();
-    renderDatabaseAcademicTable();
-    renderDatabaseProgrammeTable();
-    renderDatabaseClassTable();
-}
-
-function renderDatabaseInstituteTable() {
-    const tbody = document.getElementById('databaseInstituteTableBody');
-    tbody.innerHTML = '';
-    
-    institutes.forEach(institute => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${institute.id}</td>
-            <td>${institute.name}</td>
-            <td>${institute.code}</td>
-            <td>${institute.address}</td>
-            <td><span class="${institute.status === 'Active' ? 'status-active' : 'status-inactive'}">${institute.status}</span></td>
-            <td>${formatDateForDisplay(institute.created_at)}</td>
-            <td>${formatDateForDisplay(institute.updated_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-institute-db" data-id="${institute.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-institute-db" data-id="${institute.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Add event listeners to action buttons
-    if (currentUser && currentUser.role === 'admin') {
-        // Remove existing event listeners first
-        const editButtons = document.querySelectorAll('.edit-institute-db');
-        const deleteButtons = document.querySelectorAll('.delete-institute-db');
-        
-        // Add new event listeners
-        editButtons.forEach(btn => {
-            btn.addEventListener('click', function(e) {
+            });
+            document.getElementById('loginButton').addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
-                const instituteId = this.getAttribute('data-id');
-                const institute = institutes.find(inst => inst.id === instituteId);
-                if (institute) {
+                hasSubmitted = true;
+                handleLogin();
+            });
+
+            // Logout buttons
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            document.getElementById('studentLogoutBtn').addEventListener('click', handleLogout);
+            document.getElementById('hodLogoutBtn').addEventListener('click', handleLogout);
+
+            // Back buttons
+            document.getElementById('backFromInstitute').addEventListener('click', showMainDashboard);
+            document.getElementById('backFromAcademic').addEventListener('click', showMainDashboard);
+            document.getElementById('backFromProgramme').addEventListener('click', showMainDashboard);
+            document.getElementById('backFromClass').addEventListener('click', showMainDashboard);
+            document.getElementById('backFromReports').addEventListener('click', showMainDashboard);
+            document.getElementById('backFromSettings').addEventListener('click', showMainDashboard);
+            document.getElementById('backFromHod').addEventListener('click', showMainDashboard);
+            document.getElementById('backFromStudent').addEventListener('click', showMainDashboard);
+
+            // Quick actions
+            document.getElementById('addInstituteBtn').addEventListener('click', function() {
+                saveDashboardScrollPosition();
+                showInstituteModule();
+                showAddInstituteForm();
+                setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+            });
+            document.getElementById('addAcademicYearBtn').addEventListener('click', function() {
+                saveDashboardScrollPosition();
+                showAcademicModule();
+                showAddAcademicForm();
+                setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+            });
+            document.getElementById('addProgrammeBtn').addEventListener('click', function() {
+                saveDashboardScrollPosition();
+                showProgrammeModule();
+                showAddProgrammeForm();
+                setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+            });
+            document.getElementById('addClassBtn').addEventListener('click', function() {
+                saveDashboardScrollPosition();
+                showClassModule();
+                showAddClassForm();
+                setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+            });
+            document.getElementById('addHodBtn').addEventListener('click', function() {
+                if (currentUser && currentUser.role === 'admin') {
                     saveDashboardScrollPosition();
-                    showModule('institute');
-                    showEditInstituteForm(institute);
-                    setTimeout(() => {
-                        dashboard.scrollTop = 0;
-                    }, 10);
+                    showHodModule();
+                    showAddHodForm();
+                    setTimeout(() => { dashboard.scrollTop = 0; }, 10);
                 }
             });
-        });
-        
-        deleteButtons.forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const instituteId = this.getAttribute('data-id');
-                showCustomConfirm('Are you sure you want to delete this institute?', 'Confirm Delete', 'warning').then(confirmed => {
-                    if (confirmed) {
-                        deleteInstitute(instituteId);
-                        // Refresh the database table
-                        renderDatabaseInstituteTable();
+            document.getElementById('viewReportsBtn').addEventListener('click', function() {
+                saveDashboardScrollPosition();
+                showReportsModule();
+                setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+            });
+            document.getElementById('settingsBtn').addEventListener('click', function() {
+                if (currentUser && currentUser.role === 'admin') {
+                    saveDashboardScrollPosition();
+                    showSettingsModule();
+                    setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+                }
+            });
+
+            // Table tabs
+            document.querySelectorAll('.table-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tableId = this.getAttribute('data-table');
+                    switchTableTab(tableId);
+                });
+            });
+
+            // Settings tabs
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const panelId = this.getAttribute('data-panel');
+                    switchSettingsTab(panelId);
+                });
+            });
+
+            // Save profile, change password, change username
+            document.getElementById('saveProfileBtn').addEventListener('click', saveProfile);
+            document.getElementById('changePasswordBtn').addEventListener('click', changePassword);
+            document.getElementById('changeUsernameBtn').addEventListener('click', changeUsername);
+
+            // Export buttons
+            document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
+            document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+
+            // Institute form
+            document.getElementById('saveInstituteBtn').addEventListener('click', saveInstitute);
+            document.getElementById('cancelInstituteBtn').addEventListener('click', cancelInstituteForm);
+            document.getElementById('searchInstitute').addEventListener('input', filterInstitutes);
+            document.getElementById('clearInstituteSearch').addEventListener('click', clearInstituteSearch);
+
+            // Academic form
+            document.getElementById('saveAcademicBtn').addEventListener('click', saveAcademicYear);
+            document.getElementById('cancelAcademicBtn').addEventListener('click', cancelAcademicForm);
+            document.getElementById('searchAcademic').addEventListener('input', filterAcademicYears);
+            document.getElementById('clearAcademicSearch').addEventListener('click', clearAcademicSearch);
+
+            // Programme form
+            document.getElementById('saveProgrammeBtn').addEventListener('click', saveProgramme);
+            document.getElementById('cancelProgrammeBtn').addEventListener('click', cancelProgrammeForm);
+            document.getElementById('searchProgramme').addEventListener('input', filterProgrammes);
+            document.getElementById('clearProgrammeSearch').addEventListener('click', clearProgrammeSearch);
+
+            // Class form
+            document.getElementById('saveClassBtn').addEventListener('click', saveClass);
+            document.getElementById('cancelClassBtn').addEventListener('click', cancelClassForm);
+            document.getElementById('searchClass').addEventListener('input', filterClasses);
+            document.getElementById('clearClassSearch').addEventListener('click', clearClassSearch);
+            document.getElementById('classProgramme').addEventListener('change', function() {
+                const classCodeSelect = document.getElementById('classCode');
+                const academicYearSelect = document.getElementById('classAcademicYear');
+                const termSelect = document.getElementById('classTerm');
+                if (this.value) {
+                    const selectedProgram = programmes.find(prog => prog.id === this.value);
+                    if (selectedProgram) {
+                        classCodeSelect.disabled = false;
+                        updateClassCodeDropdown();
+                        academicYearSelect.disabled = false;
+                        updateAcademicYearDropdownForClassMaster();
+                        termSelect.disabled = true;
+                        termSelect.innerHTML = '<option value="">Select Class Code first</option>';
+                        termSelect.value = '';
+                        classCodeSelect.style.opacity = '1';
+                        academicYearSelect.style.opacity = '1';
+                        termSelect.style.opacity = '0.5';
+                    }
+                } else {
+                    classCodeSelect.disabled = true;
+                    classCodeSelect.innerHTML = '<option value="">Select Program first</option>';
+                    classCodeSelect.value = '';
+                    classCodeSelect.style.opacity = '0.5';
+                    academicYearSelect.disabled = true;
+                    academicYearSelect.innerHTML = '<option value="">Select Program first</option>';
+                    academicYearSelect.value = '';
+                    academicYearSelect.style.opacity = '0.5';
+                    termSelect.disabled = true;
+                    termSelect.innerHTML = '<option value="">Select Program first</option>';
+                    termSelect.value = '';
+                    termSelect.style.opacity = '0.5';
+                }
+            });
+            document.getElementById('classCode').addEventListener('change', function() {
+                const termSelect = document.getElementById('classTerm');
+                if (this.value) {
+                    termSelect.disabled = false;
+                    updateTermDropdown(this.value);
+                    termSelect.style.opacity = '1';
+                } else {
+                    termSelect.disabled = true;
+                    termSelect.innerHTML = '<option value="">Select Class Code first</option>';
+                    termSelect.value = '';
+                    termSelect.style.opacity = '0.5';
+                }
+            });
+
+            // HOD form
+            document.getElementById('saveHodBtn').addEventListener('click', saveHod);
+            document.getElementById('cancelHodBtn').addEventListener('click', cancelHodForm);
+            document.getElementById('searchHod').addEventListener('input', filterHods);
+            document.getElementById('clearHodSearch').addEventListener('click', clearHodSearch);
+
+            // Student form
+            document.getElementById('saveStudentBtn').addEventListener('click', saveStudent);
+            document.getElementById('cancelStudentBtn').addEventListener('click', cancelStudentForm);
+            document.getElementById('searchStudent').addEventListener('input', filterStudents);
+            document.getElementById('clearStudentSearch').addEventListener('click', clearStudentSearch);
+            document.getElementById('studentClassYear').addEventListener('change', function() {
+                const termSelect = document.getElementById('studentTerm');
+                const year = this.value;
+                termSelect.innerHTML = '<option value="">Select Term</option>';
+                if (year === 'First Year') {
+                    termSelect.innerHTML += '<option value="Term 1">Term 1</option><option value="Term 2">Term 2</option>';
+                } else if (year === 'Second Year') {
+                    termSelect.innerHTML += '<option value="Term 3">Term 3</option><option value="Term 4">Term 4</option>';
+                } else if (year === 'Third Year') {
+                    termSelect.innerHTML += '<option value="Term 5">Term 5</option><option value="Term 6">Term 6</option>';
+                }
+                termSelect.disabled = false;
+            });
+
+            // Validation for dropdowns (simplified)
+            document.getElementById('isCurrentYear').addEventListener('change', function() {
+                const selectedValue = this.value;
+                if (selectedValue === 'Yes') {
+                    const otherCurrentYear = academicYears.find(year => 
+                        year.is_current === 'Yes' && 
+                        (!editingAcademicId || year.id !== editingAcademicId)
+                    );
+                    if (otherCurrentYear) {
+                        alert(`Cannot mark this year as current. "${otherCurrentYear.name}" is already marked as current year.`);
+                        this.value = this.getAttribute('data-previous-value') || '';
+                    }
+                }
+                this.setAttribute('data-previous-value', selectedValue);
+            });
+
+            // Input validation
+            document.getElementById('username').addEventListener('blur', function() { if (hasSubmitted) validateUsername(); });
+            document.getElementById('password').addEventListener('blur', function() { if (hasSubmitted) validatePassword(); });
+            document.getElementById('username').addEventListener('input', function() { if (this.value.trim()) { clearError('username'); this.classList.remove('error'); } });
+            document.getElementById('password').addEventListener('input', function() { if (this.value.trim()) { clearError('password'); this.classList.remove('error'); } });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const activeElement = document.activeElement;
+                    if (activeElement === document.getElementById('username') || activeElement === document.getElementById('password')) {
+                        e.preventDefault();
+                        hasSubmitted = true;
+                        handleLogin();
+                    }
+                }
+                if (e.key === 'Escape') { hideToast(); hideCustomAlert(); }
+            });
+
+            // HOD Sidebar Toggle
+            document.getElementById('hodSidebarToggle').addEventListener('click', function() {
+                document.getElementById('hodSidebar').classList.toggle('closed');
+            });
+
+            // HOD Menu Items
+            document.querySelectorAll('.hod-menu-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.hod-menu-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    const section = this.dataset.section;
+                    document.querySelectorAll('.hod-section').forEach(s => s.style.display = 'none');
+                    if (section === 'dashboard') document.getElementById('hodDashboardSection').style.display = 'block';
+                    else if (section === 'addStudent') document.getElementById('hodAddStudentSection').style.display = 'block';
+                    else if (section === 'faculty') { document.getElementById('hodFacultySection').style.display = 'block'; renderFacultyTable(); }
+                    else if (section === 'createFeedback') { document.getElementById('hodCreateFeedbackSection').style.display = 'block'; updateFacultyDropdown(); }
+                    else if (section === 'viewFeedback') { document.getElementById('hodViewFeedbackSection').style.display = 'block'; renderFeedbackView(); }
+                });
+            });
+
+            // HOD Save Student
+            document.getElementById('hodSaveStudentBtn').addEventListener('click', hodSaveStudent);
+
+            // HOD Save Faculty
+            document.getElementById('hodSaveFacultyBtn').addEventListener('click', hodSaveFaculty);
+
+            // HOD Create Feedback
+            document.getElementById('hodSaveFeedbackBtn').addEventListener('click', hodSaveFeedback);
+
+            // Student Sidebar Toggle
+            document.getElementById('studentSidebarToggle').addEventListener('click', function() {
+                document.getElementById('studentSidebar').classList.toggle('closed');
+            });
+
+            // Student Menu Items
+            document.querySelectorAll('.student-menu-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.student-menu-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    const section = this.dataset.section;
+                    if (section === 'profile') {
+                        document.getElementById('studentProfileSection').style.display = 'flex';
+                        document.getElementById('studentFeedbackSection').style.display = 'none';
+                    } else {
+                        document.getElementById('studentProfileSection').style.display = 'none';
+                        document.getElementById('studentFeedbackSection').style.display = 'block';
+                        loadStudentFeedbackForms();
                     }
                 });
             });
-        });
-    }
-}
-
-function renderDatabaseAcademicTable() {
-    const tbody = document.getElementById('databaseAcademicTableBody');
-    tbody.innerHTML = '';
-    
-    academicYears.forEach(year => {
-        const row = document.createElement('tr');
-        const statusClass = year.status === 'Active' ? 'status-active' : 
-                           year.status === 'Completed' ? 'status-completed' : 'status-inactive';
-        row.innerHTML = `
-            <td>${year.id}</td>
-            <td>${year.name}</td>
-            <td>${formatDateForDisplay(year.start_date)}</td>
-            <td>${formatDateForDisplay(year.end_date)}</td>
-            <td><span class="${year.is_current === 'Yes' ? 'status-active' : 'status-inactive'}">${year.is_current}</span></td>
-            <td><span class="${statusClass}">${year.status}</span></td>
-            <td>${formatDateForDisplay(year.created_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-academic-db" data-id="${year.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-academic-db" data-id="${year.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Add event listeners to action buttons
-    if (currentUser && currentUser.role === 'admin') {
-        document.querySelectorAll('.edit-academic-db').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const yearId = this.getAttribute('data-id');
-                const year = academicYears.find(y => y.id === yearId);
-                if (year) {
-                    saveDashboardScrollPosition();
-                    showModule('academic');
-                    showEditAcademicForm(year);
-                    setTimeout(() => {
-                        dashboard.scrollTop = 0;
-                    }, 10);
-                }
-            });
-        });
-        
-        document.querySelectorAll('.delete-academic-db').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const yearId = this.getAttribute('data-id');
-                showCustomConfirm('Are you sure you want to delete this academic year?', 'Confirm Delete', 'warning').then(confirmed => {
-                    if (confirmed) {
-                        deleteAcademicYear(yearId);
-                        // Refresh the database table
-                        renderDatabaseAcademicTable();
-                    }
-                });
-            });
-        });
-    }
-}
-
-function renderDatabaseProgrammeTable() {
-    const tbody = document.getElementById('databaseProgrammeTableBody');
-    tbody.innerHTML = '';
-    
-    programmes.forEach(programme => {
-        const statusClass = programme.status === 'Active' ? 'status-active' : 
-                          programme.status === 'Completed' ? 'status-completed' : 'status-inactive';
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${programme.id}</td>
-            <td>${programme.code}</td>
-            <td>${programme.name}</td>
-            <td>${programme.duration}</td>
-            <td>${programme.description}</td>
-            <td><span class="${statusClass}">${programme.status}</span></td>
-            <td>${formatDateForDisplay(programme.created_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-programme-db" data-id="${programme.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-programme-db" data-id="${programme.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Add event listeners to action buttons
-    if (currentUser && currentUser.role === 'admin') {
-        document.querySelectorAll('.edit-programme-db').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const programmeId = this.getAttribute('data-id');
-                const programme = programmes.find(prog => prog.id === programmeId);
-                if (programme) {
-                    saveDashboardScrollPosition();
-                    showModule('programme');
-                    showEditProgrammeForm(programme);
-                    setTimeout(() => {
-                        dashboard.scrollTop = 0;
-                    }, 10);
-                }
-            });
-        });
-        
-        document.querySelectorAll('.delete-programme-db').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const programmeId = this.getAttribute('data-id');
-                showCustomConfirm('Are you sure you want to delete this program?', 'Confirm Delete', 'warning').then(confirmed => {
-                    if (confirmed) {
-                        deleteProgramme(programmeId);
-                        // Refresh the database table
-                        renderDatabaseProgrammeTable();
-                    }
-                });
-            });
-        });
-    }
-}
-
-// Render Database Class Table to show Academic Year Name instead of ID
-function renderDatabaseClassTable() {
-    const tbody = document.getElementById('databaseClassTableBody');
-    tbody.innerHTML = '';
-    
-    classes.forEach(cls => {
-        const statusClass = cls.status === 'Active' ? 'status-active' : 
-                          cls.status === 'Completed' ? 'status-completed' : 'status-inactive';
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${cls.id}</td>
-            <td>${cls.programme_id}</td>
-            <td>${cls.programme_name}</td>
-            <td>${cls.class_code}</td>
-            <!-- Show Academic Year Name instead of ID -->
-            <td>${getAcademicYearNameById(cls.academic_year)}</td>
-            <td>${cls.term}</td>
-            <td><span class="${statusClass}">${cls.status}</span></td>
-            <td>${formatDateForDisplay(cls.created_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-class-db" data-id="${cls.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-class-db" data-id="${cls.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Add event listeners to action buttons
-    if (currentUser && currentUser.role === 'admin') {
-        document.querySelectorAll('.edit-class-db').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const classId = this.getAttribute('data-id');
-                const cls = classes.find(c => c.id === classId);
-                if (cls) {
-                    saveDashboardScrollPosition();
-                    showModule('class');
-                    showEditClassForm(cls);
-                    setTimeout(() => {
-                        dashboard.scrollTop = 0;
-                    }, 10);
-                }
-            });
-        });
-        
-        document.querySelectorAll('.delete-class-db').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const classId = this.getAttribute('data-id');
-                showCustomConfirm('Are you sure you want to delete this class?', 'Confirm Delete', 'warning').then(confirmed => {
-                    if (confirmed) {
-                        deleteClass(classId);
-                        // Refresh the database table
-                        renderDatabaseClassTable();
-                    }
-                });
-            });
-        });
-    }
-}
-
-function switchTableTab(tableId) {
-    // Update active tab
-    tableTabs.forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.getAttribute('data-table') === tableId) {
-            tab.classList.add('active');
         }
-    });
-    
-    // Show selected table
-    tableContainers.forEach(container => {
-        container.classList.remove('active');
-        if (container.id === `${tableId}TableContainer`) {
-            container.classList.add('active');
-        }
-    });
-}
 
-function switchSettingsTab(panelId) {
-    // Update active tab
-    settingsTabs.forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.getAttribute('data-panel') === panelId) {
-            tab.classList.add('active');
-        }
-    });
-    
-    // Show selected panel
-    settingsPanels.forEach(panel => {
-        panel.classList.remove('active');
-        if (panel.id === `${panelId}Panel`) {
-            panel.classList.add('active');
-        }
-    });
-}
-
-function switchPrincipalSettingsTab(panelId) {
-    // Update active tab
-    principalSettingsTabs.forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.getAttribute('data-panel') === panelId) {
-            tab.classList.add('active');
-        }
-    });
-    
-    // Show selected panel
-    principalSettingsPanels.forEach(panel => {
-        panel.classList.remove('active');
-        if (panel.id === `${panelId}Panel`) {
-            panel.classList.add('active');
-        }
-    });
-}
-
-// Reports Functions
-function initializeReports() {
-    // Update summary cards
-    reportTotalInstitutes.textContent = institutes.length;
-    reportTotalProgrammes.textContent = programmes.length;
-    reportTotalClasses.textContent = classes.length;
-    reportActiveYears.textContent = academicYears.filter(year => year.is_current === 'Yes').length;
-    
-    // Initialize charts
-    initializeCharts();
-}
-
-function initializeCharts() {
-    // Destroy existing charts
-    if (charts.instituteChart) charts.instituteChart.destroy();
-    if (charts.programmeChart) charts.programmeChart.destroy();
-    if (charts.academicYearChart) charts.academicYearChart.destroy();
-    if (charts.classDistributionChart) charts.classDistributionChart.destroy();
-    
-    // Institute Status Chart (Pie Chart)
-    const instituteCtx = document.getElementById('instituteChart').getContext('2d');
-    const instituteStatusCounts = {
-        'Active': institutes.filter(i => i.status === 'Active').length,
-        'Inactive': institutes.filter(i => i.status === 'Inactive').length
-    };
-    
-    charts.instituteChart = new Chart(instituteCtx, {
-        type: 'pie',
-        data: {
-            labels: ['Active', 'Inactive'],
-            datasets: [{
-                data: [instituteStatusCounts.Active, instituteStatusCounts.Inactive],
-                backgroundColor: ['#10b981', '#ef4444'],
-                borderWidth: 2,
-                borderColor: '#ffffff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                },
-                title: {
-                    display: true,
-                    text: 'Institute Status Distribution'
-                }
-            }
-        }
-    });
-    
-    // Program Statistics Chart (Bar Chart) - UPDATED: Ensure zero values when no data
-    const programmeCtx = document.getElementById('programmeChart').getContext('2d');
-    
-    // Count programs by status - always show all three categories
-    const programmeCounts = {
-        'Active': programmes.filter(p => p.status === 'Active').length,
-        'Completed': programmes.filter(p => p.status === 'Completed').length,
-        'Inactive': programmes.filter(p => p.status === 'Inactive').length
-    };
-    
-    charts.programmeChart = new Chart(programmeCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Active', 'Completed', 'Inactive'],
-            datasets: [{
-                label: 'Number of Programs',
-                data: [
-                    programmeCounts.Active,
-                    programmeCounts.Completed,
-                    programmeCounts.Inactive
-                ],
-                backgroundColor: ['#4f46e5', '#f59e0b', '#ef4444'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                        callback: function(value) {
-                            if (value % 1 === 0) {
-                                return value;
-                            }
-                        }
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                title: {
-                    display: true,
-                    text: 'Program Statistics'
-                }
-            }
-        }
-    });
-    
-    // Academic Year Status Chart (Doughnut Chart)
-    const academicYearCtx = document.getElementById('academicYearChart').getContext('2d');
-    const academicYearCounts = {
-        'Active': academicYears.filter(y => y.status === 'Active').length,
-        'Completed': academicYears.filter(y => y.status === 'Completed').length,
-        'Inactive': academicYears.filter(y => y.status === 'Inactive').length
-    };
-    
-    charts.academicYearChart = new Chart(academicYearCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Active', 'Completed', 'Inactive'],
-            datasets: [{
-                data: [academicYearCounts.Active, academicYearCounts.Completed, academicYearCounts.Inactive],
-                backgroundColor: ['#8b5cf6', '#f59e0b', '#ef4444'],
-                borderWidth: 2,
-                borderColor: '#ffffff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                },
-                title: {
-                    display: true,
-                    text: 'Academic Year Status'
-                }
-            }
-        }
-    });
-    
-    // Class Distribution Chart (Line Chart)
-    const classDistributionCtx = document.getElementById('classDistributionChart').getContext('2d');
-    const programmeClassCounts = {};
-    programmes.forEach(programme => {
-        const count = classes.filter(c => c.programme_name === programme.name).length;
-        programmeClassCounts[programme.name] = count;
-    });
-    
-    charts.classDistributionChart = new Chart(classDistributionCtx, {
-        type: 'line',
-        data: {
-            labels: Object.keys(programmeClassCounts),
-            datasets: [{
-                label: 'Number of Classes',
-                data: Object.values(programmeClassCounts),
-                borderColor: '#ec4899',
-                backgroundColor: 'rgba(236, 72, 153, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                title: {
-                    display: true,
-                    text: 'Classes per Program'
-                }
-            }
-        }
-    });
-}
-
-function exportToPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(20);
-    doc.text('EDU MASTER - Reports Summary', 20, 20);
-    
-    // Add summary
-    doc.setFontSize(12);
-    doc.text(`Report Generated: ${new Date().toLocaleDateString()}`, 20, 35);
-    doc.text(`Total Institutes: ${institutes.length}`, 20, 45);
-    doc.text(`Total Programs: ${programmes.length}`, 20, 55);
-    doc.text(`Total Classes: ${classes.length}`, 20, 65);
-    doc.text(`Active Academic Years: ${academicYears.filter(y => y.is_current === 'Yes').length}`, 20, 75);
-    
-    // Add institute data
-    doc.setFontSize(14);
-    doc.text('Institute Master Data:', 20, 95);
-    doc.setFontSize(10);
-    let yPos = 105;
-    institutes.forEach((institute, index) => {
-        if (yPos > 280) {
-            doc.addPage();
-            yPos = 20;
-        }
-        doc.text(`${index + 1}. ${institute.name} (${institute.code}) - ${institute.status}`, 25, yPos);
-        yPos += 7;
-    });
-    
-    // Save the PDF
-    doc.save(`EDU-MASTER-Report-${new Date().toISOString().slice(0, 10)}.pdf`);
-    showToast('Success', 'Report exported as PDF successfully', 'success');
-}
-
-function exportToExcel() {
-    // Create workbook
-    const wb = XLSX.utils.book_new();
-    
-    // Institute data
-    const instituteData = institutes.map(inst => ({
-        'Institute ID': inst.id,
-        'Institute Name': inst.name,
-        'Institute Code': inst.code,
-        'Address': inst.address,
-        'Status': inst.status,
-        'Created At': formatDateForDisplay(inst.created_at),
-        'Updated At': formatDateForDisplay(inst.updated_at)
-    }));
-    const instituteWs = XLSX.utils.json_to_sheet(instituteData);
-    XLSX.utils.book_append_sheet(wb, instituteWs, 'Institutes');
-    
-    // Academic Year data
-    const academicData = academicYears.map(year => ({
-        'Year ID': year.id,
-        'Year Name': year.name,
-        'Start Date': formatDateForDisplay(year.start_date),
-        'End Date': formatDateForDisplay(year.end_date),
-        'Is Current': year.is_current,
-        'Status': year.status,
-        'Created At': formatDateForDisplay(year.created_at)
-    }));
-    const academicWs = XLSX.utils.json_to_sheet(academicData);
-    XLSX.utils.book_append_sheet(wb, academicWs, 'Academic Years');
-    
-    // Program data
-    const programmeData = programmes.map(prog => ({
-        'Program ID': prog.id,
-        'Program Code': prog.code,
-        'Program Name': prog.name,
-        'Duration (Years)': prog.duration,
-        'Description': prog.description,
-        'Status': prog.status,
-        'Created At': formatDateForDisplay(prog.created_at)
-    }));
-    const programmeWs = XLSX.utils.json_to_sheet(programmeData);
-    XLSX.utils.book_append_sheet(wb, programmeWs, 'Programs');
-    
-    // Class data - Show Academic Year Name instead of ID
-    const classData = classes.map(cls => ({
-        'Class ID': cls.id,
-        'Program ID': cls.programme_id,
-        'Program Name': cls.programme_name,
-        'Class Code': cls.class_code,
-        'Academic Year': getAcademicYearNameById(cls.academic_year), // Show name instead of ID
-        'TERM': cls.term,
-        'Status': cls.status,
-        'Created At': formatDateForDisplay(cls.created_at)
-    }));
-    const classWs = XLSX.utils.json_to_sheet(classData);
-    XLSX.utils.book_append_sheet(wb, classWs, 'Classes');
-    
-    // Summary sheet
-    const summaryData = [{
-        'Total Institutes': institutes.length,
-        'Total Programs': programmes.length,
-        'Total Classes': classes.length,
-        'Active Academic Years': academicYears.filter(y => y.is_current === 'Yes').length,
-        'Report Date': new Date().toLocaleDateString()
-    }];
-    const summaryWs = XLSX.utils.json_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
-    
-    // Save the workbook
-    XLSX.writeFile(wb, `EDU-MASTER-Data-${new Date().toISOString().slice(0, 10)}.xlsx`);
-    showToast('Success', 'Data exported to Excel successfully', 'success');
-}
-
-// Settings Functions
-function updateProfileSettings() {
-    if (!currentUser) return;
-    
-    profileName.value = currentUser.name;
-    profileEmail.value = currentUser.email;
-    profileRole.value = currentUser.roleName;
-    profileMobile.value = currentUser.mobile || '';
-    
-    // Pre-fill current username in security panel (set to empty as per requirement)
-    if (currentUsername) {
-        currentUsername.value = '';
-    }
-}
-
-function updatePrincipalSettings() {
-    if (!currentUser || currentUser.role !== 'principal') return;
-    
-    console.log('Updating principal settings UI...');
-    
-    // Load principal settings
-    loadPrincipalSettingsFromStorage();
-    
-    // Update form fields - ensure they have values
-    principalSettingsName.value = principalSettings.displayName || 'Dr. Ranjit Deshmukh';
-    principalSettingsEmail.value = principalSettings.email || 'principal@edumaster.edu';
-    principalSettingsRole.value = 'Principal';
-    principalSettingsMobile.value = principalSettings.mobile || '+91 9876543210';
-    
-    // Update current username in security panel - EMPTY as per requirement
-    if (principalCurrentUsernameField) {
-        principalCurrentUsernameField.value = '';
-    }
-    
-    // Make sure all form fields are visible
-    ensurePrincipalSettingsVisibility();
-}
-
-function updatePrincipalManagementPanel() {
-    if (currentUser.role === 'admin') {
-        // Pre-fill form fields
-        principalDisplayName.value = principalCredentials.displayName || 'Dr. Ranjit Deshmukh';
-        principalEmail.value = principalCredentials.email || 'principal@edumaster.edu';
-        principalMobile.value = principalCredentials.mobile || '+91 9876543210';
-        
-        // Pre-fill principal current username - EMPTY as per requirement
-        principalCurrentUsername.value = '';
-    }
-}
-
-function saveProfile() {
-    const name = profileName.value.trim();
-    const email = profileEmail.value.trim();
-    const mobile = profileMobile.value.trim();
-    
-    if (!name || !email || !mobile) {
-        showToast('Error', 'Name, email, and mobile number are required', 'error');
-        return;
-    }
-    
-    // Update stored credentials
-    storedCredentials[currentUser.role].name = name;
-    storedCredentials[currentUser.role].email = email;
-    storedCredentials[currentUser.role].mobile = mobile;
-    
-    // Save to localStorage
-    saveCredentialsToStorage();
-    
-    // Update current user
-    currentUser.name = name;
-    currentUser.email = email;
-    currentUser.mobile = mobile;
-    
-    // Update dashboard
-    dashboardUserName.textContent = name;
-    avatarText.textContent = name.charAt(0).toUpperCase();
-    
-    showToast('Success', 'Profile updated successfully', 'success');
-}
-
-function savePrincipalSettings() {
-    const name = principalSettingsName.value.trim();
-    const email = principalSettingsEmail.value.trim();
-    const mobile = principalSettingsMobile.value.trim();
-    
-    if (!name || !email || !mobile) {
-        showToast('Error', 'Name, email, and mobile number are required', 'error');
-        return;
-    }
-    
-    // Update principal settings
-    principalSettings.displayName = name;
-    principalSettings.email = email;
-    principalSettings.mobile = mobile;
-    principalSettings.lastUpdated = new Date().toISOString();
-    
-    // Save to localStorage
-    savePrincipalSettingsToStorage();
-    
-    // Update current user if principal is logged in
-    if (currentUser && currentUser.role === 'principal') {
-        currentUser.name = name;
-        currentUser.email = email;
-        currentUser.mobile = mobile;
-        
-        // Update dashboard
-        dashboardUserName.textContent = name;
-        avatarText.textContent = name.charAt(0).toUpperCase();
-    }
-    
-    showToast('Success', 'Profile updated successfully', 'success');
-}
-
-function changeUsername() {
-    const currentUserInput = currentUsername.value.trim();
-    const newUser = newUsername.value.trim();
-    const confirm = confirmUsername.value.trim();
-    
-    if (!currentUserInput || !newUser || !confirm) {
-        showToast('Error', 'All username fields are required', 'error');
-        return;
-    }
-    
-    if (newUser !== confirm) {
-        showToast('Error', 'New usernames do not match', 'error');
-        return;
-    }
-    
-    // Verify current username
-    if (currentUserInput !== currentUser.username) {
-        showToast('Error', 'Current username is incorrect', 'error');
-        return;
-    }
-    
-    // Update stored credentials
-    storedCredentials[currentUser.role].username = newUser;
-    saveCredentialsToStorage();
-    
-    // Update username
-    currentUser.username = newUser;
-    
-    // Clear fields - UPDATED: Also clear current username field
-    currentUsername.value = '';
-    newUsername.value = '';
-    confirmUsername.value = '';
-    
-    showToast('Success', 'Username changed successfully', 'success');
-}
-
-function changePrincipalUsernameAdmin() {
-    const currentUserInput = principalCurrentUsername.value.trim();
-    const newUser = principalNewUsername.value.trim();
-    const confirm = principalConfirmUsername.value.trim();
-    
-    if (!currentUserInput || !newUser || !confirm) {
-        showToast('Error', 'All username fields are required', 'error');
-        return;
-    }
-    
-    if (newUser !== confirm) {
-        showToast('Error', 'New usernames do not match', 'error');
-        return;
-    }
-    
-    // Check if current username matches stored principal username
-    if (currentUserInput !== storedCredentials.principal.username) {
-        showToast('Error', 'Current username is incorrect', 'error');
-        return;
-    }
-    
-    // Update stored credentials
-    storedCredentials.principal.username = newUser;
-    saveCredentialsToStorage();
-    
-    // Update principal settings
-    principalSettings.username = newUser;
-    principalSettings.lastUpdated = new Date().toISOString();
-    
-    // Save to localStorage
-    savePrincipalSettingsToStorage();
-    
-    // Update current user if principal is logged in
-    if (currentUser && currentUser.role === 'principal') {
-        currentUser.username = newUser;
-    }
-    
-    // Clear fields - DON'T update current username field as per requirement
-    principalCurrentUsername.value = '';
-    principalNewUsername.value = '';
-    principalConfirmUsername.value = '';
-    
-    showToast('Success', 'Principal username changed successfully', 'success');
-}
-
-function changePrincipalUsername() {
-    const currentUserInput = principalCurrentUsernameField.value.trim();
-    const newUser = principalNewUsernameField.value.trim();
-    const confirm = principalConfirmUsernameField.value.trim();
-    
-    if (!currentUserInput || !newUser || !confirm) {
-        showToast('Error', 'All username fields are required', 'error');
-        return;
-    }
-    
-    if (newUser !== confirm) {
-        showToast('Error', 'New usernames do not match', 'error');
-        return;
-    }
-    
-    // Check if current username matches stored username
-    const storedUsername = storedCredentials.principal.username || 'principal';
-    if (currentUserInput !== storedUsername) {
-        showToast('Error', 'Current username is incorrect', 'error');
-        return;
-    }
-    
-    // Update stored credentials
-    storedCredentials.principal.username = newUser;
-    saveCredentialsToStorage();
-    
-    // Update principal settings
-    principalSettings.username = newUser;
-    principalSettings.lastUpdated = new Date().toISOString();
-    
-    // Save to localStorage
-    savePrincipalSettingsToStorage();
-    
-    // Update current user if principal is logged in
-    if (currentUser && currentUser.role === 'principal') {
-        currentUser.username = newUser;
-    }
-    
-    // Update form fields - clear current username field as per requirement
-    principalCurrentUsernameField.value = '';
-    
-    // Clear fields
-    principalNewUsernameField.value = '';
-    principalConfirmUsernameField.value = '';
-    
-    showToast('Success', 'Username changed successfully', 'success');
-}
-
-function changePassword() {
-    const currentPass = currentPassword.value;
-    const newPass = newPassword.value;
-    const confirm = confirmPassword.value;
-    
-    if (!currentPass || !newPass || !confirm) {
-        showToast('Error', 'All password fields are required', 'error');
-        return;
-    }
-    
-    if (newPass !== confirm) {
-        showToast('Error', 'New passwords do not match', 'error');
-        return;
-    }
-    
-    // Check against stored credentials
-    if (currentPass !== storedCredentials[currentUser.role].password) {
-        showToast('Error', 'Current password is incorrect', 'error');
-        return;
-    }
-    
-    // Update stored credentials
-    storedCredentials[currentUser.role].password = newPass;
-    saveCredentialsToStorage();
-    
-    // Update password
-    currentUser.password = newPass;
-    
-    // Clear fields
-    currentPassword.value = '';
-    newPassword.value = '';
-    confirmPassword.value = '';
-    
-    showToast('Success', 'Password changed successfully', 'success');
-}
-
-function changePrincipalPasswordAdmin() {
-    const currentPass = principalCurrentPassword.value;
-    const newPass = principalNewPassword.value;
-    const confirm = principalConfirmPassword.value;
-    
-    if (!currentPass || !newPass || !confirm) {
-        showToast('Error', 'All password fields are required', 'error');
-        return;
-    }
-    
-    if (newPass !== confirm) {
-        showToast('Error', 'New passwords do not match', 'error');
-        return;
-    }
-    
-    // Check current password against stored principal credentials
-    if (currentPass !== storedCredentials.principal.password) {
-        showToast('Error', 'Current password is incorrect', 'error');
-        return;
-    }
-    
-    // Update stored credentials
-    storedCredentials.principal.password = newPass;
-    saveCredentialsToStorage();
-    
-    // Update principal credentials
-    principalCredentials.password = newPass;
-    principalCredentials.lastChanged = new Date().toISOString().split('T')[0];
-    
-    // Save to localStorage
-    savePrincipalCredentialsToStorage();
-    
-    // Update current user if principal is logged in
-    if (currentUser && currentUser.role === 'principal') {
-        currentUser.password = newPass;
-    }
-    
-    // Clear fields
-    principalCurrentPassword.value = '';
-    principalNewPassword.value = '';
-    principalConfirmPassword.value = '';
-    
-    showToast('Success', 'Principal password changed successfully', 'success');
-}
-
-function changePrincipalPassword() {
-    const currentPass = principalCurrentPasswordField.value;
-    const newPass = principalNewPasswordField.value;
-    const confirm = principalConfirmPasswordField.value;
-    
-    if (!currentPass || !newPass || !confirm) {
-        showToast('Error', 'All password fields are required', 'error');
-        return;
-    }
-    
-    if (newPass !== confirm) {
-        showToast('Error', 'New passwords do not match', 'error');
-        return;
-    }
-    
-    // Check current password against stored credentials
-    const storedPassword = storedCredentials.principal.password || 'principal123';
-    if (currentPass !== storedPassword) {
-        showToast('Error', 'Current password is incorrect', 'error');
-        return;
-    }
-    
-    // Update stored credentials
-    storedCredentials.principal.password = newPass;
-    saveCredentialsToStorage();
-    
-    // Update principal credentials
-    principalCredentials.password = newPass;
-    principalCredentials.lastChanged = new Date().toISOString().split('T')[0];
-    
-    // Save to localStorage
-    savePrincipalCredentialsToStorage();
-    
-    // Update current user if principal is logged in
-    if (currentUser && currentUser.role === 'principal') {
-        currentUser.password = newPass;
-    }
-    
-    // Clear fields
-    principalCurrentPasswordField.value = '';
-    principalNewPasswordField.value = '';
-    principalConfirmPasswordField.value = '';
-    
-    showToast('Success', 'Password changed successfully', 'success');
-}
-
-function savePrincipalCredentials() {
-    const displayName = principalDisplayName.value.trim();
-    const email = principalEmail.value.trim();
-    const mobile = principalMobile.value.trim();
-    
-    if (!displayName || !email || !mobile) {
-        showToast('Error', 'All fields are required', 'error');
-        return;
-    }
-    
-    // Update stored principal credentials
-    storedCredentials.principal.name = displayName;
-    storedCredentials.principal.displayName = displayName;
-    storedCredentials.principal.email = email;
-    storedCredentials.principal.mobile = mobile;
-    
-    // Save to localStorage
-    saveCredentialsToStorage();
-    
-    // Update principal credentials
-    principalCredentials.displayName = displayName;
-    principalCredentials.email = email;
-    principalCredentials.mobile = mobile;
-    
-    // Update principal settings as well
-    principalSettings.displayName = displayName;
-    principalSettings.email = email;
-    principalSettings.mobile = mobile;
-    principalSettings.lastUpdated = new Date().toISOString();
-    
-    // Save to localStorage
-    savePrincipalCredentialsToStorage();
-    savePrincipalSettingsToStorage();
-    
-    // Update display
-    updatePrincipalManagementPanel();
-    
-    showToast('Success', 'Principal credentials updated successfully', 'success');
-}
-
-function savePrincipalCredentialsToStorage() {
-    try {
-        localStorage.setItem('eduMasterPrincipalCredentials', JSON.stringify(principalCredentials));
-    } catch (e) {
-        console.error('Error saving principal credentials:', e);
-    }
-}
-
-function loadPrincipalCredentialsFromStorage() {
-    try {
-        const saved = localStorage.getItem('eduMasterPrincipalCredentials');
-        if (saved) {
-            principalCredentials = JSON.parse(saved);
-        }
-    } catch (e) {
-        console.error('Error loading principal credentials:', e);
-    }
-}
-
-function savePrincipalSettingsToStorage() {
-    try {
-        localStorage.setItem('eduMasterPrincipalSettings', JSON.stringify(principalSettings));
-    } catch (e) {
-        console.error('Error saving principal settings:', e);
-    }
-}
-
-function loadPrincipalSettingsFromStorage() {
-    try {
-        const saved = localStorage.getItem('eduMasterPrincipalSettings');
-        if (saved) {
-            principalSettings = JSON.parse(saved);
-        }
-    } catch (e) {
-        console.error('Error loading principal settings:', e);
-    }
-}
-
-function saveProfilePhotos() {
-    try {
-        localStorage.setItem('eduMasterProfilePhotos', JSON.stringify(userProfilePhotos));
-    } catch (e) {
-        console.error('Error saving profile photos:', e);
-    }
-}
-
-function loadProfilePhotos() {
-    try {
-        const saved = localStorage.getItem('eduMasterProfilePhotos');
-        if (saved) {
-            userProfilePhotos = JSON.parse(saved);
-        }
-    } catch (e) {
-        console.error('Error loading profile photos:', e);
-    }
-}
-
-// Institute Master Functions - ID format changed to IID001, IID002, etc.
-function showAddInstituteForm() {
-    document.getElementById('instituteFormTitle').textContent = 'Add New Institute';
-    document.getElementById('saveInstituteBtn').innerHTML = '<i class="fas fa-save"></i> Save Institute';
-    editingInstituteId = null;
-    resetInstituteForm();
-}
-
-function showEditInstituteForm(institute) {
-    document.getElementById('instituteFormTitle').textContent = 'Edit Institute';
-    document.getElementById('saveInstituteBtn').innerHTML = '<i class="fas fa-save"></i> Update Institute';
-    editingInstituteId = institute.id;
-    
-    document.getElementById('instituteName').value = institute.name;
-    document.getElementById('instituteCode').value = institute.code;
-    document.getElementById('instituteAddress').value = institute.address;
-    document.getElementById('instituteStatus').value = institute.status;
-}
-
-function saveInstitute() {
-    const name = document.getElementById('instituteName').value.trim();
-    const code = document.getElementById('instituteCode').value.trim();
-    const address = document.getElementById('instituteAddress').value.trim();
-    const status = document.getElementById('instituteStatus').value;
-    
-    // Validation
-    if (!name || !code || !address || !status) {
-        showToast('Validation Error', 'Please fill in all required fields', 'error');
-        return;
-    }
-    
-    const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
-    
-    if (editingInstituteId) {
-        // Update existing institute
-        const index = institutes.findIndex(inst => inst.id === editingInstituteId);
-        if (index !== -1) {
-            institutes[index] = {
-                ...institutes[index],
-                name,
-                code,
-                address,
-                status,
-                updated_at: today
-            };
-            showToast('Success', 'Institute updated successfully', 'success');
-        }
-    } else {
-        // Add new institute - ID format changed to IID001, IID002, etc.
-        const newInstitute = {
-            id: `IID${String(institutes.length + 1).padStart(3, '0')}`,
-            name,
-            code,
-            address,
-            status,
-            created_at: today,
-            updated_at: today
-        };
-        institutes.push(newInstitute);
-        showToast('Success', 'Institute added successfully', 'success');
-    }
-    
-    // Update dashboard stats after adding/updating
-    updateDashboardStats();
-    renderInstituteTable();
-    renderDatabaseInstituteTable();
-    resetInstituteForm();
-}
-
-function resetInstituteForm() {
-    document.getElementById('instituteName').value = '';
-    document.getElementById('instituteCode').value = '';
-    document.getElementById('instituteAddress').value = '';
-    document.getElementById('instituteStatus').value = '';
-    editingInstituteId = null;
-}
-
-function cancelInstituteForm() {
-    resetInstituteForm();
-    document.getElementById('instituteFormTitle').textContent = 'Add New Institute';
-    document.getElementById('saveInstituteBtn').innerHTML = '<i class="fas fa-save"></i> Save Institute';
-}
-
-function renderInstituteTable() {
-    const tbody = document.getElementById('instituteTableBody');
-    tbody.innerHTML = '';
-    
-    institutes.forEach(institute => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${institute.id}</td>
-            <td>${institute.name}</td>
-            <td>${institute.code}</td>
-            <td>${institute.address}</td>
-            <td><span class="${institute.status === 'Active' ? 'status-active' : 'status-inactive'}">${institute.status}</span></td>
-            <td>${formatDateForDisplay(institute.created_at)}</td>
-            <td>${formatDateForDisplay(institute.updated_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-institute" data-id="${institute.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-institute" data-id="${institute.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Add event listeners to action buttons
-    document.querySelectorAll('.edit-institute').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const instituteId = this.getAttribute('data-id');
-            const institute = institutes.find(inst => inst.id === instituteId);
-            if (institute) {
-                showEditInstituteForm(institute);
-                // Scroll to form
-                document.getElementById('instituteFormCard').scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-    });
-    
-    document.querySelectorAll('.delete-institute').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const instituteId = this.getAttribute('data-id');
-            showCustomConfirm('Are you sure you want to delete this institute?', 'Confirm Delete', 'warning').then(confirmed => {
-                if (confirmed) {
-                    deleteInstitute(instituteId);
-                }
-            });
-        });
-    });
-}
-
-function deleteInstitute(id) {
-    const index = institutes.findIndex(inst => inst.id === id);
-    if (index !== -1) {
-        institutes.splice(index, 1);
-        // Update dashboard stats after deletion
-        updateDashboardStats();
-        renderInstituteTable();
-        renderDatabaseInstituteTable();
-        showToast('Success', 'Institute deleted successfully', 'success');
-    }
-}
-
-function filterInstitutes() {
-    const searchTerm = document.getElementById('searchInstitute').value.toLowerCase();
-    const filtered = institutes.filter(institute => 
-        institute.name.toLowerCase().includes(searchTerm) ||
-        institute.code.toLowerCase().includes(searchTerm) ||
-        institute.address.toLowerCase().includes(searchTerm)
-    );
-    
-    const tbody = document.getElementById('instituteTableBody');
-    tbody.innerHTML = '';
-    
-    filtered.forEach(institute => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${institute.id}</td>
-            <td>${institute.name}</td>
-            <td>${institute.code}</td>
-            <td>${institute.address}</td>
-            <td><span class="${institute.status === 'Active' ? 'status-active' : 'status-inactive'}">${institute.status}</span></td>
-            <td>${formatDateForDisplay(institute.created_at)}</td>
-            <td>${formatDateForDisplay(institute.updated_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-institute" data-id="${institute.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-institute" data-id="${institute.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Re-add event listeners
-    document.querySelectorAll('.edit-institute').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const instituteId = this.getAttribute('data-id');
-            const institute = institutes.find(inst => inst.id === instituteId);
-            if (institute) showEditInstituteForm(institute);
-        });
-    });
-    
-    document.querySelectorAll('.delete-institute').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const instituteId = this.getAttribute('data-id');
-            showCustomConfirm('Are you sure you want to delete this institute?', 'Confirm Delete', 'warning').then(confirmed => {
-                if (confirmed) {
-                    deleteInstitute(instituteId);
-                }
-            });
-        });
-    });
-}
-
-function clearInstituteSearch() {
-    document.getElementById('searchInstitute').value = '';
-    renderInstituteTable();
-}
-
-// Academic Year Functions - Updated with new validation rules and immediate validation
-function showAddAcademicForm() {
-    document.getElementById('academicFormTitle').textContent = 'Add New Academic Year';
-    document.getElementById('saveAcademicBtn').innerHTML = '<i class="fas fa-save"></i> Save Academic Year';
-    editingAcademicId = null;
-    resetAcademicForm();
-    
-    // Reset previous value storage for dropdowns
-    previousIsCurrentYearValue = '';
-    previousAcademicStatusValue = '';
-    document.getElementById('isCurrentYear').setAttribute('data-previous-value', '');
-    document.getElementById('academicStatus').setAttribute('data-previous-value', '');
-    
-    // Clear any validation errors
-    dropdownValidationTracker.clearAll();
-    
-    // Apply Class Master validation rules - UPDATED: Ensure Status dropdown is visible
-    applyClassMasterValidationRules();
-    
-    // NEW: Ensure Status dropdown is visible and enabled when adding new Academic Year
-    const academicStatus = document.getElementById('academicStatus');
-    if (academicStatus) {
-        academicStatus.disabled = false;
-        academicStatus.style.opacity = '1';
-        academicStatus.removeAttribute('title');
-    }
-}
-
-function showEditAcademicForm(academic) {
-    document.getElementById('academicFormTitle').textContent = 'Edit Academic Year';
-    document.getElementById('saveAcademicBtn').innerHTML = '<i class="fas fa-save"></i> Update Academic Year';
-    editingAcademicId = academic.id;
-    
-    document.getElementById('yearName').value = academic.name;
-    document.getElementById('startDate').value = formatDateToYYYYMMDD(academic.start_date);
-    document.getElementById('endDate').value = formatDateToYYYYMMDD(academic.end_date);
-    document.getElementById('isCurrentYear').value = academic.is_current || '';
-    document.getElementById('academicStatus').value = academic.status;
-    
-    // Store previous values for validation
-    previousIsCurrentYearValue = academic.is_current || '';
-    previousAcademicStatusValue = academic.status || '';
-    document.getElementById('isCurrentYear').setAttribute('data-previous-value', previousIsCurrentYearValue);
-    document.getElementById('academicStatus').setAttribute('data-previous-value', previousAcademicStatusValue);
-    
-    // Clear any validation errors
-    dropdownValidationTracker.clearAll();
-    
-    // Apply Class Master validation rules
-    applyClassMasterValidationRules();
-}
-
-// Save Academic Year function with all required validations
-function saveAcademicYear() {
-    const name = document.getElementById('yearName').value.trim();
-    const startDateInput = document.getElementById('startDate').value;
-    const endDateInput = document.getElementById('endDate').value;
-    const isCurrent = document.getElementById('isCurrentYear').value;
-    const status = document.getElementById('academicStatus').value;
-    
-    // Clear previous validation errors
-    dropdownValidationTracker.clearAll();
-    
-    // Run immediate validations
-    const isCurrentYearValid = validateAcademicYearCurrentYearImmediate();
-    const academicStatusValid = validateAcademicYearStatusImmediate();
-    
-    // If any immediate validation failed, don't proceed
-    if (!isCurrentYearValid || !academicStatusValid) {
-        showToast('Validation Error', 'Please fix the validation errors before saving', 'error');
-        return;
-    }
-    
-    // Validation
-    if (!name || !startDateInput || !endDateInput || !isCurrent || !status) {
-        showToast('Validation Error', 'Please fill in all required fields', 'error');
-        return;
-    }
-    
-    // Convert to DD-MM-YYYY format for storage
-    const startDate = formatDateToDDMMYYYY(startDateInput);
-    const endDate = formatDateToDDMMYYYY(endDateInput);
-    
-    // RULE 2: Only one Academic Year can be marked as Current Year at a time
-    if (isCurrent === 'Yes') {
-        // Check if there is another academic year already marked as current
-        const otherCurrentYear = academicYears.find(year => 
-            year.is_current === 'Yes' && 
-            (!editingAcademicId || year.id !== editingAcademicId)
-        );
-        
-        if (otherCurrentYear) {
-            dropdownValidationTracker.addError(
-                'isCurrentYear',
-                `Cannot mark "${name}" as current year. "${otherCurrentYear.name}" is already marked as current year. Please complete the existing current year first.`
-            );
-            return;
-        }
-    }
-    
-    // When records exist in Class Master, Status options "Inactive" and "Completed" should be selectable only if all related classes are completed
-    if (hasClassMasterRecords() && editingAcademicId) {
-        const hasRelatedClasses = hasRelatedAcademicYearClasses(editingAcademicId);
-        
-        if (hasRelatedClasses && (status === 'Inactive' || status === 'Completed')) {
-            // Check if all related classes are completed
-            const allCompleted = areAllRelatedClassesCompleted(editingAcademicId);
-            
-            if (!allCompleted) {
-                dropdownValidationTracker.addError(
-                    'academicStatus',
-                    'Cannot set status to Inactive or Completed. All related Class Master records must be marked as Completed first.'
-                );
+        // HOD Functions
+        function hodSaveStudent() {
+            const academicYear = document.getElementById('hodStudentAcademicYear').value;
+            const dept = document.getElementById('hodStudentDepartment').value;
+            const year = document.getElementById('hodStudentYear').value;
+            const term = document.getElementById('hodStudentTerm').value;
+            const name = document.getElementById('hodStudentName').value.trim();
+            const enrollment = document.getElementById('hodStudentEnrollment').value.trim();
+            const mobile = document.getElementById('hodStudentMobile').value.trim();
+            const email = document.getElementById('hodStudentEmail').value.trim();
+            if (!academicYear || !dept || !year || !term || !name || !enrollment || !mobile || !email) {
+                alert('All fields required');
                 return;
             }
-        }
-    }
-    
-    const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
-    
-    if (editingAcademicId) {
-        // Update existing academic year
-        const index = academicYears.findIndex(year => year.id === editingAcademicId);
-        if (index !== -1) {
-            academicYears[index] = {
-                ...academicYears[index],
+            const nameParts = name.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join('') || '';
+            const defaultPassword = firstName + lastName;
+            const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+            const newId = `STU${String(students.length + 1).padStart(3, '0')}`;
+            const newStudent = {
+                id: newId,
                 name,
-                start_date: startDate,
-                end_date: endDate,
-                is_current: isCurrent,
-                status,
+                enrollment,
+                program: dept,
+                academicYear,
+                classYear: year === 'FY-CO' ? 'First Year' : year === 'SY-CO' ? 'Second Year' : 'Third Year',
+                term,
+                mobile,
+                email,
+                password: defaultPassword,
+                firstLogin: true,
+                created_at: today,
                 updated_at: today
             };
-            showToast('Success', 'Academic year updated successfully', 'success');
+            students.push(newStudent);
+            saveStudents();
+            alert('Student added. Default password: ' + defaultPassword);
+            document.getElementById('hodAddStudentSection').querySelectorAll('input, select').forEach(el => el.value = '');
         }
-    } else {
-        // Add new academic year - ID format changed to YID001, YID002, etc.
-        const newAcademicYear = {
-            id: `YID${String(academicYears.length + 1).padStart(3, '0')}`,
-            name,
-            start_date: startDate,
-            end_date: endDate,
-            is_current: isCurrent,
-            status,
-            created_at: today,
-            updated_at: today
+
+        function hodSaveFaculty() {
+            const academicYear = document.getElementById('hodFacultyAcademicYear').value;
+            const dept = document.getElementById('hodFacultyDepartment').value;
+            const year = document.getElementById('hodFacultyYear').value;
+            const term = document.getElementById('hodFacultyTerm').value;
+            const name = document.getElementById('hodFacultyName').value.trim();
+            const subject = document.getElementById('hodFacultySubject').value.trim();
+            const mobile = document.getElementById('hodFacultyMobile').value.trim();
+            const email = document.getElementById('hodFacultyEmail').value.trim();
+            if (!academicYear || !dept || !year || !term || !name || !subject || !mobile || !email) {
+                alert('All fields required');
+                return;
+            }
+            const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+            faculties.push({
+                id: 'FAC' + Date.now(),
+                academicYear,
+                department: dept,
+                year,
+                term,
+                name,
+                subject,
+                mobile,
+                email,
+                created_at: today
+            });
+            saveFaculties();
+            alert('Faculty added');
+            renderFacultyTable();
+            document.getElementById('hodFacultySection').querySelectorAll('input, select').forEach(el => el.value = '');
+        }
+
+        function renderFacultyTable() {
+            const tbody = document.getElementById('hodFacultyTableBody');
+            tbody.innerHTML = '';
+            faculties.filter(f => f.department === currentUser.department).forEach(f => {
+                const row = `<tr><td>${f.name}</td><td>${f.subject}</td><td>${f.year}</td><td>${f.term}</td><td>${f.mobile}</td><td>${f.email}</td></tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function updateFacultyDropdown() {
+            const select = document.getElementById('hodFeedbackFaculty');
+            select.innerHTML = '<option value="">Select Faculty</option>';
+            faculties.filter(f => f.department === currentUser.department).forEach(f => {
+                select.innerHTML += `<option value="${f.id}" data-subject="${f.subject}">${f.name} (${f.subject})</option>`;
+            });
+            select.addEventListener('change', function() {
+                const opt = this.options[this.selectedIndex];
+                document.getElementById('hodFeedbackSubject').value = opt.dataset.subject || '';
+            });
+        }
+
+        function hodSaveFeedback() {
+            const academicYear = document.getElementById('hodFeedbackAcademicYear').value;
+            const dept = document.getElementById('hodFeedbackDepartment').value;
+            const year = document.getElementById('hodFeedbackYear').value;
+            const term = document.getElementById('hodFeedbackTerm').value;
+            const facultyId = document.getElementById('hodFeedbackFaculty').value;
+            const subject = document.getElementById('hodFeedbackSubject').value;
+            const heading1 = document.getElementById('hodFeedbackHeading1').value.trim();
+            const heading2 = document.getElementById('hodFeedbackHeading2').value.trim();
+            if (!academicYear || !dept || !year || !term || !facultyId || !subject || !heading1 || !heading2) {
+                alert('All fields required');
+                return;
+            }
+            const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+            const faculty = faculties.find(f => f.id === facultyId);
+            feedbacks.push({
+                id: 'FB' + Date.now(),
+                academicYear,
+                department: dept,
+                year,
+                term,
+                facultyId,
+                facultyName: faculty ? faculty.name : '',
+                subject,
+                headings: [heading1, heading2],
+                created_at: today
+            });
+            saveFeedbacks();
+            alert('Feedback created');
+        }
+
+        function renderFeedbackView() {
+            const container = document.getElementById('hodFeedbackViewContainer');
+            container.innerHTML = '';
+            const hodFeedbacks = feedbacks.filter(f => f.department === currentUser.department);
+            if (hodFeedbacks.length === 0) {
+                container.innerHTML = '<p>No feedbacks yet.</p>';
+                return;
+            }
+            hodFeedbacks.forEach(fb => {
+                const responses = feedbackResponses.filter(r => r.feedbackId === fb.id);
+                const faculty = faculties.find(f => f.id === fb.facultyId);
+                const facultyName = faculty ? faculty.name : fb.facultyName;
+                const html = `
+                    <div class="form-card">
+                        <h4>${fb.subject} - ${facultyName}</h4>
+                        <p>Year: ${fb.year} | Term: ${fb.term}</p>
+                        <table class="data-table">
+                            <thead><tr><th>Student</th><th>${fb.headings[0]}</th><th>${fb.headings[1]}</th></tr></thead>
+                            <tbody>
+                                ${responses.map(r => `<tr><td>${r.studentName}</td><td>${r.marks[0]}</td><td>${r.marks[1]}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        function loadStudentFeedbackForms() {
+            const container = document.getElementById('studentFeedbackList');
+            container.innerHTML = '';
+            const student = currentUser;
+            const availableFeedbacks = feedbacks.filter(f => 
+                f.department === student.program && 
+                f.year === student.classYear.replace('First Year','FY-CO').replace('Second Year','SY-CO').replace('Third Year','TY-CO') &&
+                f.term === student.term
+            );
+            if (availableFeedbacks.length === 0) {
+                container.innerHTML = '<p>No feedback forms available.</p>';
+                return;
+            }
+            availableFeedbacks.forEach(fb => {
+                const alreadySubmitted = feedbackResponses.some(r => r.feedbackId === fb.id && r.studentId === student.id);
+                if (alreadySubmitted) {
+                    container.innerHTML += `<div class="alert alert-info">You have already submitted feedback for ${fb.subject}</div>`;
+                } else {
+                    container.innerHTML += `
+                        <div class="form-card" id="fb-${fb.id}">
+                            <h4>${fb.subject} - ${fb.facultyName}</h4>
+                            <p>${fb.headings[0]} (out of 5): <input type="number" min="1" max="5" id="mark1-${fb.id}"></p>
+                            <p>${fb.headings[1]} (out of 5): <input type="number" min="1" max="5" id="mark2-${fb.id}"></p>
+                            <button class="btn btn-primary" onclick="submitFeedback('${fb.id}')">Submit</button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        window.submitFeedback = function(feedbackId) {
+            const fb = feedbacks.find(f => f.id === feedbackId);
+            const mark1 = document.getElementById(`mark1-${feedbackId}`).value;
+            const mark2 = document.getElementById(`mark2-${feedbackId}`).value;
+            if (!mark1 || !mark2) { alert('Please enter marks'); return; }
+            feedbackResponses.push({
+                feedbackId,
+                studentId: currentUser.id,
+                studentName: currentUser.name,
+                marks: [mark1, mark2]
+            });
+            saveFeedbackResponses();
+            alert('Feedback submitted');
+            loadStudentFeedbackForms();
         };
-        academicYears.push(newAcademicYear);
-        showToast('Success', 'Academic year added successfully', 'success');
-    }
-    
-    // Update dashboard stats after adding/updating
-    updateDashboardStats();
-    renderAcademicTable();
-    renderDatabaseAcademicTable();
-    updateAcademicYearDropdownForClassMaster();
-    resetAcademicForm();
-}
 
-function resetAcademicForm() {
-    document.getElementById('yearName').value = '';
-    document.getElementById('startDate').value = '';
-    document.getElementById('endDate').value = '';
-    document.getElementById('isCurrentYear').value = '';
-    document.getElementById('academicStatus').value = '';
-    editingAcademicId = null;
-    
-    // Reset previous value storage
-    previousIsCurrentYearValue = '';
-    previousAcademicStatusValue = '';
-    document.getElementById('isCurrentYear').setAttribute('data-previous-value', '');
-    document.getElementById('academicStatus').setAttribute('data-previous-value', '');
-    
-    // Clear validation errors
-    dropdownValidationTracker.clearAll();
-}
+        // Class Code options mapping (same as before)
+        const classCodeOptions = {
+            'Computer Engineering': ['FY-CO', 'SY-CO', 'TY-CO'],
+            'Civil Engineering': ['FY-CIVIL', 'SY-CIVIL', 'TY-CIVIL'],
+            'Mechanical Engineering': ['FY-MECH', 'SY-MECH', 'TY-MECH'],
+            'Electrical Engineering': ['FY-EJ', 'SY-EJ', 'TY-EJ'],
+            'Electronics and Telecommunication Engineering': ['FY-ENTC', 'SY-ENTC', 'TY-ENTC']
+        };
 
-function cancelAcademicForm() {
-    resetAcademicForm();
-    document.getElementById('academicFormTitle').textContent = 'Add New Academic Year';
-    document.getElementById('saveAcademicBtn').innerHTML = '<i class="fas fa-save"></i> Save Academic Year';
-    
-    // Clear validation errors
-    dropdownValidationTracker.clearAll();
-}
+        const termMapping = {
+            'FY-CO': ['TERM 1', 'TERM 2'],
+            'SY-CO': ['TERM 3', 'TERM 4'],
+            'TY-CO': ['TERM 5', 'TERM 6'],
+            'FY-CIVIL': ['TERM 1', 'TERM 2'],
+            'SY-CIVIL': ['TERM 3', 'TERM 4'],
+            'TY-CIVIL': ['TERM 5', 'TERM 6'],
+            'FY-MECH': ['TERM 1', 'TERM 2'],
+            'SY-MECH': ['TERM 3', 'TERM 4'],
+            'TY-MECH': ['TERM 5', 'TERM 6'],
+            'FY-EJ': ['TERM 1', 'TERM 2'],
+            'SY-EJ': ['TERM 3', 'TERM 4'],
+            'TY-EJ': ['TERM 5', 'TERM 6'],
+            'FY-ENTC': ['TERM 1', 'TERM 2'],
+            'SY-ENTC': ['TERM 3', 'TERM 4'],
+            'TY-ENTC': ['TERM 5', 'TERM 6']
+        };
 
-function renderAcademicTable() {
-    const tbody = document.getElementById('academicTableBody');
-    tbody.innerHTML = '';
-    
-    academicYears.forEach(year => {
-        const statusClass = year.status === 'Active' ? 'status-active' : 
-                           year.status === 'Completed' ? 'status-completed' : 'status-inactive';
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${year.id}</td>
-            <td>${year.name}</td>
-            <td>${formatDateForDisplay(year.start_date)}</td>
-            <td>${formatDateForDisplay(year.end_date)}</td>
-            <td><span class="${year.is_current === 'Yes' ? 'status-active' : 'status-inactive'}">${year.is_current}</span></td>
-            <td><span class="${statusClass}">${year.status}</span></td>
-            <td>${formatDateForDisplay(year.created_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-academic" data-id="${year.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-academic" data-id="${year.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Add event listeners
-    document.querySelectorAll('.edit-academic').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const yearId = this.getAttribute('data-id');
-            const year = academicYears.find(y => y.id === yearId);
-            if (year) showEditAcademicForm(year);
-        });
-    });
-    
-    document.querySelectorAll('.delete-academic').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const yearId = this.getAttribute('data-id');
-            showCustomConfirm('Are you sure you want to delete this academic year?', 'Confirm Delete', 'warning').then(confirmed => {
-                if (confirmed) {
-                    deleteAcademicYear(yearId);
-                }
+        function updateAcademicYearDropdownForClassMaster() {
+            const dropdown = document.getElementById('classAcademicYear');
+            const currentValue = dropdown.value;
+            dropdown.innerHTML = '<option value="">Select Academic Year</option>';
+            const available = academicYears.filter(year => year.status === 'Active' && year.is_current === 'Yes');
+            available.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year.id;
+                option.textContent = year.name;
+                dropdown.appendChild(option);
             });
-        });
-    });
-}
-
-function deleteAcademicYear(id) {
-    const index = academicYears.findIndex(year => year.id === id);
-    if (index !== -1) {
-        // Check if this year is used in any classes
-        const usedInClasses = classes.some(cls => cls.academic_year === id);
-        if (usedInClasses) {
-            showToast('Error', 'Cannot delete academic year used in classes', 'error');
-            return;
+            if (currentValue && available.some(y => y.id === currentValue)) dropdown.value = currentValue;
         }
-        
-        academicYears.splice(index, 1);
-        // Update dashboard stats after deletion
-        updateDashboardStats();
-        renderAcademicTable();
-        renderDatabaseAcademicTable();
-        updateAcademicYearDropdownForClassMaster();
-        showToast('Success', 'Academic year deleted successfully', 'success');
-    }
-}
 
-function filterAcademicYears() {
-    const searchTerm = document.getElementById('searchAcademic').value.toLowerCase();
-    const filtered = academicYears.filter(year => 
-        year.name.toLowerCase().includes(searchTerm)
-    );
-    
-    const tbody = document.getElementById('academicTableBody');
-    tbody.innerHTML = '';
-    
-    filtered.forEach(year => {
-        const statusClass = year.status === 'Active' ? 'status-active' : 
-                           year.status === 'Completed' ? 'status-completed' : 'status-inactive';
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${year.id}</td>
-            <td>${year.name}</td>
-            <td>${formatDateForDisplay(year.start_date)}</td>
-            <td>${formatDateForDisplay(year.end_date)}</td>
-            <td><span class="${year.is_current === 'Yes' ? 'status-active' : 'status-inactive'}">${year.is_current}</span></td>
-            <td><span class="${statusClass}">${year.status}</span></td>
-            <td>${formatDateForDisplay(year.created_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-academic" data-id="${year.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-academic" data-id="${year.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Re-add event listeners
-    document.querySelectorAll('.edit-academic').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const yearId = this.getAttribute('data-id');
-            const year = academicYears.find(y => y.id === yearId);
-            if (year) showEditAcademicForm(year);
-        });
-    });
-    
-    document.querySelectorAll('.delete-academic').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const yearId = this.getAttribute('data-id');
-            showCustomConfirm('Are you sure you want to delete this academic year?', 'Confirm Delete', 'warning').then(confirmed => {
-                if (confirmed) {
-                    deleteAcademicYear(yearId);
-                }
+        function updateProgrammeDropdownForClassMaster() {
+            const dropdown = document.getElementById('classProgramme');
+            const currentValue = dropdown.value;
+            dropdown.innerHTML = '<option value="">Select Program</option>';
+            const available = programmes.filter(p => p.status === 'Active');
+            available.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = `${p.name} (${p.id})`;
+                dropdown.appendChild(option);
             });
-        });
-    });
-}
+            if (currentValue && available.some(p => p.id === currentValue)) dropdown.value = currentValue;
+        }
 
-function clearAcademicSearch() {
-    document.getElementById('searchAcademic').value = '';
-    renderAcademicTable();
-}
-// Program Functions - Updated with new validation rules and immediate validation
-function showAddProgrammeForm() {
-    document.getElementById('programmeFormTitle').textContent = 'Add New Program';
-    document.getElementById('saveProgrammeBtn').innerHTML = '<i class="fas fa-save"></i> Save Program';
-    editingProgrammeId = null;
-    resetProgrammeForm();
-    
-    // Reset previous value storage for programme status
-    previousProgrammeStatusValue = '';
-    document.getElementById('programmeStatus').setAttribute('data-previous-value', '');
-    
-    // Clear any validation errors
-    dropdownValidationTracker.clearAll();
-    
-    // Apply Class Master validation rules - UPDATED: Ensure Status dropdown is visible
-    applyClassMasterValidationRules();
-    
-    // NEW: Ensure Status dropdown is visible and enabled when adding new Program
-    const programmeStatus = document.getElementById('programmeStatus');
-    if (programmeStatus) {
-        programmeStatus.disabled = false;
-        programmeStatus.style.opacity = '1';
-        programmeStatus.removeAttribute('title');
-    }
-}
-
-function showEditProgrammeForm(programme) {
-    document.getElementById('programmeFormTitle').textContent = 'Edit Program';
-    document.getElementById('saveProgrammeBtn').innerHTML = '<i class="fas fa-save"></i> Update Program';
-    editingProgrammeId = programme.id;
-    
-    document.getElementById('programmeName').value = programme.name;
-    document.getElementById('programmeCode').value = programme.code;
-    document.getElementById('programmeDuration').value = programme.duration;
-    document.getElementById('programmeDescription').value = programme.description;
-    document.getElementById('programmeStatus').value = programme.status;
-    
-    // Store previous value for validation
-    previousProgrammeStatusValue = programme.status || '';
-    document.getElementById('programmeStatus').setAttribute('data-previous-value', previousProgrammeStatusValue);
-    
-    // Clear any validation errors
-    dropdownValidationTracker.clearAll();
-    
-    // Apply Class Master validation rules
-    applyClassMasterValidationRules();
-}
-
-// Validate programme status change
-function validateProgrammeStatus(programmeId, newStatus) {
-    // RULE 3: When records exist in Class Master, Status must not be changeable
-    if (hasClassMasterRecords() && editingProgrammeId) {
-        const hasRelatedClasses = hasRelatedProgramClasses(editingProgrammeId);
-        
-        if (hasRelatedClasses) {
-            // Check if all related classes are completed
-            const allCompleted = areAllClassesCompletedForProgram(editingProgrammeId);
-            
-            if (!allCompleted) {
-                return false;
+        function updateClassCodeDropdown() {
+            const programmeSelect = document.getElementById('classProgramme');
+            const classCodeSelect = document.getElementById('classCode');
+            const selectedProgrammeId = programmeSelect.value;
+            classCodeSelect.innerHTML = '';
+            if (!selectedProgrammeId) {
+                classCodeSelect.disabled = true;
+                classCodeSelect.innerHTML = '<option value="">Select Program first</option>';
+                return;
+            }
+            const selectedProgramme = programmes.find(p => p.id === selectedProgrammeId);
+            if (!selectedProgramme) {
+                classCodeSelect.disabled = true;
+                classCodeSelect.innerHTML = '<option value="">Program not found</option>';
+                return;
+            }
+            classCodeSelect.disabled = false;
+            classCodeSelect.innerHTML = '<option value="">Select Class Code</option>';
+            const programName = selectedProgramme.name;
+            if (classCodeOptions[programName]) {
+                classCodeOptions[programName].forEach(code => {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = code;
+                    classCodeSelect.appendChild(option);
+                });
+            } else {
+                ['FY', 'SY', 'TY'].forEach(code => {
+                    const option = document.createElement('option');
+                    option.value = `${code}-${selectedProgramme.code}`;
+                    option.textContent = `${code}-${selectedProgramme.code}`;
+                    classCodeSelect.appendChild(option);
+                });
             }
         }
-    }
-    
-    return true;
-}
 
-function saveProgramme() {
-    const name = document.getElementById('programmeName').value.trim();
-    const code = document.getElementById('programmeCode').value.trim();
-    const duration = document.getElementById('programmeDuration').value;
-    const description = document.getElementById('programmeDescription').value.trim();
-    const status = document.getElementById('programmeStatus').value;
-    
-    // Clear previous validation errors
-    dropdownValidationTracker.clearAll();
-    
-    // Run immediate validation
-    const programmeStatusValid = validateProgrammeStatusImmediate();
-    
-    // If immediate validation failed, don't proceed
-    if (!programmeStatusValid) {
-        showToast('Validation Error', 'Please fix the validation errors before saving', 'error');
-        return;
-    }
-    
-    // Validation
-    if (!name || !code || !duration || !status) {
-        showToast('Validation Error', 'Program name, code, duration and status are required', 'error');
-        return;
-    }
-    
-    // Validate status change
-    if (!validateProgrammeStatus(editingProgrammeId, status)) {
-        dropdownValidationTracker.addError(
-            'programmeStatus',
-            'Cannot change Program status. All related Class Master records must be marked as Completed first.'
-        );
-        return; // Validation failed
-    }
-    
-    const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
-    
-    if (editingProgrammeId) {
-        // Update existing program
-        const index = programmes.findIndex(prog => prog.id === editingProgrammeId);
-        if (index !== -1) {
-            programmes[index] = {
-                ...programmes[index],
-                name,
-                code,
-                duration: parseInt(duration),
-                description,
-                status,
-                updated_at: today
-            };
-            showToast('Success', 'Program updated successfully', 'success');
-        }
-    } else {
-        // Add new program - ID format changed to PID001, PID002, etc.
-        const newProgramme = {
-            id: `PID${String(programmes.length + 1).padStart(3, '0')}`,
-            name,
-            code,
-            duration: parseInt(duration),
-            description,
-            status,
-            created_at: today,
-            updated_at: today
-        };
-        programmes.push(newProgramme);
-        showToast('Success', 'Program added successfully', 'success');
-    }
-    
-    // Update dashboard stats after adding/updating
-    updateDashboardStats();
-    renderProgrammeTable();
-    renderDatabaseProgrammeTable();
-    // Update programme dropdown in class master
-    updateProgrammeDropdownForClassMaster();
-    resetProgrammeForm();
-}
-
-function resetProgrammeForm() {
-    document.getElementById('programmeName').value = '';
-    document.getElementById('programmeCode').value = '';
-    document.getElementById('programmeDuration').value = '3';
-    document.getElementById('programmeDescription').value = '';
-    document.getElementById('programmeStatus').value = '';
-    editingProgrammeId = null;
-    
-    // Reset previous value storage
-    previousProgrammeStatusValue = '';
-    document.getElementById('programmeStatus').setAttribute('data-previous-value', '');
-    
-    // Clear validation errors
-    dropdownValidationTracker.clearAll();
-}
-
-function cancelProgrammeForm() {
-    resetProgrammeForm();
-    document.getElementById('programmeFormTitle').textContent = 'Add New Program';
-    document.getElementById('saveProgrammeBtn').innerHTML = '<i class="fas fa-save"></i> Save Program';
-    
-    // Clear validation errors
-    dropdownValidationTracker.clearAll();
-}
-
-function renderProgrammeTable() {
-    const tbody = document.getElementById('programmeTableBody');
-    tbody.innerHTML = '';
-    
-    programmes.forEach(programme => {
-        const statusClass = programme.status === 'Active' ? 'status-active' : 
-                          programme.status === 'Completed' ? 'status-completed' : 'status-inactive';
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${programme.id}</td>
-            <td>${programme.code}</td>
-            <td>${programme.name}</td>
-            <td>${programme.duration}</td>
-            <td>${programme.description}</td>
-            <td><span class="${statusClass}">${programme.status}</span></td>
-            <td>${formatDateForDisplay(programme.created_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-programme" data-id="${programme.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-programme" data-id="${programme.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Add event listeners
-    document.querySelectorAll('.edit-programme').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const programmeId = this.getAttribute('data-id');
-            const programme = programmes.find(prog => prog.id === programmeId);
-            if (programme) showEditProgrammeForm(programme);
-        });
-    });
-    
-    document.querySelectorAll('.delete-programme').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const programmeId = this.getAttribute('data-id');
-            showCustomConfirm('Are you sure you want to delete this program?', 'Confirm Delete', 'warning').then(confirmed => {
-                if (confirmed) {
-                    deleteProgramme(programmeId);
-                }
+        function updateTermDropdown(classCode) {
+            const termSelect = document.getElementById('classTerm');
+            termSelect.innerHTML = '<option value="">Select Term</option>';
+            if (!classCode) {
+                termSelect.disabled = true;
+                return;
+            }
+            const terms = termMapping[classCode] || [];
+            terms.forEach(term => {
+                const option = document.createElement('option');
+                option.value = term;
+                option.textContent = term;
+                termSelect.appendChild(option);
             });
-        });
-    });
-}
-
-function deleteProgramme(id) {
-    const index = programmes.findIndex(programme => programme.id === id);
-    if (index !== -1) {
-        // Check if this program is used in any classes
-        const usedInClasses = classes.some(cls => cls.programme_id === id);
-        if (usedInClasses) {
-            showToast('Error', 'Cannot delete program used in classes', 'error');
-            return;
+            termSelect.disabled = false;
         }
-        
-        programmes.splice(index, 1);
-        // Update dashboard stats after deletion
-        updateDashboardStats();
-        renderProgrammeTable();
-        renderDatabaseProgrammeTable();
-        // Update programme dropdown in class master
-        updateProgrammeDropdownForClassMaster();
-        showToast('Success', 'Program deleted successfully', 'success');
-    }
-}
 
-function filterProgrammes() {
-    const searchTerm = document.getElementById('searchProgramme').value.toLowerCase();
-    const filtered = programmes.filter(programme => 
-        programme.name.toLowerCase().includes(searchTerm) ||
-        programme.code.toLowerCase().includes(searchTerm) ||
-        programme.description.toLowerCase().includes(searchTerm)
-    );
-    
-    const tbody = document.getElementById('programmeTableBody');
-    tbody.innerHTML = '';
-    
-    filtered.forEach(programme => {
-        const statusClass = programme.status === 'Active' ? 'status-active' : 
-                          programme.status === 'Completed' ? 'status-completed' : 'status-inactive';
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${programme.id}</td>
-            <td>${programme.code}</td>
-            <td>${programme.name}</td>
-            <td>${programme.duration}</td>
-            <td>${programme.description}</td>
-            <td><span class="${statusClass}">${programme.status}</span></td>
-            <td>${formatDateForDisplay(programme.created_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-programme" data-id="${programme.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-programme" data-id="${programme.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Re-add event listeners
-    document.querySelectorAll('.edit-programme').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const programmeId = this.getAttribute('data-id');
-            const programme = programmes.find(prog => prog.id === programmeId);
-            if (programme) showEditProgrammeForm(programme);
-        });
-    });
-    
-    document.querySelectorAll('.delete-programme').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const programmeId = this.getAttribute('data-id');
-            showCustomConfirm('Are you sure you want to delete this program?', 'Confirm Delete', 'warning').then(confirmed => {
-                if (confirmed) {
-                    deleteProgramme(programmeId);
-                }
-            });
-        });
-    });
-}
+        // Login handling
+        let currentUser = null;
+        let toastTimeout = null;
+        let currentRole = 'student'; // default to student
+        let successBannerTimeout = null;
+        let hasSubmitted = false;
+        let loginAnimationPlayed = false;
+        let dashboardScrollPosition = 0;
 
-function clearProgrammeSearch() {
-    document.getElementById('searchProgramme').value = '';
-    renderProgrammeTable();
-}
+        const loginPage = document.getElementById('loginPage');
+        const studentDashboard = document.getElementById('studentDashboard');
+        const hodDashboard = document.getElementById('hodDashboard');
+        const dashboard = document.getElementById('dashboard');
+        const passwordInput = document.getElementById('password');
+        const usernameInput = document.getElementById('username');
 
-// Class Functions - ID format changed to CID001, CID002, etc.
-function showAddClassForm() {
-    document.getElementById('classFormTitle').textContent = 'Add New Class';
-    document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Save Class';
-    editingClassId = null;
-    resetClassForm();
-}
-
-function showEditClassForm(cls) {
-    document.getElementById('classFormTitle').textContent = 'Edit Class';
-    document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Update Class';
-    editingClassId = cls.id;
-    
-    // Find the program for this class
-    const programme = programmes.find(prog => prog.id === cls.programme_id);
-    if (programme) {
-        document.getElementById('classProgramme').value = programme.id;
-        // Trigger update of class code dropdown
-        const programmeEvent = new Event('change');
-        document.getElementById('classProgramme').dispatchEvent(programmeEvent);
-        
-        // Set class code after a short delay to ensure dropdown is populated
-        setTimeout(() => {
-            document.getElementById('classCode').value = cls.class_code;
-            // Trigger change event for class code
-            const classCodeEvent = new Event('change');
-            document.getElementById('classCode').dispatchEvent(classCodeEvent);
-            
-            // Set academic year
-            document.getElementById('classAcademicYear').value = cls.academic_year;
-            
-            // Set term
-            setTimeout(() => {
-                document.getElementById('classTerm').value = cls.term;
-            }, 100);
-        }, 200);
-    }
-    
-    document.getElementById('classStatus').value = cls.status;
-}
-
-function saveClass() {
-    const programmeId = document.getElementById('classProgramme').value;
-    const classCode = document.getElementById('classCode').value;
-    const academicYear = document.getElementById('classAcademicYear').value;
-    const term = document.getElementById('classTerm').value;
-    const status = document.getElementById('classStatus').value;
-    
-    // Validation
-    if (!programmeId || !classCode || !academicYear || !term || !status) {
-        showToast('Validation Error', 'Please fill in all required fields', 'error');
-        return;
-    }
-    
-    const programme = programmes.find(prog => prog.id === programmeId);
-    const academicYearObj = academicYears.find(year => year.id === academicYear);
-    
-    const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
-    
-    if (editingClassId) {
-        // Update existing class
-        const index = classes.findIndex(cls => cls.id === editingClassId);
-        if (index !== -1) {
-            classes[index] = {
-                ...classes[index],
-                class_code: classCode,
-                programme_id: programmeId,
-                programme_name: programme ? programme.name : classes[index].programme_name,
-                academic_year: academicYear,
-                term: term,
-                status,
-                updated_at: today
-            };
-            showToast('Success', 'Class updated successfully', 'success');
-        }
-    } else {
-        // Add new class - ID format changed to CID001, CID002, etc.
-        const newClass = {
-            id: `CID${String(classes.length + 1).padStart(3, '0')}`,
-            class_code: classCode,
-            programme_id: programmeId,
-            programme_name: programme ? programme.name : '',
-            academic_year: academicYear,
-            term: term,
-            status,
-            created_at: today,
-            updated_at: today
-        };
-        classes.push(newClass);
-        showToast('Success', 'Class added successfully', 'success');
-    }
-    
-    // Update dashboard stats after adding/updating
-    updateDashboardStats();
-    renderClassTable();
-    renderDatabaseClassTable();
-    resetClassForm();
-}
-
-function resetClassForm() {
-    document.getElementById('classProgramme').value = '';
-    document.getElementById('classCode').innerHTML = '<option value="">Select Program first</option>';
-    document.getElementById('classCode').disabled = true;
-    document.getElementById('classAcademicYear').value = '';
-    document.getElementById('classAcademicYear').disabled = true;
-    document.getElementById('classTerm').value = '';
-    document.getElementById('classTerm').disabled = true;
-    document.getElementById('classStatus').value = '';
-    editingClassId = null;
-    
-    // Reset opacity for visual indication
-    document.getElementById('classCode').style.opacity = '0.5';
-    document.getElementById('classAcademicYear').style.opacity = '0.5';
-    document.getElementById('classTerm').style.opacity = '0.5';
-}
-
-function cancelClassForm() {
-    resetClassForm();
-    document.getElementById('classFormTitle').textContent = 'Add New Class';
-    document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Save Class';
-}
-
-// Render Class Table to show Academic Year Name instead of ID
-function renderClassTable() {
-    const tbody = document.getElementById('classTableBody');
-    tbody.innerHTML = '';
-    
-    classes.forEach(cls => {
-        const statusClass = cls.status === 'Active' ? 'status-active' : 
-                          cls.status === 'Completed' ? 'status-completed' : 'status-inactive';
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${cls.id}</td>
-            <td>${cls.programme_id}</td>
-            <td>${cls.programme_name}</td>
-            <td>${cls.class_code}</td>
-            <!-- Show Academic Year Name instead of ID -->
-            <td>${getAcademicYearNameById(cls.academic_year)}</td>
-            <td>${cls.term}</td>
-            <td><span class="${statusClass}">${cls.status}</span></td>
-            <td>${formatDateForDisplay(cls.created_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-class" data-id="${cls.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-class" data-id="${cls.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Add event listeners
-    document.querySelectorAll('.edit-class').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const classId = this.getAttribute('data-id');
-            const cls = classes.find(c => c.id === classId);
-            if (cls) showEditClassForm(cls);
-        });
-    });
-    
-    document.querySelectorAll('.delete-class').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const classId = this.getAttribute('data-id');
-            showCustomConfirm('Are you sure you want to delete this class?', 'Confirm Delete', 'warning').then(confirmed => {
-                if (confirmed) {
-                    deleteClass(classId);
-                }
-            });
-        });
-    });
-}
-
-function deleteClass(id) {
-    const index = classes.findIndex(cls => cls.id === id);
-    if (index !== -1) {
-        classes.splice(index, 1);
-        // Update dashboard stats after deletion
-        updateDashboardStats();
-        renderClassTable();
-        renderDatabaseClassTable();
-        showToast('Success', 'Class deleted successfully', 'success');
-    }
-}
-
-// Filter Classes to show Academic Year Name instead of ID
-function filterClasses() {
-    const searchTerm = document.getElementById('searchClass').value.toLowerCase();
-    const filtered = classes.filter(cls => 
-        cls.class_code.toLowerCase().includes(searchTerm) ||
-        cls.programme_name.toLowerCase().includes(searchTerm) ||
-        cls.term.toLowerCase().includes(searchTerm)
-    );
-    
-    const tbody = document.getElementById('classTableBody');
-    tbody.innerHTML = '';
-    
-    filtered.forEach(cls => {
-        const statusClass = cls.status === 'Active' ? 'status-active' : 
-                          cls.status === 'Completed' ? 'status-completed' : 'status-inactive';
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${cls.id}</td>
-            <td>${cls.programme_id}</td>
-            <td>${cls.programme_name}</td>
-            <td>${cls.class_code}</td>
-            <!-- Show Academic Year Name instead of ID -->
-            <td>${getAcademicYearNameById(cls.academic_year)}</td>
-            <td>${cls.term}</td>
-            <td><span class="${statusClass}">${cls.status}</span></td>
-            <td>${formatDateForDisplay(cls.created_at)}</td>
-            <td class="actions">
-                ${currentUser && currentUser.role === 'admin' ? `
-                    <button class="btn btn-primary btn-sm edit-class" data-id="${cls.id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="btn btn-danger btn-sm delete-class" data-id="${cls.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-    
-    // Re-add event listeners
-    document.querySelectorAll('.edit-class').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const classId = this.getAttribute('data-id');
-            const cls = classes.find(c => c.id === classId);
-            if (cls) showEditClassForm(cls);
-        });
-    });
-    
-    document.querySelectorAll('.delete-class').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const classId = this.getAttribute('data-id');
-            showCustomConfirm('Are you sure you want to delete this class?', 'Confirm Delete', 'warning').then(confirmed => {
-                if (confirmed) {
-                    deleteClass(classId);
-                }
-            });
-        });
-    });
-}
-
-function clearClassSearch() {
-    document.getElementById('searchClass').value = '';
-    renderClassTable();
-}
-
-function resetAllForms() {
-    resetInstituteForm();
-    resetAcademicForm();
-    resetProgrammeForm();
-    resetClassForm();
-}
-
-function resetUIToDefaultState() {
-    console.log('Resetting UI to default state');
-    
-    // Reset all module displays
-    document.querySelectorAll('.module-section').forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    // Show main dashboard
-    mainDashboard.style.display = 'block';
-    
-    // Reset all form cards to visible
-    const formCards = document.querySelectorAll('.form-card');
-    formCards.forEach(card => {
-        card.style.display = 'block';
-    });
-    
-    // Reset all action columns to visible
-    const actionHeaders = document.querySelectorAll('.actions-header');
-    const actionCells = document.querySelectorAll('.data-table .actions');
-    
-    actionHeaders.forEach(header => header.style.display = 'table-cell');
-    actionCells.forEach(cell => cell.style.display = 'flex');
-    
-    // Reset quick action buttons
-    const addButtons = document.querySelectorAll('.quick-action-btn');
-    addButtons.forEach(btn => {
-        btn.style.display = 'flex';
-    });
-    
-    // Reset settings button
-    settingsBtn.style.display = 'flex';
-    
-    // Reset settings tabs to default (profile tab active)
-    switchSettingsTab('adminProfile');
-    switchPrincipalSettingsTab('principalProfile');
-    
-    // Reset table tabs to default (institute tab active)
-    switchTableTab('institute');
-    
-    // Reset all forms
-    resetAllForms();
-    
-    // Clear all validation errors
-    dropdownValidationTracker.clearAll();
-    
-    // Reset scroll position
-    dashboardScrollPosition = 0;
-}
-
-async function handleLogout() {
-    console.log('Handling logout...');
-    
-    const confirmed = await showCustomConfirm('Are you sure you want to logout?', 'Confirm Logout', 'warning');
-    
-    if (confirmed) {
-        showToast('Logged Out', 'You have been successfully logged out', 'success');
-        
-        // Hide success banner if shown
-        successBanner.style.display = 'none';
-        welcomeBanner.style.display = 'block';
-        
-        // Clear any timeout
-        if (successBannerTimeout) {
-            clearTimeout(successBannerTimeout);
-            successBannerTimeout = null;
-        }
-        
-        // Reset form submission state
-        hasSubmitted = false;
-        
-        // Reset UI elements to default state
-        resetUIToDefaultState();
-        
-        // Fade out dashboard
-        dashboard.style.opacity = '0';
-        dashboard.style.transition = 'opacity 0.3s ease';
-        
-        setTimeout(() => {
-            dashboard.style.display = 'none';
-            loginPage.style.display = 'flex';
-            
-            // Reset form
-            loginForm.reset();
+        function handleLogin() {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
             clearErrors();
-            usernameInput.classList.remove('success', 'error');
-            passwordInput.classList.remove('success', 'error');
-            
-            // Reset to admin role by default
-            roleButtons.forEach((btn, index) => {
-                btn.classList.remove('active');
-                if (index === 0) {
-                    btn.classList.add('active');
-                    currentRole = 'admin';
-                }
-            });
-            
-            // Reset password visibility
-            passwordInput.setAttribute('type', 'password');
-            togglePassword.innerHTML = '<i class="fas fa-eye"></i>';
-            
-            // Show main dashboard
-            showMainDashboard();
-            
-            // Reset login animation for next login
-            loginAnimationPlayed = false;
-            loginPage.style.opacity = '0';
-            const loginWrapper = document.querySelector('.login-wrapper');
-            loginWrapper.style.opacity = '0';
-            loginWrapper.style.transform = 'translateY(20px) scale(0.98)';
-            loginWrapper.style.animation = 'none';
-            
-            // Fade in login page with animation
+            let isValid = true;
+            if (!username) { showError('username', 'Username is required'); isValid = false; }
+            if (!password) { showError('password', 'Password is required'); isValid = false; }
+            if (!isValid) return;
+
+            const role = currentRole;
+            const department = document.getElementById('loginDepartment').value;
+            if ((role === 'student' || role === 'hod') && !department) {
+                alert('Please select a department');
+                return;
+            }
+
+            document.getElementById('loginButton').disabled = true;
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('loginButton').querySelector('span').textContent = 'AUTHENTICATING...';
+
             setTimeout(() => {
-                loginPage.style.opacity = '1';
-                if (!loginAnimationPlayed) {
-                    loginAnimationPlayed = true;
-                    loginWrapper.style.animation = 'cardAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
-                    loginWrapper.style.animationDelay = '0.3s';
+                let authenticated = false;
+                let userData = null;
+                if (role === 'admin') {
+                    if (username === storedCredentials.admin.username && password === storedCredentials.admin.password) {
+                        authenticated = true;
+                        userData = storedCredentials.admin;
+                    }
+                } else if (role === 'hod') {
+                    const hod = hods.find(h => h.username === username && h.password === password && h.department === department);
+                    if (hod) {
+                        authenticated = true;
+                        userData = {
+                            name: hod.name,
+                            role: 'hod',
+                            roleName: 'HOD',
+                            department: hod.department,
+                            username: hod.username
+                        };
+                    }
+                } else if (role === 'student') {
+                    const student = students.find(s => s.enrollment === username && s.password === password && s.program === department);
+                    if (student) {
+                        authenticated = true;
+                        userData = {
+                            name: student.name,
+                            role: 'student',
+                            roleName: 'Student',
+                            enrollment: student.enrollment,
+                            program: student.program,
+                            academicYear: student.academicYear,
+                            classYear: student.classYear,
+                            term: student.term,
+                            mobile: student.mobile,
+                            email: student.email,
+                            firstLogin: student.firstLogin,
+                            id: student.id
+                        };
+                    }
                 }
-                usernameInput.focus();
-            }, 50);
-            
-            // Clear current user
-            currentUser = null;
-        }, 300);
-    }
-}
 
-function validateUsername() {
-    const username = usernameInput.value.trim();
-    if (!username) {
-        showError('username', 'Username is required');
-        return false;
-    }
-    clearError('username');
-    return true;
-}
+                if (authenticated && userData) {
+                    currentUser = userData;
+                    usernameInput.classList.add('success');
+                    passwordInput.classList.add('success');
+                    showToast('Login Successful', `Welcome, ${userData.name}!`, 'success');
 
-function validatePassword() {
-    const password = passwordInput.value;
-    if (!password) {
-        showError('password', 'Password is required');
-        return false;
-    }
-    clearError('password');
-    return true;
-}
-
-function showError(field, message) {
-    const input = document.getElementById(field);
-    const errorElement = document.getElementById(`${field}Error`);
-    
-    if (input && errorElement) {
-        input.classList.add('error');
-        errorElement.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-        errorElement.classList.add('show');
-    }
-}
-
-function clearError(field) {
-    const input = document.getElementById(field);
-    const errorElement = document.getElementById(`${field}Error`);
-    
-    if (input && errorElement) {
-        input.classList.remove('error');
-        errorElement.classList.remove('show');
-        errorElement.innerHTML = '';
-    }
-}
-
-function clearErrors() {
-    clearError('username');
-    clearError('password');
-    if (usernameInput) usernameInput.classList.remove('error', 'success');
-    if (passwordInput) passwordInput.classList.remove('error', 'success');
-}
-
-function resetLoginButton() {
-    loginButton.disabled = false;
-    loadingSpinner.style.display = 'none';
-    loginButton.querySelector('span').textContent = 'LOGIN TO DASHBOARD';
-}
-
-function resetLoginForm() {
-    loginForm.reset();
-    clearErrors();
-    resetLoginButton();
-    
-    // Reset form submission state
-    hasSubmitted = false;
-    
-    // Reset role to admin
-    roleButtons.forEach((btn, index) => {
-        btn.classList.remove('active');
-        if (index === 0) {
-            btn.classList.add('active');
-            currentRole = 'admin';
+                    if (role === 'admin') {
+                        setTimeout(() => transitionToAdminDashboard(), 500);
+                    } else if (role === 'hod') {
+                        setTimeout(() => showHodDashboard(), 500);
+                    } else if (role === 'student') {
+                        if (currentUser.firstLogin) {
+                            // Force password change
+                            setTimeout(() => showFirstLoginChangePassword(), 500);
+                        } else {
+                            setTimeout(() => showStudentDashboard(), 500);
+                        }
+                    }
+                    resetLoginForm();
+                } else {
+                    usernameInput.classList.add('error');
+                    passwordInput.classList.add('error');
+                    showError('username', 'Invalid username or password');
+                    showError('password', 'Please check your credentials');
+                    usernameInput.style.animation = 'shake 0.5s';
+                    passwordInput.style.animation = 'shake 0.5s';
+                    setTimeout(() => {
+                        usernameInput.style.animation = '';
+                        passwordInput.style.animation = '';
+                    }, 500);
+                    showToast('Login Failed', 'Invalid username or password', 'error');
+                    document.getElementById('loginButton').disabled = false;
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    document.getElementById('loginButton').querySelector('span').textContent = 'LOGIN TO DASHBOARD';
+                }
+            }, 500);
         }
-    });
-    
-    // Reset password visibility
-    passwordInput.setAttribute('type', 'password');
-    togglePassword.innerHTML = '<i class="fas fa-eye"></i>';
-}
 
-function showToast(title, message, type = 'success') {
-    console.log('Showing toast:', title, message);
-    
-    if (toastTimeout) clearTimeout(toastTimeout);
-    
-    toastTitle.textContent = title;
-    toastMessage.textContent = message;
-    
-    toast.className = 'toast';
-    toast.classList.add(`toast-${type}`);
-    
-    if (type === 'success') {
-        toast.querySelector('.toast-icon').innerHTML = '<i class="fas fa-check"></i>';
-    } else {
-        toast.querySelector('.toast-icon').innerHTML = '<i class="fas fa-exclamation-circle"></i>';
-    }
-    
-    toast.classList.add('show');
-    
-    toastTimeout = setTimeout(() => {
-        hideToast();
-    }, 3000);
-}
-    
-function hideToast() {
-    toast.classList.remove('show');
-    if (toastTimeout) {
-        clearTimeout(toastTimeout);
-        toastTimeout = null;
-    }
-}
+        function showFirstLoginChangePassword() {
+            // Show custom alert with password change fields
+            const overlay = document.getElementById('customAlertOverlay');
+            document.getElementById('customAlertTitle').textContent = 'First Login - Change Password';
+            document.getElementById('customAlertMessage').innerHTML = `
+                <input type="password" id="newPasswordFirst" class="search-input" placeholder="New Password" style="margin-bottom:10px;">
+                <input type="password" id="confirmPasswordFirst" class="search-input" placeholder="Confirm Password">
+            `;
+            document.getElementById('customAlertIcon').innerHTML = '<i class="fas fa-key"></i>';
+            document.getElementById('customAlertIcon').className = 'custom-alert-icon warning';
+            document.getElementById('customAlertCancel').style.display = 'inline-flex';
+            document.getElementById('customAlertConfirm').textContent = 'Change';
+            document.getElementById('customAlertCancel').textContent = 'Cancel';
+            overlay.classList.add('show');
 
-// Initialize Principal Settings
-function initializePrincipalSettings() {
-    // Load saved principal settings
-    const savedSettings = localStorage.getItem('eduMasterPrincipalSettings');
-    if (savedSettings) {
-        try {
-            const parsed = JSON.parse(savedSettings);
-            if (parsed.displayName) principalSettingsName.value = parsed.displayName;
-            if (parsed.email) principalSettingsEmail.value = parsed.email;
-            if (parsed.mobile) principalSettingsMobile.value = parsed.mobile;
-        } catch (e) {
-            console.error('Error loading principal settings:', e);
+            const handleConfirm = () => {
+                const newPass = document.getElementById('newPasswordFirst').value;
+                const confirmPass = document.getElementById('confirmPasswordFirst').value;
+                if (!newPass || !confirmPass) {
+                    alert('Please fill both fields');
+                    return;
+                }
+                if (newPass !== confirmPass) {
+                    alert('Passwords do not match');
+                    return;
+                }
+                // Update student password
+                const student = students.find(s => s.id === currentUser.id);
+                if (student) {
+                    student.password = newPass;
+                    student.firstLogin = false;
+                    saveStudents();
+                    currentUser.firstLogin = false;
+                }
+                hideCustomAlert();
+                showToast('Password Changed', 'Please login again with new password', 'success');
+                handleLogout();
+            };
+
+            const handleCancel = () => {
+                hideCustomAlert();
+                handleLogout();
+            };
+
+            const handleKeyDown = (e) => {
+                if (e.key === 'Escape') handleCancel();
+                else if (e.key === 'Enter') handleConfirm();
+            };
+
+            document.getElementById('customAlertConfirm').onclick = handleConfirm;
+            document.getElementById('customAlertCancel').onclick = handleCancel;
+            document.addEventListener('keydown', handleKeyDown);
+            customAlertResolve = () => {
+                document.removeEventListener('keydown', handleKeyDown);
+                document.getElementById('customAlertConfirm').onclick = null;
+                document.getElementById('customAlertCancel').onclick = null;
+            };
         }
-    }
-    
-    // Ensure Principal Settings forms are visible
-    setTimeout(ensurePrincipalSettingsVisibility, 100);
-}
 
-// DOM Elements
-const loginPage = document.getElementById('loginPage');
-const dashboard = document.getElementById('dashboard');
-const loginForm = document.getElementById('loginForm');
-const roleButtons = document.querySelectorAll('.role-btn');
-const togglePassword = document.getElementById('togglePassword');
-const passwordInput = document.getElementById('password');
-const usernameInput = document.getElementById('username');
-const loginButton = document.getElementById('loginButton');
-const loadingSpinner = document.getElementById('loadingSpinner');
-const logoutBtn = document.getElementById('logoutBtn');
-const usernameError = document.getElementById('usernameError');
-const passwordError = document.getElementById('passwordError');
-const toast = document.getElementById('toast');
-const toastTitle = document.getElementById('toastTitle');
-const toastMessage = document.getElementById('toastMessage');
-const closeToast = document.getElementById('closeToast');
+        function showStudentDashboard() {
+            loginPage.style.opacity = '0';
+            loginPage.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                loginPage.style.display = 'none';
+                studentDashboard.style.display = 'block';
+                studentDashboard.style.opacity = '0';
+                studentDashboard.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => {
+                    studentDashboard.style.opacity = '1';
+                    updateStudentDashboard();
+                }, 50);
+            }, 300);
+        }
 
-// Custom Alert Elements
-const customAlertOverlay = document.getElementById('customAlertOverlay');
-const customAlertIcon = document.getElementById('customAlertIcon');
-const customAlertTitle = document.getElementById('customAlertTitle');
-const customAlertMessage = document.getElementById('customAlertMessage');
-const customAlertCancel = document.getElementById('customAlertCancel');
-const customAlertConfirm = document.getElementById('customAlertConfirm');
+        function updateStudentDashboard() {
+            document.getElementById('studentSidebarName').textContent = currentUser.name;
+            document.getElementById('studentAvatarLargeSide').textContent = currentUser.name.charAt(0);
+            document.getElementById('studentAvatarLarge').textContent = currentUser.name.charAt(0);
+            document.getElementById('studentFullName').textContent = currentUser.name;
+            document.getElementById('studentEnrollment').textContent = currentUser.enrollment;
+            document.getElementById('studentProgram').textContent = currentUser.program;
+            document.getElementById('studentAcademicYear').textContent = getAcademicYearNameById(currentUser.academicYear);
+            document.getElementById('studentClass').textContent = currentUser.classYear;
+            document.getElementById('studentTerm').textContent = currentUser.term;
+        }
 
-// Dashboard elements
-const userAvatar = document.getElementById('userAvatar');
-const avatarText = document.getElementById('avatarText');
-const dashboardUserName = document.getElementById('dashboardUserName');
-const dashboardUserRole = document.getElementById('dashboardUserRole');
-const welcomeBanner = document.getElementById('welcomeBanner');
-const successBanner = document.getElementById('successBanner');
-const welcomeTitle = document.getElementById('welcomeTitle');
-const welcomeSubtitle = document.getElementById('welcomeSubtitle');
-const successSubtitle = document.getElementById('successSubtitle');
-const mainDashboard = document.getElementById('mainDashboard');
+        function showHodDashboard() {
+            loginPage.style.opacity = '0';
+            loginPage.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                loginPage.style.display = 'none';
+                hodDashboard.style.display = 'block';
+                hodDashboard.style.opacity = '0';
+                hodDashboard.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => {
+                    hodDashboard.style.opacity = '1';
+                    // Set HOD department fields
+                    document.getElementById('hodStudentDepartment').value = currentUser.department;
+                    document.getElementById('hodFacultyDepartment').value = currentUser.department;
+                    document.getElementById('hodFeedbackDepartment').value = currentUser.department;
+                    document.getElementById('hodSidebarName').textContent = currentUser.name;
+                    // Populate academic year dropdowns
+                    const acSelects = ['hodStudentAcademicYear', 'hodFacultyAcademicYear', 'hodFeedbackAcademicYear'];
+                    acSelects.forEach(id => {
+                        const select = document.getElementById(id);
+                        select.innerHTML = '<option value="">Select</option>';
+                        academicYears.filter(y => y.status === 'Active').forEach(y => {
+                            select.innerHTML += `<option value="${y.id}">${y.name}</option>`;
+                        });
+                    });
+                    // Stats
+                    document.getElementById('hodTotalStudents').textContent = students.filter(s => s.program === currentUser.department).length;
+                    document.getElementById('hodTotalFaculty').textContent = faculties.filter(f => f.department === currentUser.department).length;
+                    document.getElementById('hodTotalFeedbacks').textContent = feedbacks.filter(f => f.department === currentUser.department).length;
+                }, 50);
+            }, 300);
+        }
 
-// Stats elements
-const statInstitutes = document.getElementById('statInstitutes');
-const statYears = document.getElementById('statYears');
-const statProgrammes = document.getElementById('statProgrammes');
-const statClasses = document.getElementById('statClasses');
-const instituteChange = document.getElementById('instituteChange');
-const activeYearCount = document.getElementById('activeYearCount');
-const programmeChange = document.getElementById('programmeChange');
-const classChange = document.getElementById('classChange');
+        function transitionToAdminDashboard() {
+            updateAdminDashboard();
+            showSuccessMessage();
+            loginPage.style.opacity = '0';
+            loginPage.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                loginPage.style.display = 'none';
+                dashboard.style.display = 'block';
+                dashboard.style.opacity = '0';
+                dashboard.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => {
+                    dashboard.style.opacity = '1';
+                    dashboard.scrollTop = 0;
+                }, 50);
+            }, 300);
+        }
 
-// Quick action buttons
-const addInstituteBtn = document.getElementById('addInstituteBtn');
-const addAcademicYearBtn = document.getElementById('addAcademicYearBtn');
-const addProgrammeBtn = document.getElementById('addProgrammeBtn');
-const addClassBtn = document.getElementById('addClassBtn');
-const viewReportsBtn = document.getElementById('viewReportsBtn');
-const settingsBtn = document.getElementById('settingsBtn');
+        function showSuccessMessage() {
+            document.getElementById('successBanner').style.display = 'block';
+            document.getElementById('welcomeBanner').style.display = 'none';
+            document.getElementById('successSubtitle').textContent = `Welcome ${currentUser.name} to EDU MASTER Dashboard`;
+            document.getElementById('successBanner').style.animation = 'successPulse 2s ease-in-out';
+            if (successBannerTimeout) clearTimeout(successBannerTimeout);
+            successBannerTimeout = setTimeout(() => {
+                document.getElementById('successBanner').style.display = 'none';
+                document.getElementById('welcomeBanner').style.display = 'block';
+            }, 3000);
+        }
 
-// Module sections
-const instituteModule = document.getElementById('instituteModule');
-const academicModule = document.getElementById('academicModule');
-const programmeModule = document.getElementById('programmeModule');
-const classModule = document.getElementById('classModule');
-const reportsModule = document.getElementById('reportsModule');
-const settingsModule = document.getElementById('settingsModule');
-const principalSettingsModule = document.getElementById('principalSettingsModule');
-const databaseTablesSection = document.getElementById('databaseTablesSection');
+        function updateAdminDashboard() {
+            if (!currentUser) return;
+            document.getElementById('dashboardUserName').textContent = currentUser.name;
+            document.getElementById('dashboardUserRole').textContent = currentUser.roleName;
+            document.getElementById('avatarText').textContent = currentUser.name.charAt(0);
+            document.getElementById('welcomeTitle').textContent = `Welcome back, ${currentUser.name}!`;
+            document.getElementById('welcomeSubtitle').textContent = 'You have full access to manage institutes, programs, classes, and academic years.';
+            updateDashboardStats();
+            renderDatabaseTables();
+            updateProfileSettings();
+            updateProgrammeDropdownForClassMaster();
+        }
 
-// Back buttons
-const backFromInstitute = document.getElementById('backFromInstitute');
-const backFromAcademic = document.getElementById('backFromAcademic');
-const backFromProgramme = document.getElementById('backFromProgramme');
-const backFromClass = document.getElementById('backFromClass');
-const backFromReports = document.getElementById('backFromReports');
-const backFromSettings = document.getElementById('backFromSettings');
-const backFromPrincipalSettings = document.getElementById('backFromPrincipalSettings');
+        function updateDashboardStats() {
+            document.getElementById('statInstitutes').textContent = institutes.length;
+            document.getElementById('statYears').textContent = academicYears.length;
+            document.getElementById('statProgrammes').textContent = programmes.length;
+            document.getElementById('statClasses').textContent = classes.length;
+            document.getElementById('instituteChange').textContent = institutes.length;
+            document.getElementById('programmeChange').textContent = programmes.length;
+            document.getElementById('classChange').textContent = classes.length;
+            const activeYears = academicYears.filter(y => y.is_current === 'Yes').length;
+            document.getElementById('activeYearCount').textContent = activeYears;
+            document.getElementById('reportTotalInstitutes').textContent = institutes.length;
+            document.getElementById('reportTotalProgrammes').textContent = programmes.length;
+            document.getElementById('reportTotalClasses').textContent = classes.length;
+            document.getElementById('reportActiveYears').textContent = activeYears;
+            renderInstituteTable();
+            renderAcademicTable();
+            renderProgrammeTable();
+            renderClassTable();
+            renderHodTable();
+            renderStudentTable();
+            updateAcademicYearDropdownForClassMaster();
+            updateProgrammeDropdownForClassMaster();
+            populateAcademicYearDropdown();
+        }
 
-// Module cards
-const moduleCards = document.querySelectorAll('.module-card');
+        function saveDashboardScrollPosition() { dashboardScrollPosition = dashboard.scrollTop; }
 
-// Database table elements
-const tableTabs = document.querySelectorAll('.table-tab');
-const tableContainers = document.querySelectorAll('.table-container');
+        function showMainDashboard() {
+            document.getElementById('mainDashboard').style.display = 'block';
+            document.querySelectorAll('.module-section').forEach(s => s.style.display = 'none');
+            resetAllForms();
+            updateDashboardStats();
+            renderDatabaseTables();
+            document.getElementById('databaseTablesSection').style.display = 'block';
+        }
 
-// Reports elements
-const exportPdfBtn = document.getElementById('exportPdfBtn');
-const exportExcelBtn = document.getElementById('exportExcelBtn');
-const reportTotalInstitutes = document.getElementById('reportTotalInstitutes');
-const reportTotalProgrammes = document.getElementById('reportTotalProgrammes');
-const reportTotalClasses = document.getElementById('reportTotalClasses');
-const reportActiveYears = document.getElementById('reportActiveYears');
+        function showModule(moduleName) {
+            document.getElementById('mainDashboard').style.display = 'none';
+            document.querySelectorAll('.module-section').forEach(s => s.style.display = 'none');
+            if (moduleName === 'institute') {
+                document.getElementById('instituteModule').style.display = 'block';
+                renderInstituteTable();
+            } else if (moduleName === 'academic') {
+                document.getElementById('academicModule').style.display = 'block';
+                renderAcademicTable();
+            } else if (moduleName === 'programme') {
+                document.getElementById('programmeModule').style.display = 'block';
+                renderProgrammeTable();
+            } else if (moduleName === 'class') {
+                document.getElementById('classModule').style.display = 'block';
+                renderClassTable();
+            } else if (moduleName === 'hod') {
+                document.getElementById('hodModule').style.display = 'block';
+                renderHodTable();
+            } else if (moduleName === 'student') {
+                document.getElementById('studentModule').style.display = 'block';
+                renderStudentTable();
+            }
+            setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+        }
 
-// Settings elements
-const settingsTabs = document.querySelectorAll('.settings-tab');
-const settingsPanels = document.querySelectorAll('.settings-panel');
-const profileName = document.getElementById('profileName');
-const profileEmail = document.getElementById('profileEmail');
-const profileRole = document.getElementById('profileRole');
-const profileMobile = document.getElementById('profileMobile');
-const saveProfileBtn = document.getElementById('saveProfileBtn');
-const currentPassword = document.getElementById('currentPassword');
-const newPassword = document.getElementById('newPassword');
-const confirmPassword = document.getElementById('confirmPassword');
-const changePasswordBtn = document.getElementById('changePasswordBtn');
-const currentUsername = document.getElementById('currentUsername');
-const newUsername = document.getElementById('newUsername');
-const confirmUsername = document.getElementById('confirmUsername');
-const changeUsernameBtn = document.getElementById('changeUsernameBtn');
+        function showInstituteModule() { showModule('institute'); }
+        function showAcademicModule() { showModule('academic'); }
+        function showProgrammeModule() { showModule('programme'); }
+        function showClassModule() { showModule('class'); }
+        function showHodModule() { showModule('hod'); }
+        function showStudentModule() { showModule('student'); }
 
-// Principal Management elements (Admin only)
-const principalProfileTab = document.getElementById('principalProfileTab');
-const principalSecurityTab = document.getElementById('principalSecurityTab');
-const principalProfilePanel = document.getElementById('principalProfilePanel');
-const principalSecurityPanel = document.getElementById('principalSecurityPanel');
-const principalDisplayName = document.getElementById('principalDisplayName');
-const principalRole = document.getElementById('principalRole');
-const principalEmail = document.getElementById('principalEmail');
-const principalMobile = document.getElementById('principalMobile');
-const savePrincipalBtn = document.getElementById('savePrincipalBtn');
+        function showReportsModule() {
+            document.getElementById('mainDashboard').style.display = 'none';
+            document.querySelectorAll('.module-section').forEach(s => s.style.display = 'none');
+            document.getElementById('reportsModule').style.display = 'block';
+            initializeReports();
+            setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+        }
 
-// Principal Security elements (Admin only)
-const principalCurrentUsername = document.getElementById('principalCurrentUsername');
-const principalNewUsername = document.getElementById('principalNewUsername');
-const principalConfirmUsername = document.getElementById('principalConfirmUsername');
-const changePrincipalUsernameBtn = document.getElementById('changePrincipalUsernameBtn');
-const principalCurrentPassword = document.getElementById('principalCurrentPassword');
-const principalNewPassword = document.getElementById('principalNewPassword');
-const principalConfirmPassword = document.getElementById('principalConfirmPassword');
-const changePrincipalPasswordBtn = document.getElementById('changePrincipalPasswordBtn');
+        function showSettingsModule() {
+            document.getElementById('mainDashboard').style.display = 'none';
+            document.querySelectorAll('.module-section').forEach(s => s.style.display = 'none');
+            document.getElementById('settingsModule').style.display = 'block';
+            updateProfileSettings();
+            setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+        }
 
-// Principal settings elements
-const principalSettingsTabs = document.querySelectorAll('.principal-settings-tab');
-const principalSettingsPanels = document.querySelectorAll('.principal-settings-panel');
-const principalSettingsName = document.getElementById('principalSettingsName');
-const principalSettingsEmail = document.getElementById('principalSettingsEmail');
-const principalSettingsRole = document.getElementById('principalSettingsRole');
-const principalSettingsMobile = document.getElementById('principalSettingsMobile');
-const savePrincipalSettingsBtn = document.getElementById('savePrincipalSettingsBtn');
-const principalCurrentUsernameField = document.getElementById('principalCurrentUsernameField');
-const principalNewUsernameField = document.getElementById('principalNewUsernameField');
-const principalConfirmUsernameField = document.getElementById('principalConfirmUsernameField');
-const changePrincipalUsernameBtnField = document.getElementById('changePrincipalUsernameBtnField');
-const principalCurrentPasswordField = document.getElementById('principalCurrentPasswordField');
-const principalNewPasswordField = document.getElementById('principalNewPasswordField');
-const principalConfirmPasswordField = document.getElementById('principalConfirmPasswordField');
-const changePrincipalPasswordBtnField = document.getElementById('changePrincipalPasswordBtnField');
+        function renderDatabaseTables() {
+            renderDatabaseInstituteTable();
+            renderDatabaseAcademicTable();
+            renderDatabaseProgrammeTable();
+            renderDatabaseClassTable();
+            renderDatabaseHodTable();
+            renderDatabaseStudentTable();
+        }
 
-// Application state
-let currentUser = null;
-let toastTimeout = null;
-let currentRole = 'admin';
-let successBannerTimeout = null;
-let hasSubmitted = false;
-let charts = {};
-let profilePhotoUrl = null;
-let loginAnimationPlayed = false;
+        function renderDatabaseInstituteTable() {
+            const tbody = document.getElementById('databaseInstituteTableBody');
+            tbody.innerHTML = '';
+            institutes.forEach(inst => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${inst.id}</td>
+                    <td>${inst.name}</td>
+                    <td>${inst.code}</td>
+                    <td>${inst.address}</td>
+                    <td><span class="${inst.status === 'Active' ? 'status-active' : 'status-inactive'}">${inst.status}</span></td>
+                    <td>${formatDateForDisplay(inst.created_at)}</td>
+                    <td>${formatDateForDisplay(inst.updated_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-institute-db" data-id="${inst.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-institute-db" data-id="${inst.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            if (currentUser && currentUser.role === 'admin') {
+                document.querySelectorAll('.edit-institute-db').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const id = this.getAttribute('data-id');
+                        const inst = institutes.find(i => i.id === id);
+                        if (inst) {
+                            saveDashboardScrollPosition();
+                            showInstituteModule();
+                            showEditInstituteForm(inst);
+                            setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+                        }
+                    });
+                });
+                document.querySelectorAll('.delete-institute-db').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const id = this.getAttribute('data-id');
+                        showCustomConfirm('Delete this institute?', 'Confirm Delete').then(confirmed => {
+                            if (confirmed) {
+                                institutes = institutes.filter(i => i.id !== id);
+                                saveInstitutes();
+                                updateDashboardStats();
+                                renderDatabaseInstituteTable();
+                                showToast('Success', 'Institute deleted', 'success');
+                            }
+                        });
+                    });
+                });
+            }
+        }
 
-// Scroll position tracking
-let dashboardScrollPosition = 0;
-    
+        function renderDatabaseAcademicTable() {
+            const tbody = document.getElementById('databaseAcademicTableBody');
+            tbody.innerHTML = '';
+            academicYears.forEach(year => {
+                const statusClass = year.status === 'Active' ? 'status-active' : year.status === 'Completed' ? 'status-completed' : 'status-inactive';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${year.id}</td>
+                    <td>${year.name}</td>
+                    <td>${formatDateForDisplay(year.start_date)}</td>
+                    <td>${formatDateForDisplay(year.end_date)}</td>
+                    <td><span class="${year.is_current === 'Yes' ? 'status-active' : 'status-inactive'}">${year.is_current}</span></td>
+                    <td><span class="${statusClass}">${year.status}</span></td>
+                    <td>${formatDateForDisplay(year.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-academic-db" data-id="${year.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-academic-db" data-id="${year.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            if (currentUser && currentUser.role === 'admin') {
+                document.querySelectorAll('.edit-academic-db').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const year = academicYears.find(y => y.id === id);
+                        if (year) {
+                            saveDashboardScrollPosition();
+                            showAcademicModule();
+                            showEditAcademicForm(year);
+                            setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+                        }
+                    });
+                });
+                document.querySelectorAll('.delete-academic-db').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        showCustomConfirm('Delete this academic year?', 'Confirm Delete').then(confirmed => {
+                            if (confirmed) {
+                                academicYears = academicYears.filter(y => y.id !== id);
+                                saveAcademicYears();
+                                updateDashboardStats();
+                                renderDatabaseAcademicTable();
+                                showToast('Success', 'Academic year deleted', 'success');
+                            }
+                        });
+                    });
+                });
+            }
+        }
+
+        function renderDatabaseProgrammeTable() {
+            const tbody = document.getElementById('databaseProgrammeTableBody');
+            tbody.innerHTML = '';
+            programmes.forEach(p => {
+                const statusClass = p.status === 'Active' ? 'status-active' : p.status === 'Completed' ? 'status-completed' : 'status-inactive';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.code}</td>
+                    <td>${p.name}</td>
+                    <td>${p.duration}</td>
+                    <td>${p.description}</td>
+                    <td><span class="${statusClass}">${p.status}</span></td>
+                    <td>${formatDateForDisplay(p.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-programme-db" data-id="${p.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-programme-db" data-id="${p.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            if (currentUser && currentUser.role === 'admin') {
+                document.querySelectorAll('.edit-programme-db').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const prog = programmes.find(p => p.id === id);
+                        if (prog) {
+                            saveDashboardScrollPosition();
+                            showProgrammeModule();
+                            showEditProgrammeForm(prog);
+                            setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+                        }
+                    });
+                });
+                document.querySelectorAll('.delete-programme-db').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        showCustomConfirm('Delete this program?', 'Confirm Delete').then(confirmed => {
+                            if (confirmed) {
+                                programmes = programmes.filter(p => p.id !== id);
+                                saveProgrammes();
+                                updateDashboardStats();
+                                renderDatabaseProgrammeTable();
+                                showToast('Success', 'Program deleted', 'success');
+                            }
+                        });
+                    });
+                });
+            }
+        }
+
+        function renderDatabaseClassTable() {
+            const tbody = document.getElementById('databaseClassTableBody');
+            tbody.innerHTML = '';
+            classes.forEach(c => {
+                const statusClass = c.status === 'Active' ? 'status-active' : c.status === 'Completed' ? 'status-completed' : 'status-inactive';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${c.id}</td>
+                    <td>${c.programme_id}</td>
+                    <td>${c.programme_name}</td>
+                    <td>${c.class_code}</td>
+                    <td>${getAcademicYearNameById(c.academic_year)}</td>
+                    <td>${c.term}</td>
+                    <td><span class="${statusClass}">${c.status}</span></td>
+                    <td>${formatDateForDisplay(c.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-class-db" data-id="${c.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-class-db" data-id="${c.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            if (currentUser && currentUser.role === 'admin') {
+                document.querySelectorAll('.edit-class-db').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const cls = classes.find(c => c.id === id);
+                        if (cls) {
+                            saveDashboardScrollPosition();
+                            showClassModule();
+                            showEditClassForm(cls);
+                            setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+                        }
+                    });
+                });
+                document.querySelectorAll('.delete-class-db').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        showCustomConfirm('Delete this class?', 'Confirm Delete').then(confirmed => {
+                            if (confirmed) {
+                                classes = classes.filter(c => c.id !== id);
+                                saveClasses();
+                                updateDashboardStats();
+                                renderDatabaseClassTable();
+                                showToast('Success', 'Class deleted', 'success');
+                            }
+                        });
+                    });
+                });
+            }
+        }
+
+        function renderDatabaseHodTable() {
+            const tbody = document.getElementById('databaseHodTableBody');
+            tbody.innerHTML = '';
+            hods.forEach(h => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${h.id}</td>
+                    <td>${h.department}</td>
+                    <td>${h.name}</td>
+                    <td>${h.mobile}</td>
+                    <td>${h.email}</td>
+                    <td>${h.username}</td>
+                    <td>${h.password}</td>
+                    <td>${formatDateForDisplay(h.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-hod-db" data-id="${h.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-hod-db" data-id="${h.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            if (currentUser && currentUser.role === 'admin') {
+                document.querySelectorAll('.edit-hod-db').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const hod = hods.find(h => h.id === id);
+                        if (hod) {
+                            saveDashboardScrollPosition();
+                            showHodModule();
+                            showEditHodForm(hod);
+                            setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+                        }
+                    });
+                });
+                document.querySelectorAll('.delete-hod-db').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        showCustomConfirm('Delete this HOD?', 'Confirm Delete').then(confirmed => {
+                            if (confirmed) {
+                                hods = hods.filter(h => h.id !== id);
+                                saveHods();
+                                updateDashboardStats();
+                                renderDatabaseHodTable();
+                                showToast('Success', 'HOD deleted', 'success');
+                            }
+                        });
+                    });
+                });
+            }
+        }
+
+        function renderDatabaseStudentTable() {
+            const tbody = document.getElementById('databaseStudentTableBody');
+            tbody.innerHTML = '';
+            students.forEach(s => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${s.id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.enrollment}</td>
+                    <td>${s.program}</td>
+                    <td>${getAcademicYearNameById(s.academicYear)}</td>
+                    <td>${s.classYear}</td>
+                    <td>${s.term}</td>
+                    <td>${s.mobile}</td>
+                    <td>${s.email}</td>
+                    <td>${s.firstLogin ? 'Yes' : 'No'}</td>
+                    <td class="actions">
+                        ${currentUser && (currentUser.role === 'admin' || currentUser.role === 'hod') ? `
+                            <button class="btn btn-primary btn-sm edit-student-db" data-id="${s.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-student-db" data-id="${s.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'hod')) {
+                document.querySelectorAll('.edit-student-db').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        const student = students.find(s => s.id === id);
+                        if (student) {
+                            saveDashboardScrollPosition();
+                            showStudentModule();
+                            showEditStudentForm(student);
+                            setTimeout(() => { dashboard.scrollTop = 0; }, 10);
+                        }
+                    });
+                });
+                document.querySelectorAll('.delete-student-db').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = this.getAttribute('data-id');
+                        showCustomConfirm('Delete this student?', 'Confirm Delete').then(confirmed => {
+                            if (confirmed) {
+                                students = students.filter(s => s.id !== id);
+                                saveStudents();
+                                updateDashboardStats();
+                                renderDatabaseStudentTable();
+                                showToast('Success', 'Student deleted', 'success');
+                            }
+                        });
+                    });
+                });
+            }
+        }
+
+        function switchTableTab(tableId) {
+            document.querySelectorAll('.table-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-table') === tableId) tab.classList.add('active');
+            });
+            document.querySelectorAll('.table-container').forEach(container => {
+                container.classList.remove('active');
+                if (container.id === `${tableId}TableContainer`) container.classList.add('active');
+            });
+        }
+
+        function switchSettingsTab(panelId) {
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-panel') === panelId) tab.classList.add('active');
+            });
+            document.querySelectorAll('.settings-panel').forEach(panel => {
+                panel.classList.remove('active');
+                if (panel.id === `${panelId}Panel`) panel.classList.add('active');
+            });
+        }
+
+        // Institute CRUD (same as before)
+        let editingInstituteId = null;
+        function showAddInstituteForm() {
+            document.getElementById('instituteFormTitle').textContent = 'Add New Institute';
+            document.getElementById('saveInstituteBtn').innerHTML = '<i class="fas fa-save"></i> Save Institute';
+            editingInstituteId = null;
+            document.getElementById('instituteName').value = '';
+            document.getElementById('instituteCode').value = '';
+            document.getElementById('instituteAddress').value = '';
+            document.getElementById('instituteStatus').value = '';
+        }
+        function showEditInstituteForm(inst) {
+            document.getElementById('instituteFormTitle').textContent = 'Edit Institute';
+            document.getElementById('saveInstituteBtn').innerHTML = '<i class="fas fa-save"></i> Update Institute';
+            editingInstituteId = inst.id;
+            document.getElementById('instituteName').value = inst.name;
+            document.getElementById('instituteCode').value = inst.code;
+            document.getElementById('instituteAddress').value = inst.address;
+            document.getElementById('instituteStatus').value = inst.status;
+        }
+        function saveInstitute() {
+            const name = document.getElementById('instituteName').value.trim();
+            const code = document.getElementById('instituteCode').value.trim();
+            const address = document.getElementById('instituteAddress').value.trim();
+            const status = document.getElementById('instituteStatus').value;
+            if (!name || !code || !address || !status) {
+                showToast('Error', 'All fields required', 'error');
+                return;
+            }
+            const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+            if (editingInstituteId) {
+                const index = institutes.findIndex(i => i.id === editingInstituteId);
+                if (index !== -1) {
+                    institutes[index] = { ...institutes[index], name, code, address, status, updated_at: today };
+                    saveInstitutes();
+                    showToast('Success', 'Institute updated', 'success');
+                }
+            } else {
+                const newId = `IID${String(institutes.length + 1).padStart(3, '0')}`;
+                institutes.push({ id: newId, name, code, address, status, created_at: today, updated_at: today });
+                saveInstitutes();
+                showToast('Success', 'Institute added', 'success');
+            }
+            updateDashboardStats();
+            renderInstituteTable();
+            renderDatabaseInstituteTable();
+            cancelInstituteForm();
+        }
+        function cancelInstituteForm() {
+            document.getElementById('instituteName').value = '';
+            document.getElementById('instituteCode').value = '';
+            document.getElementById('instituteAddress').value = '';
+            document.getElementById('instituteStatus').value = '';
+            editingInstituteId = null;
+            document.getElementById('instituteFormTitle').textContent = 'Add New Institute';
+            document.getElementById('saveInstituteBtn').innerHTML = '<i class="fas fa-save"></i> Save Institute';
+        }
+        function renderInstituteTable() {
+            const tbody = document.getElementById('instituteTableBody');
+            tbody.innerHTML = '';
+            institutes.forEach(inst => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${inst.id}</td>
+                    <td>${inst.name}</td>
+                    <td>${inst.code}</td>
+                    <td>${inst.address}</td>
+                    <td><span class="${inst.status === 'Active' ? 'status-active' : 'status-inactive'}">${inst.status}</span></td>
+                    <td>${formatDateForDisplay(inst.created_at)}</td>
+                    <td>${formatDateForDisplay(inst.updated_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-institute" data-id="${inst.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-institute" data-id="${inst.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            document.querySelectorAll('.edit-institute').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const inst = institutes.find(i => i.id === id);
+                    if (inst) showEditInstituteForm(inst);
+                });
+            });
+            document.querySelectorAll('.delete-institute').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    showCustomConfirm('Delete this institute?', 'Confirm Delete').then(confirmed => {
+                        if (confirmed) {
+                            institutes = institutes.filter(i => i.id !== id);
+                            saveInstitutes();
+                            updateDashboardStats();
+                            renderInstituteTable();
+                            renderDatabaseInstituteTable();
+                            showToast('Success', 'Institute deleted', 'success');
+                        }
+                    });
+                });
+            });
+        }
+        function filterInstitutes() {
+            const term = document.getElementById('searchInstitute').value.toLowerCase();
+            const filtered = institutes.filter(i => i.name.toLowerCase().includes(term) || i.code.toLowerCase().includes(term) || i.address.toLowerCase().includes(term));
+            const tbody = document.getElementById('instituteTableBody');
+            tbody.innerHTML = '';
+            filtered.forEach(inst => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${inst.id}</td>
+                    <td>${inst.name}</td>
+                    <td>${inst.code}</td>
+                    <td>${inst.address}</td>
+                    <td><span class="${inst.status === 'Active' ? 'status-active' : 'status-inactive'}">${inst.status}</span></td>
+                    <td>${formatDateForDisplay(inst.created_at)}</td>
+                    <td>${formatDateForDisplay(inst.updated_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-institute" data-id="${inst.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-institute" data-id="${inst.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            attachInstituteActions();
+        }
+        function clearInstituteSearch() { document.getElementById('searchInstitute').value = ''; renderInstituteTable(); }
+        function attachInstituteActions() { /* listeners already on document */ }
+
+        // Academic Year CRUD (simplified)
+        let editingAcademicId = null;
+        function showAddAcademicForm() {
+            document.getElementById('academicFormTitle').textContent = 'Add New Academic Year';
+            document.getElementById('saveAcademicBtn').innerHTML = '<i class="fas fa-save"></i> Save Academic Year';
+            editingAcademicId = null;
+            document.getElementById('yearName').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('isCurrentYear').value = '';
+            document.getElementById('academicStatus').value = '';
+        }
+        function showEditAcademicForm(year) {
+            document.getElementById('academicFormTitle').textContent = 'Edit Academic Year';
+            document.getElementById('saveAcademicBtn').innerHTML = '<i class="fas fa-save"></i> Update Academic Year';
+            editingAcademicId = year.id;
+            document.getElementById('yearName').value = year.name;
+            document.getElementById('startDate').value = formatDateToYYYYMMDD(year.start_date);
+            document.getElementById('endDate').value = formatDateToYYYYMMDD(year.end_date);
+            document.getElementById('isCurrentYear').value = year.is_current;
+            document.getElementById('academicStatus').value = year.status;
+        }
+        function saveAcademicYear() {
+            const name = document.getElementById('yearName').value.trim();
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            const isCurrent = document.getElementById('isCurrentYear').value;
+            const status = document.getElementById('academicStatus').value;
+            if (!name || !start || !end || !isCurrent || !status) {
+                showToast('Error', 'All fields required', 'error');
+                return;
+            }
+            if (isCurrent === 'Yes') {
+                const other = academicYears.find(y => y.is_current === 'Yes' && (!editingAcademicId || y.id !== editingAcademicId));
+                if (other) {
+                    alert(`Another year (${other.name}) is already current.`);
+                    return;
+                }
+            }
+            const startDate = formatDateToDDMMYYYY(start);
+            const endDate = formatDateToDDMMYYYY(end);
+            const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+            if (editingAcademicId) {
+                const index = academicYears.findIndex(y => y.id === editingAcademicId);
+                if (index !== -1) {
+                    academicYears[index] = { ...academicYears[index], name, start_date: startDate, end_date: endDate, is_current: isCurrent, status, updated_at: today };
+                    saveAcademicYears();
+                    showToast('Success', 'Academic year updated', 'success');
+                }
+            } else {
+                const newId = `YID${String(academicYears.length + 1).padStart(3, '0')}`;
+                academicYears.push({ id: newId, name, start_date: startDate, end_date: endDate, is_current: isCurrent, status, created_at: today, updated_at: today });
+                saveAcademicYears();
+                showToast('Success', 'Academic year added', 'success');
+            }
+            updateDashboardStats();
+            renderAcademicTable();
+            renderDatabaseAcademicTable();
+            cancelAcademicForm();
+        }
+        function cancelAcademicForm() {
+            document.getElementById('yearName').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('isCurrentYear').value = '';
+            document.getElementById('academicStatus').value = '';
+            editingAcademicId = null;
+            document.getElementById('academicFormTitle').textContent = 'Add New Academic Year';
+            document.getElementById('saveAcademicBtn').innerHTML = '<i class="fas fa-save"></i> Save Academic Year';
+        }
+        function renderAcademicTable() {
+            const tbody = document.getElementById('academicTableBody');
+            tbody.innerHTML = '';
+            academicYears.forEach(year => {
+                const statusClass = year.status === 'Active' ? 'status-active' : year.status === 'Completed' ? 'status-completed' : 'status-inactive';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${year.id}</td>
+                    <td>${year.name}</td>
+                    <td>${formatDateForDisplay(year.start_date)}</td>
+                    <td>${formatDateForDisplay(year.end_date)}</td>
+                    <td><span class="${year.is_current === 'Yes' ? 'status-active' : 'status-inactive'}">${year.is_current}</span></td>
+                    <td><span class="${statusClass}">${year.status}</span></td>
+                    <td>${formatDateForDisplay(year.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-academic" data-id="${year.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-academic" data-id="${year.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            document.querySelectorAll('.edit-academic').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const year = academicYears.find(y => y.id === id);
+                    if (year) showEditAcademicForm(year);
+                });
+            });
+            document.querySelectorAll('.delete-academic').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    showCustomConfirm('Delete this academic year?', 'Confirm Delete').then(confirmed => {
+                        if (confirmed) {
+                            academicYears = academicYears.filter(y => y.id !== id);
+                            saveAcademicYears();
+                            updateDashboardStats();
+                            renderAcademicTable();
+                            renderDatabaseAcademicTable();
+                            showToast('Success', 'Academic year deleted', 'success');
+                        }
+                    });
+                });
+            });
+        }
+        function filterAcademicYears() {
+            const term = document.getElementById('searchAcademic').value.toLowerCase();
+            const filtered = academicYears.filter(y => y.name.toLowerCase().includes(term));
+            const tbody = document.getElementById('academicTableBody');
+            tbody.innerHTML = '';
+            filtered.forEach(year => {
+                const statusClass = year.status === 'Active' ? 'status-active' : year.status === 'Completed' ? 'status-completed' : 'status-inactive';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${year.id}</td>
+                    <td>${year.name}</td>
+                    <td>${formatDateForDisplay(year.start_date)}</td>
+                    <td>${formatDateForDisplay(year.end_date)}</td>
+                    <td><span class="${year.is_current === 'Yes' ? 'status-active' : 'status-inactive'}">${year.is_current}</span></td>
+                    <td><span class="${statusClass}">${year.status}</span></td>
+                    <td>${formatDateForDisplay(year.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-academic" data-id="${year.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-academic" data-id="${year.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        function clearAcademicSearch() { document.getElementById('searchAcademic').value = ''; renderAcademicTable(); }
+
+        // Program CRUD (simplified)
+        let editingProgrammeId = null;
+        function showAddProgrammeForm() {
+            document.getElementById('programmeFormTitle').textContent = 'Add New Program';
+            document.getElementById('saveProgrammeBtn').innerHTML = '<i class="fas fa-save"></i> Save Program';
+            editingProgrammeId = null;
+            document.getElementById('programmeName').value = '';
+            document.getElementById('programmeCode').value = '';
+            document.getElementById('programmeDuration').value = '3';
+            document.getElementById('programmeDescription').value = '';
+            document.getElementById('programmeStatus').value = '';
+        }
+        function showEditProgrammeForm(prog) {
+            document.getElementById('programmeFormTitle').textContent = 'Edit Program';
+            document.getElementById('saveProgrammeBtn').innerHTML = '<i class="fas fa-save"></i> Update Program';
+            editingProgrammeId = prog.id;
+            document.getElementById('programmeName').value = prog.name;
+            document.getElementById('programmeCode').value = prog.code;
+            document.getElementById('programmeDuration').value = prog.duration;
+            document.getElementById('programmeDescription').value = prog.description;
+            document.getElementById('programmeStatus').value = prog.status;
+        }
+        function saveProgramme() {
+            const name = document.getElementById('programmeName').value.trim();
+            const code = document.getElementById('programmeCode').value.trim();
+            const duration = document.getElementById('programmeDuration').value;
+            const desc = document.getElementById('programmeDescription').value.trim();
+            const status = document.getElementById('programmeStatus').value;
+            if (!name || !code || !duration || !status) {
+                showToast('Error', 'All fields required', 'error');
+                return;
+            }
+            const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+            if (editingProgrammeId) {
+                const index = programmes.findIndex(p => p.id === editingProgrammeId);
+                if (index !== -1) {
+                    programmes[index] = { ...programmes[index], name, code, duration: parseInt(duration), description: desc, status, updated_at: today };
+                    saveProgrammes();
+                    showToast('Success', 'Program updated', 'success');
+                }
+            } else {
+                const newId = `PID${String(programmes.length + 1).padStart(3, '0')}`;
+                programmes.push({ id: newId, name, code, duration: parseInt(duration), description: desc, status, created_at: today, updated_at: today });
+                saveProgrammes();
+                showToast('Success', 'Program added', 'success');
+            }
+            updateDashboardStats();
+            renderProgrammeTable();
+            renderDatabaseProgrammeTable();
+            cancelProgrammeForm();
+        }
+        function cancelProgrammeForm() {
+            document.getElementById('programmeName').value = '';
+            document.getElementById('programmeCode').value = '';
+            document.getElementById('programmeDuration').value = '3';
+            document.getElementById('programmeDescription').value = '';
+            document.getElementById('programmeStatus').value = '';
+            editingProgrammeId = null;
+            document.getElementById('programmeFormTitle').textContent = 'Add New Program';
+            document.getElementById('saveProgrammeBtn').innerHTML = '<i class="fas fa-save"></i> Save Program';
+        }
+        function renderProgrammeTable() {
+            const tbody = document.getElementById('programmeTableBody');
+            tbody.innerHTML = '';
+            programmes.forEach(p => {
+                const statusClass = p.status === 'Active' ? 'status-active' : p.status === 'Completed' ? 'status-completed' : 'status-inactive';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.code}</td>
+                    <td>${p.name}</td>
+                    <td>${p.duration}</td>
+                    <td>${p.description}</td>
+                    <td><span class="${statusClass}">${p.status}</span></td>
+                    <td>${formatDateForDisplay(p.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-programme" data-id="${p.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-programme" data-id="${p.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            document.querySelectorAll('.edit-programme').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const prog = programmes.find(p => p.id === id);
+                    if (prog) showEditProgrammeForm(prog);
+                });
+            });
+            document.querySelectorAll('.delete-programme').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    showCustomConfirm('Delete this program?', 'Confirm Delete').then(confirmed => {
+                        if (confirmed) {
+                            programmes = programmes.filter(p => p.id !== id);
+                            saveProgrammes();
+                            updateDashboardStats();
+                            renderProgrammeTable();
+                            renderDatabaseProgrammeTable();
+                            showToast('Success', 'Program deleted', 'success');
+                        }
+                    });
+                });
+            });
+        }
+        function filterProgrammes() {
+            const term = document.getElementById('searchProgramme').value.toLowerCase();
+            const filtered = programmes.filter(p => p.name.toLowerCase().includes(term) || p.code.toLowerCase().includes(term));
+            const tbody = document.getElementById('programmeTableBody');
+            tbody.innerHTML = '';
+            filtered.forEach(p => {
+                const statusClass = p.status === 'Active' ? 'status-active' : p.status === 'Completed' ? 'status-completed' : 'status-inactive';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.code}</td>
+                    <td>${p.name}</td>
+                    <td>${p.duration}</td>
+                    <td>${p.description}</td>
+                    <td><span class="${statusClass}">${p.status}</span></td>
+                    <td>${formatDateForDisplay(p.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-programme" data-id="${p.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-programme" data-id="${p.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        function clearProgrammeSearch() { document.getElementById('searchProgramme').value = ''; renderProgrammeTable(); }
+
+        // Class CRUD (simplified)
+        let editingClassId = null;
+        function showAddClassForm() {
+            document.getElementById('classFormTitle').textContent = 'Add New Class';
+            document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Save Class';
+            editingClassId = null;
+            resetClassForm();
+        }
+        function showEditClassForm(cls) {
+            document.getElementById('classFormTitle').textContent = 'Edit Class';
+            document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Update Class';
+            editingClassId = cls.id;
+            const prog = programmes.find(p => p.id === cls.programme_id);
+            if (prog) {
+                document.getElementById('classProgramme').value = prog.id;
+                const event = new Event('change');
+                document.getElementById('classProgramme').dispatchEvent(event);
+                setTimeout(() => {
+                    document.getElementById('classCode').value = cls.class_code;
+                    document.getElementById('classCode').dispatchEvent(new Event('change'));
+                    document.getElementById('classAcademicYear').value = cls.academic_year;
+                    setTimeout(() => {
+                        document.getElementById('classTerm').value = cls.term;
+                    }, 100);
+                }, 200);
+            }
+            document.getElementById('classStatus').value = cls.status;
+        }
+        function saveClass() {
+            const progId = document.getElementById('classProgramme').value;
+            const classCode = document.getElementById('classCode').value;
+            const acYear = document.getElementById('classAcademicYear').value;
+            const term = document.getElementById('classTerm').value;
+            const status = document.getElementById('classStatus').value;
+            if (!progId || !classCode || !acYear || !term || !status) {
+                showToast('Error', 'All fields required', 'error');
+                return;
+            }
+            const prog = programmes.find(p => p.id === progId);
+            const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+            if (editingClassId) {
+                const index = classes.findIndex(c => c.id === editingClassId);
+                if (index !== -1) {
+                    classes[index] = { ...classes[index], class_code: classCode, programme_id: progId, programme_name: prog.name, academic_year: acYear, term, status, updated_at: today };
+                    saveClasses();
+                    showToast('Success', 'Class updated', 'success');
+                }
+            } else {
+                const newId = `CID${String(classes.length + 1).padStart(3, '0')}`;
+                classes.push({ id: newId, class_code: classCode, programme_id: progId, programme_name: prog.name, academic_year: acYear, term, status, created_at: today, updated_at: today });
+                saveClasses();
+                showToast('Success', 'Class added', 'success');
+            }
+            updateDashboardStats();
+            renderClassTable();
+            renderDatabaseClassTable();
+            cancelClassForm();
+        }
+        function resetClassForm() {
+            document.getElementById('classProgramme').value = '';
+            document.getElementById('classCode').innerHTML = '<option value="">Select Program first</option>';
+            document.getElementById('classCode').disabled = true;
+            document.getElementById('classAcademicYear').innerHTML = '<option value="">Select Class Code first</option>';
+            document.getElementById('classAcademicYear').disabled = true;
+            document.getElementById('classTerm').innerHTML = '<option value="">Select Academic Year first</option>';
+            document.getElementById('classTerm').disabled = true;
+            document.getElementById('classStatus').value = '';
+            editingClassId = null;
+        }
+        function cancelClassForm() {
+            resetClassForm();
+            document.getElementById('classFormTitle').textContent = 'Add New Class';
+            document.getElementById('saveClassBtn').innerHTML = '<i class="fas fa-save"></i> Save Class';
+        }
+        function renderClassTable() {
+            const tbody = document.getElementById('classTableBody');
+            tbody.innerHTML = '';
+            classes.forEach(c => {
+                const statusClass = c.status === 'Active' ? 'status-active' : c.status === 'Completed' ? 'status-completed' : 'status-inactive';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${c.id}</td>
+                    <td>${c.programme_id}</td>
+                    <td>${c.programme_name}</td>
+                    <td>${c.class_code}</td>
+                    <td>${getAcademicYearNameById(c.academic_year)}</td>
+                    <td>${c.term}</td>
+                    <td><span class="${statusClass}">${c.status}</span></td>
+                    <td>${formatDateForDisplay(c.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-class" data-id="${c.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-class" data-id="${c.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            document.querySelectorAll('.edit-class').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const cls = classes.find(c => c.id === id);
+                    if (cls) showEditClassForm(cls);
+                });
+            });
+            document.querySelectorAll('.delete-class').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    showCustomConfirm('Delete this class?', 'Confirm Delete').then(confirmed => {
+                        if (confirmed) {
+                            classes = classes.filter(c => c.id !== id);
+                            saveClasses();
+                            updateDashboardStats();
+                            renderClassTable();
+                            renderDatabaseClassTable();
+                            showToast('Success', 'Class deleted', 'success');
+                        }
+                    });
+                });
+            });
+        }
+        function filterClasses() {
+            const term = document.getElementById('searchClass').value.toLowerCase();
+            const filtered = classes.filter(c => c.class_code.toLowerCase().includes(term) || c.programme_name.toLowerCase().includes(term));
+            const tbody = document.getElementById('classTableBody');
+            tbody.innerHTML = '';
+            filtered.forEach(c => {
+                const statusClass = c.status === 'Active' ? 'status-active' : c.status === 'Completed' ? 'status-completed' : 'status-inactive';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${c.id}</td>
+                    <td>${c.programme_id}</td>
+                    <td>${c.programme_name}</td>
+                    <td>${c.class_code}</td>
+                    <td>${getAcademicYearNameById(c.academic_year)}</td>
+                    <td>${c.term}</td>
+                    <td><span class="${statusClass}">${c.status}</span></td>
+                    <td>${formatDateForDisplay(c.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-class" data-id="${c.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-class" data-id="${c.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        function clearClassSearch() { document.getElementById('searchClass').value = ''; renderClassTable(); }
+
+        // HOD CRUD (with password)
+        let editingHodId = null;
+        function showAddHodForm() {
+            document.getElementById('hodFormTitle').textContent = 'Add New HOD';
+            document.getElementById('saveHodBtn').innerHTML = '<i class="fas fa-save"></i> Save HOD';
+            editingHodId = null;
+            document.getElementById('hodDepartment').value = '';
+            document.getElementById('hodName').value = '';
+            document.getElementById('hodMobile').value = '';
+            document.getElementById('hodEmail').value = '';
+            document.getElementById('hodUsername').value = '';
+            document.getElementById('hodPassword').value = '';
+        }
+        function showEditHodForm(hod) {
+            document.getElementById('hodFormTitle').textContent = 'Edit HOD';
+            document.getElementById('saveHodBtn').innerHTML = '<i class="fas fa-save"></i> Update HOD';
+            editingHodId = hod.id;
+            document.getElementById('hodDepartment').value = hod.department;
+            document.getElementById('hodName').value = hod.name;
+            document.getElementById('hodMobile').value = hod.mobile;
+            document.getElementById('hodEmail').value = hod.email;
+            document.getElementById('hodUsername').value = hod.username;
+            document.getElementById('hodPassword').value = hod.password;
+        }
+        function saveHod() {
+            const dept = document.getElementById('hodDepartment').value;
+            const name = document.getElementById('hodName').value.trim();
+            const mobile = document.getElementById('hodMobile').value.trim();
+            const email = document.getElementById('hodEmail').value.trim();
+            const username = document.getElementById('hodUsername').value.trim();
+            const password = document.getElementById('hodPassword').value;
+            if (!dept || !name || !mobile || !email || !username || !password) {
+                showToast('Error', 'All fields required', 'error');
+                return;
+            }
+            const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+            if (editingHodId) {
+                const index = hods.findIndex(h => h.id === editingHodId);
+                if (index !== -1) {
+                    hods[index] = { ...hods[index], department: dept, name, mobile, email, username, password, updated_at: today };
+                    saveHods();
+                    showToast('Success', 'HOD updated', 'success');
+                }
+            } else {
+                const newId = `HOD${String(hods.length + 1).padStart(3, '0')}`;
+                hods.push({ id: newId, department: dept, name, mobile, email, username, password, created_at: today, updated_at: today });
+                saveHods();
+                showToast('Success', 'HOD added', 'success');
+            }
+            updateDashboardStats();
+            renderHodTable();
+            renderDatabaseHodTable();
+            cancelHodForm();
+        }
+        function cancelHodForm() {
+            document.getElementById('hodDepartment').value = '';
+            document.getElementById('hodName').value = '';
+            document.getElementById('hodMobile').value = '';
+            document.getElementById('hodEmail').value = '';
+            document.getElementById('hodUsername').value = '';
+            document.getElementById('hodPassword').value = '';
+            editingHodId = null;
+            document.getElementById('hodFormTitle').textContent = 'Add New HOD';
+            document.getElementById('saveHodBtn').innerHTML = '<i class="fas fa-save"></i> Save HOD';
+        }
+        function renderHodTable() {
+            const tbody = document.getElementById('hodTableBody');
+            tbody.innerHTML = '';
+            hods.forEach(h => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${h.id}</td>
+                    <td>${h.department}</td>
+                    <td>${h.name}</td>
+                    <td>${h.mobile}</td>
+                    <td>${h.email}</td>
+                    <td>${h.username}</td>
+                    <td>${h.password}</td>
+                    <td>${formatDateForDisplay(h.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-hod" data-id="${h.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-hod" data-id="${h.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            document.querySelectorAll('.edit-hod').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const hod = hods.find(h => h.id === id);
+                    if (hod) showEditHodForm(hod);
+                });
+            });
+            document.querySelectorAll('.delete-hod').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    showCustomConfirm('Delete this HOD?', 'Confirm Delete').then(confirmed => {
+                        if (confirmed) {
+                            hods = hods.filter(h => h.id !== id);
+                            saveHods();
+                            updateDashboardStats();
+                            renderHodTable();
+                            renderDatabaseHodTable();
+                            showToast('Success', 'HOD deleted', 'success');
+                        }
+                    });
+                });
+            });
+        }
+        function filterHods() {
+            const term = document.getElementById('searchHod').value.toLowerCase();
+            const filtered = hods.filter(h => h.name.toLowerCase().includes(term) || h.department.toLowerCase().includes(term));
+            const tbody = document.getElementById('hodTableBody');
+            tbody.innerHTML = '';
+            filtered.forEach(h => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${h.id}</td>
+                    <td>${h.department}</td>
+                    <td>${h.name}</td>
+                    <td>${h.mobile}</td>
+                    <td>${h.email}</td>
+                    <td>${h.username}</td>
+                    <td>${h.password}</td>
+                    <td>${formatDateForDisplay(h.created_at)}</td>
+                    <td class="actions">
+                        ${currentUser && currentUser.role === 'admin' ? `
+                            <button class="btn btn-primary btn-sm edit-hod" data-id="${h.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-hod" data-id="${h.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        function clearHodSearch() { document.getElementById('searchHod').value = ''; renderHodTable(); }
+
+        // Student CRUD
+        let editingStudentId = null;
+        function showAddStudentForm() {
+            document.getElementById('studentFormTitle').textContent = 'Add New Student';
+            document.getElementById('saveStudentBtn').innerHTML = '<i class="fas fa-save"></i> Save Student';
+            editingStudentId = null;
+            document.getElementById('studentName').value = '';
+            document.getElementById('studentEnrollment').value = '';
+            document.getElementById('studentProgram').value = '';
+            document.getElementById('studentAcademicYear').value = '';
+            document.getElementById('studentClassYear').value = '';
+            document.getElementById('studentTerm').innerHTML = '<option value="">Select Class Year first</option>';
+            document.getElementById('studentTerm').disabled = true;
+            document.getElementById('studentMobile').value = '';
+            document.getElementById('studentEmail').value = '';
+        }
+        function showEditStudentForm(student) {
+            document.getElementById('studentFormTitle').textContent = 'Edit Student';
+            document.getElementById('saveStudentBtn').innerHTML = '<i class="fas fa-save"></i> Update Student';
+            editingStudentId = student.id;
+            document.getElementById('studentName').value = student.name;
+            document.getElementById('studentEnrollment').value = student.enrollment;
+            document.getElementById('studentProgram').value = student.program;
+            document.getElementById('studentAcademicYear').value = student.academicYear;
+            document.getElementById('studentClassYear').value = student.classYear;
+            // Trigger term update
+            const event = new Event('change');
+            document.getElementById('studentClassYear').dispatchEvent(event);
+            setTimeout(() => {
+                document.getElementById('studentTerm').value = student.term;
+            }, 100);
+            document.getElementById('studentMobile').value = student.mobile;
+            document.getElementById('studentEmail').value = student.email;
+        }
+        function saveStudent() {
+            const name = document.getElementById('studentName').value.trim();
+            const enrollment = document.getElementById('studentEnrollment').value.trim();
+            const program = document.getElementById('studentProgram').value;
+            const academicYear = document.getElementById('studentAcademicYear').value;
+            const classYear = document.getElementById('studentClassYear').value;
+            const term = document.getElementById('studentTerm').value;
+            const mobile = document.getElementById('studentMobile').value.trim();
+            const email = document.getElementById('studentEmail').value.trim();
+            if (!name || !enrollment || !program || !academicYear || !classYear || !term || !mobile || !email) {
+                showToast('Error', 'All fields required', 'error');
+                return;
+            }
+            // Default password: firstName + lastName (remove spaces)
+            const nameParts = name.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join('') || '';
+            const defaultPassword = firstName + lastName;
+            const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
+            if (editingStudentId) {
+                const index = students.findIndex(s => s.id === editingStudentId);
+                if (index !== -1) {
+                    students[index] = { ...students[index], name, enrollment, program, academicYear, classYear, term, mobile, email, updated_at: today };
+                    saveStudents();
+                    showToast('Success', 'Student updated', 'success');
+                }
+            } else {
+                const newId = `STU${String(students.length + 1).padStart(3, '0')}`;
+                students.push({ id: newId, name, enrollment, program, academicYear, classYear, term, mobile, email, password: defaultPassword, firstLogin: true, created_at: today, updated_at: today });
+                saveStudents();
+                showToast('Success', 'Student added. Default password: ' + defaultPassword, 'success');
+            }
+            updateDashboardStats();
+            renderStudentTable();
+            renderDatabaseStudentTable();
+            cancelStudentForm();
+        }
+        function cancelStudentForm() {
+            document.getElementById('studentName').value = '';
+            document.getElementById('studentEnrollment').value = '';
+            document.getElementById('studentProgram').value = '';
+            document.getElementById('studentAcademicYear').value = '';
+            document.getElementById('studentClassYear').value = '';
+            document.getElementById('studentTerm').innerHTML = '<option value="">Select Class Year first</option>';
+            document.getElementById('studentTerm').disabled = true;
+            document.getElementById('studentMobile').value = '';
+            document.getElementById('studentEmail').value = '';
+            editingStudentId = null;
+            document.getElementById('studentFormTitle').textContent = 'Add New Student';
+            document.getElementById('saveStudentBtn').innerHTML = '<i class="fas fa-save"></i> Save Student';
+        }
+        function renderStudentTable() {
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+            students.forEach(s => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${s.id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.enrollment}</td>
+                    <td>${s.program}</td>
+                    <td>${getAcademicYearNameById(s.academicYear)}</td>
+                    <td>${s.classYear}</td>
+                    <td>${s.term}</td>
+                    <td>${s.mobile}</td>
+                    <td>${s.email}</td>
+                    <td>${s.firstLogin ? 'Yes' : 'No'}</td>
+                    <td class="actions">
+                        ${currentUser && (currentUser.role === 'admin' || currentUser.role === 'hod') ? `
+                            <button class="btn btn-primary btn-sm edit-student" data-id="${s.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-student" data-id="${s.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            document.querySelectorAll('.edit-student').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const student = students.find(s => s.id === id);
+                    if (student) showEditStudentForm(student);
+                });
+            });
+            document.querySelectorAll('.delete-student').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    showCustomConfirm('Delete this student?', 'Confirm Delete').then(confirmed => {
+                        if (confirmed) {
+                            students = students.filter(s => s.id !== id);
+                            saveStudents();
+                            updateDashboardStats();
+                            renderStudentTable();
+                            renderDatabaseStudentTable();
+                            showToast('Success', 'Student deleted', 'success');
+                        }
+                    });
+                });
+            });
+        }
+        function filterStudents() {
+            const term = document.getElementById('searchStudent').value.toLowerCase();
+            const filtered = students.filter(s => s.name.toLowerCase().includes(term) || s.enrollment.toLowerCase().includes(term));
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+            filtered.forEach(s => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${s.id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.enrollment}</td>
+                    <td>${s.program}</td>
+                    <td>${getAcademicYearNameById(s.academicYear)}</td>
+                    <td>${s.classYear}</td>
+                    <td>${s.term}</td>
+                    <td>${s.mobile}</td>
+                    <td>${s.email}</td>
+                    <td>${s.firstLogin ? 'Yes' : 'No'}</td>
+                    <td class="actions">
+                        ${currentUser && (currentUser.role === 'admin' || currentUser.role === 'hod') ? `
+                            <button class="btn btn-primary btn-sm edit-student" data-id="${s.id}"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm delete-student" data-id="${s.id}"><i class="fas fa-trash"></i> Delete</button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        function clearStudentSearch() { document.getElementById('searchStudent').value = ''; renderStudentTable(); }
+
+        // Reports
+        function initializeReports() {
+            document.getElementById('reportTotalInstitutes').textContent = institutes.length;
+            document.getElementById('reportTotalProgrammes').textContent = programmes.length;
+            document.getElementById('reportTotalClasses').textContent = classes.length;
+            document.getElementById('reportActiveYears').textContent = academicYears.filter(y => y.is_current === 'Yes').length;
+            initializeCharts();
+        }
+        let charts = {};
+        function initializeCharts() {
+            if (charts.instituteChart) charts.instituteChart.destroy();
+            if (charts.programmeChart) charts.programmeChart.destroy();
+            if (charts.academicYearChart) charts.academicYearChart.destroy();
+            if (charts.classDistributionChart) charts.classDistributionChart.destroy();
+            const instCtx = document.getElementById('instituteChart').getContext('2d');
+            const instCounts = { Active: institutes.filter(i => i.status === 'Active').length, Inactive: institutes.filter(i => i.status === 'Inactive').length };
+            charts.instituteChart = new Chart(instCtx, { type: 'pie', data: { labels: ['Active', 'Inactive'], datasets: [{ data: [instCounts.Active, instCounts.Inactive], backgroundColor: ['#10b981', '#ef4444'] }] }, options: { responsive: true } });
+            const progCtx = document.getElementById('programmeChart').getContext('2d');
+            const progCounts = { Active: programmes.filter(p => p.status === 'Active').length, Completed: programmes.filter(p => p.status === 'Completed').length, Inactive: programmes.filter(p => p.status === 'Inactive').length };
+            charts.programmeChart = new Chart(progCtx, { type: 'bar', data: { labels: ['Active', 'Completed', 'Inactive'], datasets: [{ data: [progCounts.Active, progCounts.Completed, progCounts.Inactive], backgroundColor: ['#4f46e5', '#f59e0b', '#ef4444'] }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } });
+            const acCtx = document.getElementById('academicYearChart').getContext('2d');
+            const acCounts = { Active: academicYears.filter(y => y.status === 'Active').length, Completed: academicYears.filter(y => y.status === 'Completed').length, Inactive: academicYears.filter(y => y.status === 'Inactive').length };
+            charts.academicYearChart = new Chart(acCtx, { type: 'doughnut', data: { labels: ['Active', 'Completed', 'Inactive'], datasets: [{ data: [acCounts.Active, acCounts.Completed, acCounts.Inactive], backgroundColor: ['#8b5cf6', '#f59e0b', '#ef4444'] }] }, options: { responsive: true } });
+            const classCtx = document.getElementById('classDistributionChart').getContext('2d');
+            const progClassCounts = {};
+            programmes.forEach(p => { progClassCounts[p.name] = classes.filter(c => c.programme_name === p.name).length; });
+            charts.classDistributionChart = new Chart(classCtx, { type: 'line', data: { labels: Object.keys(progClassCounts), datasets: [{ data: Object.values(progClassCounts), borderColor: '#ec4899', fill: false }] }, options: { responsive: true } });
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(20);
+            doc.text('EDU MASTER Report', 20, 20);
+            doc.setFontSize(12);
+            doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 35);
+            doc.text(`Institutes: ${institutes.length}`, 20, 45);
+            doc.text(`Programs: ${programmes.length}`, 20, 55);
+            doc.text(`Classes: ${classes.length}`, 20, 65);
+            doc.text(`Active Academic Years: ${academicYears.filter(y => y.is_current === 'Yes').length}`, 20, 75);
+            doc.save(`EDU-MASTER-Report-${new Date().toISOString().slice(0,10)}.pdf`);
+            showToast('Success', 'PDF exported', 'success');
+        }
+
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+            const instSheet = XLSX.utils.json_to_sheet(institutes.map(i => ({ ID: i.id, Name: i.name, Code: i.code, Address: i.address, Status: i.status })));
+            XLSX.utils.book_append_sheet(wb, instSheet, 'Institutes');
+            const progSheet = XLSX.utils.json_to_sheet(programmes.map(p => ({ ID: p.id, Code: p.code, Name: p.name, Duration: p.duration, Status: p.status })));
+            XLSX.utils.book_append_sheet(wb, progSheet, 'Programs');
+            XLSX.writeFile(wb, `EDU-MASTER-Data-${new Date().toISOString().slice(0,10)}.xlsx`);
+            showToast('Success', 'Excel exported', 'success');
+        }
+
+        // Settings
+        function updateProfileSettings() {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            document.getElementById('profileName').value = currentUser.name;
+            document.getElementById('profileEmail').value = currentUser.email;
+            document.getElementById('profileRole').value = currentUser.roleName;
+            document.getElementById('profileMobile').value = currentUser.mobile || '';
+        }
+        function saveProfile() {
+            const name = document.getElementById('profileName').value.trim();
+            const email = document.getElementById('profileEmail').value.trim();
+            const mobile = document.getElementById('profileMobile').value.trim();
+            if (!name || !email || !mobile) { showToast('Error', 'All fields required', 'error'); return; }
+            storedCredentials.admin.name = name;
+            storedCredentials.admin.email = email;
+            storedCredentials.admin.mobile = mobile;
+            localStorage.setItem('eduMasterAdminCredentials', JSON.stringify(storedCredentials.admin));
+            currentUser.name = name;
+            currentUser.email = email;
+            currentUser.mobile = mobile;
+            document.getElementById('dashboardUserName').textContent = name;
+            document.getElementById('avatarText').textContent = name.charAt(0);
+            showToast('Success', 'Profile updated', 'success');
+        }
+        function changeUsername() {
+            const current = document.getElementById('currentUsername').value.trim();
+            const newUser = document.getElementById('newUsername').value.trim();
+            const confirm = document.getElementById('confirmUsername').value.trim();
+            if (!current || !newUser || !confirm) { showToast('Error', 'All fields required', 'error'); return; }
+            if (newUser !== confirm) { showToast('Error', 'New usernames do not match', 'error'); return; }
+            if (current !== storedCredentials.admin.username) { showToast('Error', 'Current username incorrect', 'error'); return; }
+            storedCredentials.admin.username = newUser;
+            localStorage.setItem('eduMasterAdminCredentials', JSON.stringify(storedCredentials.admin));
+            currentUser.username = newUser;
+            document.getElementById('currentUsername').value = '';
+            document.getElementById('newUsername').value = '';
+            document.getElementById('confirmUsername').value = '';
+            showToast('Success', 'Username changed', 'success');
+        }
+        function changePassword() {
+            const current = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            if (!current || !newPass || !confirm) { showToast('Error', 'All fields required', 'error'); return; }
+            if (newPass !== confirm) { showToast('Error', 'New passwords do not match', 'error'); return; }
+            if (current !== storedCredentials.admin.password) { showToast('Error', 'Current password incorrect', 'error'); return; }
+            storedCredentials.admin.password = newPass;
+            localStorage.setItem('eduMasterAdminCredentials', JSON.stringify(storedCredentials.admin));
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            showToast('Success', 'Password changed', 'success');
+        }
+
+        // Reset forms
+        function resetAllForms() {
+            cancelInstituteForm();
+            cancelAcademicForm();
+            cancelProgrammeForm();
+            cancelClassForm();
+            cancelHodForm();
+            cancelStudentForm();
+        }
+
+        // Logout
+        async function handleLogout() {
+            const confirmed = await showCustomConfirm('Logout?', 'Confirm Logout');
+            if (confirmed) {
+                showToast('Logged Out', 'See you soon!', 'success');
+                document.getElementById('successBanner').style.display = 'none';
+                document.getElementById('welcomeBanner').style.display = 'block';
+                if (successBannerTimeout) clearTimeout(successBannerTimeout);
+                hasSubmitted = false;
+                dashboard.style.opacity = '0';
+                studentDashboard.style.opacity = '0';
+                hodDashboard.style.opacity = '0';
+                setTimeout(() => {
+                    dashboard.style.display = 'none';
+                    studentDashboard.style.display = 'none';
+                    hodDashboard.style.display = 'none';
+                    loginPage.style.display = 'flex';
+                    loginPage.style.opacity = '0';
+                    const wrapper = document.querySelector('.login-wrapper');
+                    wrapper.style.opacity = '0';
+                    wrapper.style.transform = 'translateY(20px) scale(0.98)';
+                    wrapper.style.animation = 'none';
+                    setTimeout(() => {
+                        loginPage.style.opacity = '1';
+                        wrapper.style.animation = 'cardAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+                        wrapper.style.animationDelay = '0.3s';
+                        document.getElementById('username').focus();
+                    }, 50);
+                    currentUser = null;
+                }, 300);
+            }
+        }
+
+        // Utility functions
+        function showToast(title, msg, type) {
+            if (toastTimeout) clearTimeout(toastTimeout);
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = msg;
+            document.getElementById('toast').className = 'toast';
+            document.getElementById('toast').classList.add(`toast-${type}`);
+            document.getElementById('toast').classList.add('show');
+            toastTimeout = setTimeout(() => { document.getElementById('toast').classList.remove('show'); }, 3000);
+        }
+        function hideToast() { document.getElementById('toast').classList.remove('show'); }
+        function showError(field, msg) {
+            const input = document.getElementById(field);
+            const err = document.getElementById(field + 'Error');
+            if (input && err) {
+                input.classList.add('error');
+                err.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${msg}`;
+                err.classList.add('show');
+            }
+        }
+        function clearError(field) {
+            const input = document.getElementById(field);
+            const err = document.getElementById(field + 'Error');
+            if (input && err) {
+                input.classList.remove('error');
+                err.classList.remove('show');
+                err.innerHTML = '';
+            }
+        }
+        function clearErrors() {
+            clearError('username');
+            clearError('password');
+        }
+        function resetLoginForm() {
+            document.getElementById('loginForm').reset();
+            clearErrors();
+            document.getElementById('loginButton').disabled = false;
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('loginButton').querySelector('span').textContent = 'LOGIN TO DASHBOARD';
+            hasSubmitted = false;
+        }
