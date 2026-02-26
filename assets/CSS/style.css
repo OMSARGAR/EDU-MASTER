@@ -45,25 +45,6 @@
             overflow-x: hidden;
         }
         
-        /* Particles.js Background */
-        #particles-js {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            z-index: 1;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            animation: gradientShift 15s ease infinite;
-            background-size: 200% 200%;
-        }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
         /* Custom Alert Box Styles */
         .custom-alert-overlay {
             position: fixed;
@@ -197,7 +178,7 @@
             transform: translateY(-1px);
         }
         
-        /* Login Page Styles */
+        /* Login Page Styles - FULL SCREEN */
         .login-container {
             height: 100vh;
             width: 100vw;
@@ -208,10 +189,11 @@
             top: 0;
             left: 0;
             overflow: hidden;
-            padding: 20px;
+            padding: 0; /* Remove padding for edge-to-edge */
             z-index: 2;
             opacity: 0;
             animation: fadeIn 0.5s ease-out forwards;
+            background: var(--light);
         }
         
         @keyframes fadeIn {
@@ -222,30 +204,23 @@
         .login-wrapper {
             display: flex;
             width: 100%;
-            max-width: 1100px;
-            height: 580px;
-            max-height: 85vh;
-            border-radius: 28px;
-            overflow: hidden;
-            box-shadow: 
-                0 25px 80px rgba(0, 0, 0, 0.25),
-                0 5px 15px rgba(0, 0, 0, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            height: 100%;
+            max-width: none;
+            max-height: none;
+            border-radius: 0;
+            box-shadow: none;
             background: white;
             opacity: 0;
             transform: translateY(20px) scale(0.98);
             animation: cardAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             animation-delay: 0.3s;
             position: relative;
-            transition: transform var(--transition-smooth), box-shadow var(--transition-smooth);
+            transition: none; /* Remove hover transition for full-screen */
         }
         
         .login-wrapper:hover {
-            transform: translateY(-2px) scale(1);
-            box-shadow: 
-                0 30px 90px rgba(0, 0, 0, 0.3),
-                0 10px 20px rgba(0, 0, 0, 0.15),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transform: none;
+            box-shadow: none;
         }
         
         @keyframes cardAppear {
@@ -260,7 +235,7 @@
         }
         
         .login-left {
-            flex: 1.2;
+            flex: 1;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             display: flex;
             flex-direction: column;
@@ -367,7 +342,6 @@
             margin-bottom: 20px;
         }
         
-        /* Form group with modern styling */
         .form-group {
             display: flex;
             flex-direction: column;
@@ -523,7 +497,6 @@
             transform: translateY(-50%) scale(0.95);
         }
         
-        /* FIX: Remove browser's default password reveal icons */
         input[type="password"]::-ms-reveal,
         input[type="password"]::-ms-clear,
         input[type="password"]::-webkit-textfield-decoration-container,
@@ -535,26 +508,23 @@
             pointer-events: none !important;
         }
         
-        /* Specifically target password input to remove black eye icon */
         input::-webkit-credentials-auto-fill-button,
         input::-webkit-contacts-auto-fill-button {
             display: none !important;
         }
         
-        /* Hide any browser-generated password toggle */
         .form-input::-ms-reveal,
         .form-input::-ms-clear {
             display: none;
         }
         
-        /* Ensure only our custom eye icon is visible */
         #togglePassword {
             display: flex !important;
         }
         
         .role-selector {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
             margin-top: 5px;
             width: 100%;
@@ -636,6 +606,43 @@
             z-index: 2;
         }
         
+        /* Fixed height for department selector to prevent layout shift */
+        .department-selector {
+            height: 70px;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        
+        .department-selector.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        .department-selector select {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 14px;
+            border: 2px solid var(--gray-200);
+            background: white;
+            font-size: 1rem;
+            color: var(--gray-900);
+            transition: all var(--transition-smooth);
+            cursor: pointer;
+        }
+        
+        .department-selector select:hover {
+            border-color: var(--gray-300);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+        
+        .department-selector select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+            transform: translateY(-2px);
+        }
+        
         .login-btn-container {
             width: 100%;
             margin-top: 15px;
@@ -710,7 +717,6 @@
             box-shadow: none !important;
         }
         
-        /* Loading Animation */
         .loading-spinner {
             display: none;
             width: 20px;
@@ -721,7 +727,6 @@
             animation: spin 1s linear infinite;
         }
         
-        /* Left panel content */
         .left-content {
             position: relative;
             z-index: 2;
@@ -767,7 +772,6 @@
             animation: fadeInUp 0.8s ease-out 0.6s both;
         }
         
-        /* Welcome Section Styles */
         .welcome-section {
             margin-top: 10px;
             margin-bottom: 40px;
@@ -886,7 +890,6 @@
             font-weight: 700;
         }
         
-        /* Error Message */
         .error-message {
             color: var(--danger);
             font-size: 0.85rem;
@@ -907,26 +910,6 @@
             transform: translateY(0);
         }
         
-        /* Animated Background Elements */
-        .floating-elements {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            z-index: 3;
-            overflow: hidden;
-            pointer-events: none;
-        }
-        
-        .floating-element {
-            position: absolute;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
-            animation: float 20s infinite linear;
-        }
-        
-        /* Success Message Banner */
         .success-banner {
             background: linear-gradient(135deg, var(--secondary) 0%, #0da172 100%);
             border-radius: 16px;
@@ -962,7 +945,7 @@
         }
         
         /* Dashboard Styles */
-        .dashboard-container {
+        .dashboard-container, .student-dashboard-container, .hod-dashboard-container {
             display: none;
             height: 100vh;
             width: 100%;
@@ -1260,7 +1243,7 @@
             padding: 25px;
             transition: all var(--transition-smooth);
             border: 2px solid transparent;
-            cursor: default; /* Changed from pointer to default */
+            cursor: default;
             height: 100%;
         }
         
@@ -1271,7 +1254,6 @@
             background: white;
         }
         
-        /* Disable click effect */
         .module-card:active {
             transform: translateY(-1px);
         }
@@ -1370,6 +1352,14 @@
             background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         }
         
+        .btn-indigo {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        }
+        
+        .btn-amber {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
         /* CRUD Module Sections */
         .module-section {
             display: none;
@@ -1427,7 +1417,6 @@
             }
         }
         
-        /* FIX: Mobile responsive forms */
         @media (max-width: 576px) {
             .form-card {
                 padding: 20px;
@@ -1439,7 +1428,7 @@
             
             .search-input {
                 padding: 14px 16px;
-                font-size: 16px; /* Prevents zoom on iOS */
+                font-size: 16px;
                 border-radius: 12px;
             }
             
@@ -1492,7 +1481,6 @@
             box-shadow: var(--shadow-md);
         }
         
-        /* Search and Filter - UPDATED TO MATCH THE IMAGE DESIGN */
         .search-container {
             background: white;
             border-radius: 16px;
@@ -1521,7 +1509,6 @@
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
         }
         
-        /* Data Table - UPDATED FOR MOBILE RESPONSIVENESS */
         .data-table-container {
             background: white;
             border-radius: 16px;
@@ -1538,20 +1525,6 @@
             -webkit-overflow-scrolling: touch;
         }
         
-        /* FIX: Remove horizontal scrolling for Class Master table */
-        #classModule .data-table-wrapper,
-        #databaseTablesSection .data-table-wrapper {
-            overflow-x: visible;
-        }
-        
-        /* Ensure tables are responsive */
-        #classModule .data-table,
-        #databaseTablesSection .data-table {
-            min-width: 100%;
-            width: 100%;
-            table-layout: auto;
-        }
-        
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -1559,34 +1532,6 @@
             min-width: 600px;
             margin-bottom: 0;
             table-layout: auto;
-        }
-        
-        /* FIX: Make database tables match Quick Action tables design - UPDATED TO MATCH IMAGE */
-        #databaseTablesSection .data-table {
-            min-width: 100%;
-            width: 100%;
-            table-layout: auto;
-        }
-        
-        #databaseTablesSection .data-table th,
-        #databaseTablesSection .data-table td {
-            padding: 15px 12px;
-            white-space: normal;
-            word-wrap: break-word;
-        }
-        
-        /* Match the Quick Actions table design - UPDATED TO MATCH IMAGE */
-        .module-section .data-table {
-            min-width: 100%;
-            width: 100%;
-            table-layout: auto;
-        }
-        
-        .module-section .data-table th,
-        .module-section .data-table td {
-            padding: 15px 12px;
-            white-space: normal;
-            word-wrap: break-word;
         }
         
         .data-table thead {
@@ -1655,7 +1600,6 @@
             display: inline-block;
         }
         
-        /* Toast Notification */
         .toast {
             position: fixed;
             bottom: 30px;
@@ -1728,7 +1672,6 @@
             color: var(--gray-700);
         }
         
-        /* Database Tables Section - UPDATED TO MATCH THE IMAGE DESIGN EXACTLY */
         .database-tables-section {
             background: white;
             border-radius: 16px;
@@ -1737,24 +1680,6 @@
             margin-bottom: 30px;
             width: 100%;
             overflow: hidden;
-            /* Will be shown for both admin and principal */
-        }
-        
-        /* Hide actions column for principal */
-        .principal-view .actions-header,
-        .principal-view .actions {
-            display: none !important;
-        }
-        
-        /* Show database tables for principal (read-only) */
-        .principal-view .data-table {
-            min-width: 800px; /* Slightly larger to accommodate all columns without actions */
-        }
-        
-        /* Make sure table layout is stable for both roles */
-        .data-table-container.principal-view {
-            min-height: 400px;
-            position: relative;
         }
         
         .table-tabs {
@@ -1814,7 +1739,6 @@
             animation: fadeIn 0.3s ease-out;
         }
         
-        /* Reports Section - UPDATED FOR MOBILE RESPONSIVENESS */
         .reports-section {
             background: white;
             border-radius: 16px;
@@ -1955,7 +1879,6 @@
             }
         }
         
-        /* Settings Section - UPDATED FOR CONSISTENT INPUT BOX SIZES */
         .settings-section {
             background: white;
             border-radius: 16px;
@@ -2021,8 +1944,6 @@
             animation: fadeIn 0.3s ease-out;
         }
         
-        /* REMOVED: Profile photo container from Admin Settings */
-        
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -2087,7 +2008,6 @@
             margin-top: 5px;
         }
         
-        /* Progress Circle */
         .progress-circle {
             width: 120px;
             height: 120px;
@@ -2126,187 +2046,286 @@
             color: var(--primary);
         }
         
-        /* Principal Settings Section - UPDATED FOR CONSISTENT INPUT BOX SIZES */
-        .principal-settings-section {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: var(--shadow-md);
-            margin-bottom: 30px;
-            width: 100%;
-            overflow: hidden;
-        }
-        
-        .principal-settings-tabs {
+        /* HOD Dashboard Left Panel */
+        .hod-dashboard-wrapper {
             display: flex;
-            border-bottom: 2px solid var(--gray-200);
-            margin-bottom: 25px;
-            overflow-x: auto;
-            overflow-y: hidden;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
+            height: 100vh;
+            width: 100%;
         }
         
-        .principal-settings-tabs::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .principal-settings-tab {
-            padding: 12px 24px;
-            background: none;
-            border: none;
-            font-weight: 600;
-            color: var(--gray-600);
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            white-space: nowrap;
-            position: relative;
+        .hod-sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+            transition: width 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
             flex-shrink: 0;
         }
         
-        .principal-settings-tab:hover {
-            color: var(--primary);
+        .hod-sidebar.closed {
+            width: 80px;
         }
         
-        .principal-settings-tab.active {
-            color: var(--primary);
+        .hod-sidebar-header {
+            padding: 20px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--gray-200);
         }
         
-        .principal-settings-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: var(--primary);
+        .hod-sidebar.closed .hod-sidebar-header {
+            justify-content: center;
+            padding: 20px 0;
         }
         
-        .principal-settings-panel {
+        .hod-sidebar.closed .hod-sidebar-header span {
             display: none;
         }
         
-        .principal-settings-panel.active {
-            display: block;
-            animation: fadeIn 0.3s ease-out;
+        .hod-sidebar-toggle {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
         }
         
-        /* UPDATED: Ensure Principal Settings forms have same input box sizes as Admin Settings */
-        .principal-settings-panel .form-row {
-            display: grid !important;
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 20px !important;
-            margin-bottom: 20px !important;
+        .hod-sidebar-toggle:hover {
+            background: var(--gray-100);
         }
         
-        @media (max-width: 768px) {
-            .principal-settings-panel .form-row {
-                grid-template-columns: 1fr !important;
-            }
+        .hod-user-info {
+            padding: 20px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--gray-200);
         }
         
-        /* UPDATED: Make all input boxes consistent size */
-        .settings-panel .search-input,
-        .principal-settings-panel .search-input {
-            width: 100% !important;
-            min-width: 100% !important;
-            height: 56px !important;
-            padding: 16px 20px !important;
-            border-radius: 14px !important;
-            border: 2px solid var(--gray-200) !important;
-            font-size: 1rem !important;
-            transition: all var(--transition-fast) !important;
-            box-sizing: border-box !important;
-            margin-bottom: 0 !important;
+        .hod-sidebar.closed .hod-user-info {
+            justify-content: center;
+            padding: 20px 0;
         }
         
-        .settings-panel .search-input:focus,
-        .principal-settings-panel .search-input:focus {
-            outline: none !important;
-            border-color: var(--primary) !important;
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15) !important;
-            transform: translateY(-2px) !important;
+        .hod-sidebar.closed .hod-user-info .user-details {
+            display: none;
         }
         
-        .principal-settings-panel .form-group {
-            display: block !important;
-            margin-bottom: 20px !important;
-            opacity: 1 !important;
-            visibility: visible !important;
+        .hod-user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+            flex-shrink: 0;
         }
         
-        .principal-settings-panel .form-label {
-            display: block !important;
-            margin-bottom: 8px !important;
-            font-weight: 600 !important;
-            color: var(--gray-900) !important;
+        .hod-menu {
+            list-style: none;
+            padding: 20px 0;
+            margin: 0;
+            flex: 1;
         }
         
-        .principal-settings-panel .form-actions {
-            display: flex !important;
-            gap: 15px !important;
-            margin-top: 25px !important;
-            opacity: 1 !important;
-            visibility: visible !important;
+        .hod-menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            color: var(--gray-700);
+            font-weight: 500;
         }
         
-        .principal-settings-panel .btn {
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            opacity: 1 !important;
-            visibility: visible !important;
+        .hod-menu-item:hover, .hod-menu-item.active {
+            background: var(--gray-100);
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
         }
         
-        /* Focus enhancement for better accessibility */
-        .form-input:focus-visible {
-            outline: 2px solid var(--primary);
-            outline-offset: 2px;
-        }
-        
-        /* Dashboard Footer */
-        .dashboard-footer {
-            margin-top: 40px;
-            padding: 25px 0;
+        .hod-menu-item i {
+            width: 24px;
             text-align: center;
-            color: var(--gray-600);
-            border-top: 1px solid var(--gray-300);
-            background: var(--gray-50);
-            border-radius: 16px;
+            font-size: 1.1rem;
         }
         
-        .footer-content {
+        .hod-sidebar.closed .hod-menu-item span {
+            display: none;
+        }
+        
+        .hod-sidebar.closed .hod-menu-item {
+            justify-content: center;
+            padding: 12px 0;
+        }
+        
+        .hod-main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        /* Student Dashboard Left Panel */
+        .student-dashboard-wrapper {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+        
+        .student-sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+            transition: width 0.3s ease;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .student-sidebar.closed {
+            width: 80px;
+        }
+        
+        .student-sidebar-header {
+            padding: 20px 15px;
+            display: flex;
             align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--gray-200);
         }
         
-        .footer-line {
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--gray-300), transparent);
-            margin: 10px 0;
+        .student-sidebar.closed .student-sidebar-header {
+            justify-content: center;
+            padding: 20px 0;
         }
         
-        .footer-copyright {
-            font-size: 1rem;
-            font-weight: 600;
+        .student-sidebar.closed .student-sidebar-header span {
+            display: none;
+        }
+        
+        .student-sidebar-toggle {
+            background: none;
+            border: none;
             color: var(--primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
         }
         
-        .footer-developer {
-            font-size: 0.9rem;
+        .student-sidebar-toggle:hover {
+            background: var(--gray-100);
+        }
+        
+        .student-user-info {
+            padding: 20px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .student-sidebar.closed .student-user-info {
+            justify-content: center;
+            padding: 20px 0;
+        }
+        
+        .student-sidebar.closed .student-user-info .user-details {
+            display: none;
+        }
+        
+        .student-user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .student-menu {
+            list-style: none;
+            padding: 20px 0;
+            margin: 0;
+            flex: 1;
+        }
+        
+        .student-menu-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
             color: var(--gray-700);
+            font-weight: 500;
         }
         
-        /* Animations */
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(20px, 20px) rotate(90deg); }
-            50% { transform: translate(0, 40px) rotate(180deg); }
-            75% { transform: translate(-20px, 20px) rotate(270deg); }
+        .student-menu-item:hover, .student-menu-item.active {
+            background: var(--gray-100);
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .student-menu-item i {
+            width: 24px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .student-sidebar.closed .student-menu-item span {
+            display: none;
+        }
+        
+        .student-sidebar.closed .student-menu-item {
+            justify-content: center;
+            padding: 12px 0;
+        }
+        
+        .student-main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            margin-top: 30px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .footer .footer-copyright {
+            color: #1e3a8a !important; /* Dark blue */
+            font-weight: 500;
         }
         
         @keyframes fadeInUp {
@@ -2341,13 +2360,7 @@
             100% { transform: scale(1); }
         }
         
-        /* Responsive Styles - UPDATED FOR MOBILE */
         @media (max-width: 1200px) {
-            .login-wrapper {
-                max-width: 1000px;
-                height: 540px;
-            }
-            
             .product-title {
                 font-size: 2.8rem;
             }
@@ -2359,19 +2372,13 @@
             .welcome-message {
                 font-size: 2.2rem;
             }
-            
-            .custom-alert-box {
-                padding: 30px;
-                max-width: 450px;
-            }
         }
         
         @media (max-width: 992px) {
             .login-wrapper {
                 flex-direction: column;
                 height: auto;
-                max-width: 600px;
-                max-height: 80vh;
+                max-height: none;
             }
             
             .login-left, .login-right {
@@ -2403,31 +2410,9 @@
             .logo-main {
                 font-size: 2.8rem;
             }
-            
-            .dashboard-content {
-                padding: 20px;
-            }
-            
-            .welcome-banner {
-                padding: 30px;
-            }
-            
-            .welcome-title-large {
-                font-size: 1.8rem;
-            }
         }
         
-        /* Mobile and small devices - UPDATED FOR BETTER RESPONSIVENESS */
         @media (max-width: 768px) {
-            html, body {
-                overflow-x: hidden;
-                position: relative;
-            }
-            
-            body {
-                overflow-x: hidden;
-            }
-            
             .login-container {
                 position: relative;
                 height: 100vh;
@@ -2439,11 +2424,10 @@
             
             .login-wrapper {
                 height: auto;
-                margin: 20px;
-                max-height: 90vh;
-                border-radius: 20px;
-                box-shadow: var(--shadow-lg);
-                width: calc(100% - 40px);
+                margin: 0;
+                max-height: none;
+                border-radius: 0;
+                width: 100%;
                 flex-direction: column;
             }
             
@@ -2482,203 +2466,14 @@
             .success-title {
                 font-size: 1.5rem;
             }
-            
-            .short-info {
-                font-size: 1rem;
-            }
-            
-            .dashboard-content {
-                padding: 15px;
-            }
-            
-            .dashboard-navbar {
-                padding: 0 15px;
-                flex-wrap: wrap;
-                height: auto;
-                min-height: 70px;
-            }
-            
-            .dashboard-logo {
-                font-size: 1.5rem;
-            }
-            
-            .user-details {
-                display: none;
-            }
-            
-            .welcome-banner {
-                padding: 25px;
-                margin-bottom: 20px;
-            }
-            
-            .welcome-title-large {
-                font-size: 1.6rem;
-            }
-            
-            .modules-section {
-                padding: 20px;
-                margin-bottom: 20px;
-            }
-            
-            .quick-actions-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-            }
-            
-            .charts-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            
-            .summary-cards {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            
-            /* Database tables FIX for mobile - UPDATED FOR RESPONSIVENESS */
-            .database-tables-section {
-                padding: 20px;
-            }
-            
-            .data-table-container {
-                border-radius: 12px;
-                overflow-x: auto;
-            }
-            
-            .data-table-wrapper {
-                border-radius: 12px;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            .data-table {
-                min-width: 100%;
-                width: auto;
-                table-layout: auto;
-                display: block;
-                overflow-x: auto;
-            }
-            
-            .data-table th,
-            .data-table td {
-                padding: 12px 15px;
-                font-size: 0.85rem;
-                white-space: normal;
-                word-wrap: break-word;
-                min-width: 120px;
-            }
-            
-            .data-table th {
-                white-space: nowrap;
-            }
-            
-            /* Settings section fix for mobile */
-            .settings-section {
-                padding: 20px;
-            }
-            
-            .principal-settings-section {
-                padding: 20px;
-            }
-            
-            .form-card {
-                padding: 20px;
-            }
-            
-            /* Custom Alert responsive */
-            .custom-alert-box {
-                padding: 25px;
-                width: 95%;
-            }
-            
-            .custom-alert-icon {
-                width: 70px;
-                height: 70px;
-                font-size: 2rem;
-            }
-            
-            .custom-alert-title {
-                font-size: 1.5rem;
-            }
-            
-            .custom-alert-buttons {
-                flex-direction: column;
-                width: 100%;
-            }
-            
-            .custom-alert-btn {
-                width: 100%;
-            }
-            
-            /* Principal Settings responsive */
-            .principal-settings-panel .form-row {
-                grid-template-columns: 1fr !important;
-                gap: 15px !important;
-            }
-            
-            /* Form actions responsive */
-            .form-actions {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .form-actions .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            /* Footer responsive */
-            .dashboard-footer {
-                padding: 20px 15px;
-                margin-top: 30px;
-            }
-            
-            .footer-copyright {
-                font-size: 0.9rem;
-            }
-            
-            .footer-developer {
-                font-size: 0.8rem;
-            }
-            
-            /* Search container responsive */
-            .search-container {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 15px;
-            }
-            
-            .search-input {
-                min-width: 100%;
-            }
-            
-            .search-container .btn {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            /* Module header responsive */
-            .module-header {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-            
-            .module-header .section-title {
-                margin-bottom: 0;
-            }
-            
-            .module-header .back-to-dashboard {
-                align-self: flex-start;
-            }
         }
         
         @media (max-width: 576px) {
             .login-wrapper {
-                margin: 10px;
-                width: calc(100% - 20px);
-                border-radius: 16px;
-                max-height: 95vh;
+                margin: 0;
+                width: 100%;
+                border-radius: 0;
+                max-height: none;
             }
             
             .login-right {
@@ -2703,11 +2498,6 @@
             .short-info {
                 font-size: 0.95rem;
                 margin-top: 12px;
-            }
-            
-            .description {
-                font-size: 0.9rem;
-                margin-bottom: 30px;
             }
             
             .logo-main {
@@ -2736,258 +2526,35 @@
                 font-size: 1.3rem;
             }
             
-            .section-title {
-                font-size: 1.2rem;
-            }
-            
             .demo-credentials {
                 padding: 18px;
                 margin-top: 30px;
             }
-            
-            .dashboard-content {
-                padding: 10px;
-            }
-            
-            .welcome-banner {
-                padding: 20px;
-            }
-            
-            .welcome-title-large {
-                font-size: 1.4rem;
-            }
-            
-            .stat-card {
-                padding: 20px;
-            }
-            
-            .stat-value {
-                font-size: 1.8rem;
-            }
-            
-            .module-card {
-                padding: 20px;
-            }
-            
-            .search-input {
-                min-width: 100%;
-                font-size: 0.95rem;
-            }
-            
-            .principal-settings-section {
-                padding: 15px;
-            }
-            
-            .settings-section {
-                padding: 15px;
-            }
-            
-            .database-tables-section {
-                padding: 15px;
-            }
-            
-            .custom-alert-box {
-                padding: 20px 15px;
-            }
-            
-            .custom-alert-icon {
-                width: 60px;
-                height: 60px;
-                font-size: 1.8rem;
-                margin-bottom: 20px;
-            }
-            
-            .custom-alert-title {
-                font-size: 1.3rem;
-            }
-            
-            .custom-alert-message {
-                font-size: 1rem;
-            }
-            
-            /* Quick actions on very small screens */
-            .quick-actions-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            /* Tables on very small screens - UPDATED FOR RESPONSIVENESS */
-            .data-table {
-                display: block;
-                width: 100%;
-                overflow-x: auto;
-            }
-            
-            .data-table th,
-            .data-table td {
-                padding: 10px 12px;
-                font-size: 0.8rem;
-                min-width: 100px;
-            }
-            
-            .data-table .actions {
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            .btn-sm {
-                padding: 8px 12px;
-                font-size: 0.8rem;
-                width: 100%;
-                justify-content: center;
-            }
         }
         
-        /* Very small devices */
-        @media (max-width: 375px) {
-            .login-right {
-                padding: 20px 15px;
-            }
-            
-            .logo-main {
-                font-size: 1.8rem;
-            }
-            
-            .form-input {
-                padding: 12px 15px 12px 40px;
-                font-size: 0.9rem;
-            }
-            
-            .form-icon {
-                left: 15px;
-            }
-            
-            .toggle-password {
-                right: 15px;
-            }
-            
-            .dashboard-navbar {
-                padding: 0 10px;
-            }
-            
-            .dashboard-logo {
-                font-size: 1.3rem;
-            }
-            
-            .logout-btn {
-                padding: 8px 15px;
-                font-size: 0.85rem;
-            }
-            
-            /* Table responsiveness for very small screens */
-            .data-table th,
-            .data-table td {
-                padding: 8px 10px;
-                font-size: 0.75rem;
-                min-width: 90px;
-            }
-            
-            .data-table .btn-sm {
-                padding: 6px 10px;
-                font-size: 0.75rem;
-            }
+        .dropdown-error-message {
+            color: var(--danger);
+            font-size: 0.85rem;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(5px);
+            transition: opacity var(--transition-fast), transform var(--transition-fast);
+            height: 20px;
         }
         
-        /* Large screens (computers, laptops) - show both sections */
-        @media (min-width: 769px) {
-            .login-left {
-                display: flex;
-            }
-            
-            .login-wrapper {
-                flex-direction: row;
-            }
-            
-            /* Fix for database tables on large screens */
-            .data-table {
-                table-layout: auto;
-                width: 100%;
-            }
+        .dropdown-error-message.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
         
-        /* Prevent text selection on mobile */
-        @media (max-width: 768px) {
-            .data-table,
-            .table-tabs,
-            .settings-tabs,
-            .principal-settings-tabs {
-                -webkit-tap-highlight-color: transparent;
-                user-select: none;
-            }
-            
-            .data-table .actions .btn {
-                touch-action: manipulation;
-            }
+        .search-input.error {
+            border-color: var(--danger) !important;
+            background-color: rgba(239, 68, 68, 0.05) !important;
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both !important;
         }
-        
-        /* Specific mobile fixes for database tables */
-        @media (max-width: 768px) {
-            .database-tables-section .data-table-wrapper {
-                border: 1px solid var(--gray-200);
-                border-radius: 8px;
-            }
-            
-            .database-tables-section .data-table {
-                margin: 0;
-            }
-                
-            .database-tables-section .data-table th {
-                position: sticky;
-                top: 0;
-                z-index: 10;
-            }
-        }
-        
-        /* Date input styling - REMOVED CALENDAR ICON */
-        input[type="date"] {
-            position: relative;
-            padding: 16px 20px;
-            font-family: 'Poppins', sans-serif;
-            width: 100%;
-        }
-        
-        /* REMOVED: Calendar picker indicator hiding and custom icon */
-        
-        /* Date input wrapper - UPDATED: No icon */
-        .date-input-wrapper {
-            position: relative;
-            width: 100%;
-        }
-        
-        /* REMOVED: date-input-wrapper::after for calendar icon */
-        
-        /* NEW: Academic Year form adjustments */
-        .academic-form-adjustments .form-row {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        /* Make date inputs same size as other inputs */
-        .academic-form-adjustments input[type="date"] {
-            height: 56px;
-            padding: 16px 20px;
-            border-radius: 14px;
-            border: 2px solid var(--gray-200);
-            font-size: 1rem;
-            transition: all var(--transition-smooth);
-            box-sizing: border-box;
-            background: white;
-            color: var(--gray-900);
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .academic-form-adjustments input[type="date"]:hover {
-            border-color: var(--gray-300);
-            box-shadow: var(--shadow-md);
-            transform: translateY(-1px);
-        }
-        
-        .academic-form-adjustments input[type="date"]:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 
-                0 0 0 4px rgba(79, 70, 229, 0.15),
-                var(--shadow-md);
-            transform: translateY(-2px);
-        }
+    
