@@ -2571,6 +2571,16 @@
             background-color: rgba(239, 68, 68, 0.05) !important;
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both !important;
         }
+        
+        /* Password strength message */
+        .password-requirements {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+            margin-top: 5px;
+            padding: 5px 10px;
+            background: var(--gray-100);
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -3569,7 +3579,20 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Password *</label>
-                        <input type="password" class="search-input" id="hodPassword" placeholder="Enter password">
+                        <div class="password-container">
+                            <input type="password" class="search-input" id="hodPassword" placeholder="Enter password">
+                            <button type="button" class="toggle-password" id="toggleHodPassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-requirements">
+                            Password must contain:<br>
+                            - 1 Uppercase<br>
+                            - 1 Lowercase<br>
+                            - 1 Number<br>
+                            - 1 Special Character<br>
+                            - Minimum 8 Characters
+                        </div>
                     </div>
                 </div>
                 <div class="form-actions">
@@ -3945,6 +3968,15 @@
             // Default student role: show department selector
             currentRole = 'student';
             document.getElementById('departmentSelector').classList.remove('hidden');
+
+            // Toggle HOD password eye
+            document.getElementById('toggleHodPassword')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const pwd = document.getElementById('hodPassword');
+                const type = pwd.getAttribute('type') === 'password' ? 'text' : 'password';
+                pwd.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+            });
         });
 
         // New function to populate student program dropdown with only Active programs
@@ -4299,6 +4331,21 @@
             err.innerHTML = '';
         }
 
+        // Password strength validation
+        function isStrongPassword(password) {
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /\d/.test(password);
+            const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            const minLength = password.length >= 8;
+            return hasUpper && hasLower && hasNumber && hasSpecial && minLength;
+        }
+
+        // Mobile validation
+        function isValidMobile(mobile) {
+            return /^\d{10}$/.test(mobile);
+        }
+
         // Login handling
         let currentUser = null;
         let toastTimeout = null;
@@ -4354,7 +4401,8 @@
                             role: 'hod',
                             roleName: 'HOD',
                             department: hod.department,
-                            username: hod.username
+                            username: hod.username,
+                            id: hod.id
                         };
                     }
                 } else if (role === 'student') {
@@ -4411,63 +4459,164 @@
             }, 500);
         }
 
-        // ==================== HOD DASHBOARD IMPLEMENTATION ====================
+        // ==================== MODIFIED HOD DASHBOARD ====================
+        // No left panel, admin style with top navbar
         function showHODDashboard() {
-            // Build HOD dashboard HTML with left panel
             hodDashboard.innerHTML = `
-                <div class="hod-dashboard-wrapper">
-                    <div class="hod-sidebar" id="hodSidebar">
-                        <div class="hod-sidebar-header">
-                            <span class="dashboard-logo" style="font-size:1.4rem;">EDU MASTER</span>
-                            <button class="hod-sidebar-toggle" id="hodSidebarToggle"><i class="fas fa-bars"></i></button>
-                        </div>
-                        <div class="hod-user-info">
-                            <div class="hod-user-avatar">${currentUser.name.charAt(0)}</div>
+                <!-- Top navbar like admin -->
+                <nav class="dashboard-navbar">
+                    <div class="dashboard-logo">EDU MASTER</div>
+                    <div class="dashboard-user">
+                        <div class="user-info">
+                            <div class="user-avatar">${currentUser.name.charAt(0)}</div>
                             <div class="user-details">
                                 <div class="user-name">${currentUser.name}</div>
                                 <div class="user-role">HOD (${currentUser.department})</div>
                             </div>
                         </div>
-                        <ul class="hod-menu">
-                            <li class="hod-menu-item active" data-module="dashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></li>
-                            <li class="hod-menu-item" data-module="addStudent"><i class="fas fa-user-plus"></i><span>Add Student</span></li>
-                            <li class="hod-menu-item" data-module="createSubject"><i class="fas fa-book"></i><span>Create Subject</span></li>
-                            <li class="hod-menu-item" data-module="createFaculty"><i class="fas fa-chalkboard-teacher"></i><span>Create Faculty</span></li>
-                            <li class="hod-menu-item" data-module="createFeedback"><i class="fas fa-star"></i><span>Create Feedback</span></li>
-                            <li class="hod-menu-item" data-module="viewStudents"><i class="fas fa-users"></i><span>View Students</span></li>
-                            <li class="hod-menu-item" data-module="viewFaculty"><i class="fas fa-user-tie"></i><span>View Faculty</span></li>
-                            <li class="hod-menu-item" data-module="viewFeedback"><i class="fas fa-clipboard-list"></i><span>View Feedback</span></li>
-                        </ul>
+                        <button class="logout-btn" id="hodLogoutBtn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
                     </div>
-                    <div class="hod-main-content" id="hodMainContent">
-                        <!-- Top header -->
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background:white; padding:15px 20px; border-radius:12px; box-shadow:var(--shadow-sm);">
-                            <h2 style="margin:0; font-size:1.5rem; font-weight:700; color:var(--primary);">EDU MASTER</h2>
-                            <div style="display:flex; align-items:center; gap:15px;">
-                                <span style="font-weight:600;">${currentUser.name} (HOD)</span>
-                                <button class="logout-btn" id="hodLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </nav>
+                
+                <main class="dashboard-content" id="hodMainContent">
+                    <!-- Welcome Banner -->
+                    <div class="welcome-banner">
+                        <h1 class="welcome-title-large">Welcome, HOD ${currentUser.name}!</h1>
+                        <p class="welcome-subtitle-large">Manage your department: ${currentUser.department}</p>
+                    </div>
+                    
+                    <!-- Stats Grid - 4 boxes -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                                <div><div class="stat-title">Total Students</div><div class="stat-value">${students.filter(s => s.program === currentUser.department).length}</div></div>
                             </div>
                         </div>
-                        <!-- Content area -->
-                        <div id="hodContentArea"></div>
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                                <div><div class="stat-title">Total Faculty</div><div class="stat-value">${faculties.filter(f => f.department === currentUser.department).length}</div></div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-icon"><i class="fas fa-book"></i></div>
+                                <div><div class="stat-title">Subjects</div><div class="stat-value">${subjects.filter(s => s.department === currentUser.department).length}</div></div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-header">
+                                <div class="stat-icon"><i class="fas fa-star"></i></div>
+                                <div><div class="stat-title">Feedbacks</div><div class="stat-value">${feedbacks.filter(f => f.department === currentUser.department).length}</div></div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                    
+                    <!-- Quick Actions - 4 buttons -->
+                    <div class="modules-section">
+                        <h2 class="section-title"><i class="fas fa-bolt"></i> Quick Actions</h2>
+                        <div class="quick-actions-grid" style="grid-template-columns:repeat(4,1fr);">
+                            <button class="quick-action-btn btn-green" id="hodAddStudentBtn"><i class="fas fa-user-plus"></i><span>Add Student</span></button>
+                            <button class="quick-action-btn btn-purple" id="hodCreateSubjectBtn"><i class="fas fa-book"></i><span>Create Subject</span></button>
+                            <button class="quick-action-btn btn-teal" id="hodCreateFacultyBtn"><i class="fas fa-chalkboard-teacher"></i><span>Create Faculty</span></button>
+                            <button class="quick-action-btn btn-amber" id="hodCreateFeedbackBtn"><i class="fas fa-star"></i><span>Create Feedback</span></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Database Tables Section (like admin) -->
+                    <div class="database-tables-section">
+                        <h2 class="section-title"><i class="fas fa-database"></i> Database Tables</h2>
+                        <div class="table-tabs">
+                            <button class="table-tab active" data-table="student">Student Table</button>
+                            <button class="table-tab" data-table="faculty">Faculty Table</button>
+                            <button class="table-tab" data-table="subject">Subject Table</button>
+                            <button class="table-tab" data-table="feedback">Feedback Table</button>
+                        </div>
+                        
+                        <!-- Student Table Container -->
+                        <div class="table-container active" id="hodStudentTableContainer">
+                            <div class="data-table-container">
+                                <div class="data-table-wrapper">
+                                    <table class="data-table">
+                                        <thead><tr><th>ID</th><th>Name</th><th>Enrollment</th><th>Year</th><th>Term</th><th>Mobile</th><th>Email</th><th>Actions</th></tr></thead>
+                                        <tbody id="hodStudentTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Faculty Table Container -->
+                        <div class="table-container" id="hodFacultyTableContainer">
+                            <div class="data-table-container">
+                                <div class="data-table-wrapper">
+                                    <table class="data-table">
+                                        <thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Email</th><th>Subject</th><th>Actions</th></tr></thead>
+                                        <tbody id="hodFacultyTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Subject Table Container -->
+                        <div class="table-container" id="hodSubjectTableContainer">
+                            <div class="data-table-container">
+                                <div class="data-table-wrapper">
+                                    <table class="data-table">
+                                        <thead><tr><th>ID</th><th>Name</th><th>Code</th><th>Year</th><th>Term</th><th>Actions</th></tr></thead>
+                                        <tbody id="hodSubjectTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Feedback Table Container -->
+                        <div class="table-container" id="hodFeedbackTableContainer">
+                            <div class="data-table-container">
+                                <div class="data-table-wrapper">
+                                    <table class="data-table">
+                                        <thead><tr><th>Student Name</th><th>Enrollment Number</th><th>Feedback Name</th><th>Action</th></tr></thead>
+                                        <tbody id="hodFeedbackTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <footer class="footer"><div class="footer-copyright">© 2025 EDU MASTER | All Rights Reserved</div></footer>
+                </main>
             `;
+
+            // Attach logout
             document.getElementById('hodLogoutBtn').addEventListener('click', handleLogout);
-            document.getElementById('hodSidebarToggle').addEventListener('click', function() {
-                document.getElementById('hodSidebar').classList.toggle('closed');
-            });
-            // Menu clicks
-            document.querySelectorAll('.hod-menu-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    document.querySelectorAll('.hod-menu-item').forEach(i => i.classList.remove('active'));
+
+            // Attach quick action buttons
+            document.getElementById('hodAddStudentBtn').addEventListener('click', () => showHODModule('addStudent'));
+            document.getElementById('hodCreateSubjectBtn').addEventListener('click', () => showHODModule('createSubject'));
+            document.getElementById('hodCreateFacultyBtn').addEventListener('click', () => showHODModule('createFaculty'));
+            document.getElementById('hodCreateFeedbackBtn').addEventListener('click', () => showHODModule('createFeedback'));
+
+            // Table tabs
+            document.querySelectorAll('#hodMainContent .table-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const table = this.dataset.table;
+                    document.querySelectorAll('#hodMainContent .table-tab').forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
-                    const module = this.dataset.module;
-                    showHODModule(module);
+                    document.querySelectorAll('#hodMainContent .table-container').forEach(c => c.classList.remove('active'));
+                    document.getElementById(`hod${table.charAt(0).toUpperCase()+table.slice(1)}TableContainer`).classList.add('active');
                 });
             });
-            // Show dashboard by default
-            showHODModule('dashboard');
+
+            // Render tables
+            renderHODStudentTable();
+            renderHODFacultyTable();
+            renderHODSubjectTable();
+            renderHODFeedbackTable();
+
+            // Show dashboard
             loginPage.style.opacity = '0';
             setTimeout(() => {
                 loginPage.style.display = 'none';
@@ -4476,121 +4625,207 @@
             }, 300);
         }
 
-        function showHODModule(module) {
-            const area = document.getElementById('hodContentArea');
-            if (module === 'dashboard') {
-                area.innerHTML = `
-                    <div class="welcome-banner">
-                        <h1 class="welcome-title-large">Welcome, HOD ${currentUser.name}!</h1>
-                        <p class="welcome-subtitle-large">Manage your department: ${currentUser.department}</p>
-                    </div>
-                    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
-                        <div class="stat-card"><div class="stat-card-header"><div class="stat-icon"><i class="fas fa-users"></i></div><div><div class="stat-title">Total Students</div><div class="stat-value">${students.filter(s => s.program === currentUser.department).length}</div></div></div></div>
-                        <div class="stat-card"><div class="stat-card-header"><div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div><div><div class="stat-title">Total Faculty</div><div class="stat-value">${faculties.filter(f => f.department === currentUser.department).length}</div></div></div></div>
-                        <div class="stat-card"><div class="stat-card-header"><div class="stat-icon"><i class="fas fa-book"></i></div><div><div class="stat-title">Subjects</div><div class="stat-value">${subjects.filter(s => s.department === currentUser.department).length}</div></div></div></div>
-                        <div class="stat-card"><div class="stat-card-header"><div class="stat-icon"><i class="fas fa-star"></i></div><div><div class="stat-title">Feedbacks</div><div class="stat-value">${feedbacks.filter(f => f.department === currentUser.department).length}</div></div></div></div>
-                    </div>
-                `;
-                return;
-            }
+        // Render functions for HOD tables
+        function renderHODStudentTable() {
+            const tbody = document.getElementById('hodStudentTableBody');
+            if (!tbody) return;
+            const deptStudents = students.filter(s => s.program === currentUser.department);
+            tbody.innerHTML = deptStudents.map(s => `
+                <tr>
+                    <td>${s.id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.enrollment}</td>
+                    <td>${s.classYear}</td>
+                    <td>${s.term}</td>
+                    <td>${s.mobile}</td>
+                    <td>${s.email}</td>
+                    <td class="actions">
+                        <button class="btn btn-primary btn-sm edit-student-hod" data-id="${s.id}">Edit</button>
+                        <button class="btn btn-danger btn-sm delete-student-hod" data-id="${s.id}">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+            // Attach edit/delete
+            document.querySelectorAll('.edit-student-hod').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const student = students.find(s => s.id === id);
+                    if (student) {
+                        // For simplicity, just alert that edit would open a form (could be expanded)
+                        alert('Edit student functionality would open a form.');
+                    }
+                });
+            });
+            document.querySelectorAll('.delete-student-hod').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    showCustomConfirm('Delete this student?', 'Confirm Delete').then(confirmed => {
+                        if (confirmed) {
+                            students = students.filter(s => s.id !== id);
+                            saveStudents();
+                            renderHODStudentTable();
+                            showToast('Success', 'Student deleted', 'success');
+                        }
+                    });
+                });
+            });
+        }
 
-            // Add Student form
+        function renderHODFacultyTable() {
+            const tbody = document.getElementById('hodFacultyTableBody');
+            if (!tbody) return;
+            const deptFaculties = faculties.filter(f => f.department === currentUser.department);
+            tbody.innerHTML = deptFaculties.map(f => {
+                const sub = subjects.find(s => s.id === f.subjectId);
+                return `<tr><td>${f.id}</td><td>${f.name}</td><td>${f.mobile}</td><td>${f.email}</td><td>${sub ? sub.name : ''}</td><td class="actions"><button class="btn btn-primary btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></td></tr>`;
+            }).join('');
+        }
+
+        function renderHODSubjectTable() {
+            const tbody = document.getElementById('hodSubjectTableBody');
+            if (!tbody) return;
+            const deptSubjects = subjects.filter(s => s.department === currentUser.department);
+            tbody.innerHTML = deptSubjects.map(s => `<tr><td>${s.id}</td><td>${s.name}</td><td>${s.code}</td><td>${s.year}</td><td>${s.term}</td><td class="actions"><button class="btn btn-primary btn-sm">Edit</button><button class="btn btn-danger btn-sm">Delete</button></td></tr>`).join('');
+        }
+
+        function renderHODFeedbackTable() {
+            const tbody = document.getElementById('hodFeedbackTableBody');
+            if (!tbody) return;
+            // Join feedback responses with students and feedbacks
+            const rows = [];
+            feedbackResponses.forEach(resp => {
+                const student = students.find(s => s.id === resp.studentId);
+                const feedback = feedbacks.find(f => f.id === resp.feedbackId);
+                if (student && feedback) {
+                    rows.push(`
+                        <tr>
+                            <td>${student.name}</td>
+                            <td>${student.enrollment}</td>
+                            <td>${feedback.name}</td>
+                            <td class="actions">
+                                <button class="btn btn-primary btn-sm view-feedback" data-id="${resp.feedbackId}" data-student="${student.id}">View</button>
+                            </td>
+                        </tr>
+                    `);
+                }
+            });
+            tbody.innerHTML = rows.join('');
+            // Attach view (could show detailed scores)
+            document.querySelectorAll('.view-feedback').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const feedbackId = this.dataset.id;
+                    const studentId = this.dataset.student;
+                    const response = feedbackResponses.find(r => r.feedbackId === feedbackId && r.studentId === studentId);
+                    if (response) {
+                        alert('Scores: ' + JSON.stringify(response.scores, null, 2));
+                    }
+                });
+            });
+        }
+
+        // HOD Module display (forms, etc.)
+        let criteriaCount = 0; // for feedback form
+        function showHODModule(module) {
+            const area = document.getElementById('hodMainContent');
             if (module === 'addStudent') {
                 area.innerHTML = `
+                    <div class="module-header">
+                        <button class="back-to-dashboard" id="hodBackToDashboard"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                        <h2 class="section-title"><i class="fas fa-user-plus"></i> Add Student</h2>
+                    </div>
                     <div class="form-card">
-                        <h3 class="mb-4">Add Student</h3>
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label">Academic Year *</label><select class="search-input" id="hodStudentAcademicYear">${academicYears.filter(y=>y.status==='Active').map(y=>`<option value="${y.id}">${y.name}</option>`).join('')}</select></div>
-                            <div class="form-group"><label class="form-label">Department *</label><input type="text" class="search-input" id="hodStudentDepartment" value="${currentUser.department}" readonly></div>
+                            <div class="form-group"><label class="form-label">Academic Year *</label>
+                                <select class="search-input" id="hodStudentAcademicYear">
+                                    <option value="">Select Academic Year</option>
+                                    ${academicYears.filter(y=>y.status==='Active').map(y=>`<option value="${y.id}">${y.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="form-label">Department</label><input type="text" class="search-input" value="${currentUser.department}" readonly></div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label">Year *</label><select class="search-input" id="hodStudentYear"><option value="First Year">First Year</option><option value="Second Year">Second Year</option><option value="Third Year">Third Year</option></select></div>
-                            <div class="form-group"><label class="form-label">Term *</label><select class="search-input" id="hodStudentTerm"><option value="Term 1">Term 1</option><option value="Term 2">Term 2</option></select></div>
+                            <div class="form-group"><label class="form-label">Year *</label>
+                                <select class="search-input" id="hodStudentYear">
+                                    <option value="">Select Year</option>
+                                    <option value="First Year">First Year</option>
+                                    <option value="Second Year">Second Year</option>
+                                    <option value="Third Year">Third Year</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="form-label">Term *</label>
+                                <select class="search-input" id="hodStudentTerm" disabled>
+                                    <option value="">Select Year first</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="search-input" id="hodStudentName" placeholder="Full Name"></div>
-                            <div class="form-group"><label class="form-label">Enrollment Number *</label><input type="text" class="search-input" id="hodStudentEnroll" placeholder="Enrollment"></div>
+                            <div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="search-input" id="hodStudentName"></div>
+                            <div class="form-group"><label class="form-label">Enrollment Number *</label><input type="text" class="search-input" id="hodStudentEnroll"></div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label">Mobile *</label><input type="text" class="search-input" id="hodStudentMobile" placeholder="Mobile"></div>
-                            <div class="form-group"><label class="form-label">Email *</label><input type="email" class="search-input" id="hodStudentEmail" placeholder="Email"></div>
+                            <div class="form-group"><label class="form-label">Mobile *</label><input type="text" class="search-input" id="hodStudentMobile"></div>
+                            <div class="form-group"><label class="form-label">Email *</label><input type="email" class="search-input" id="hodStudentEmail"></div>
                         </div>
                         <div class="form-row">
                             <div class="form-group"><label class="form-label">Username (auto)</label><input type="text" class="search-input" id="hodStudentUsername" readonly></div>
                             <div class="form-group"><label class="form-label">Password (auto)</label><input type="text" class="search-input" id="hodStudentPassword" readonly></div>
                         </div>
                         <div class="form-actions">
-                            <button class="btn btn-primary" id="hodAddStudentBtn"><i class="fas fa-save"></i> Add Student</button>
-                            <button class="btn btn-secondary" id="hodCancelStudentBtn"><i class="fas fa-times"></i> Cancel</button>
+                            <button class="btn btn-primary" id="hodAddStudentSaveBtn"><i class="fas fa-save"></i> Add Student</button>
+                            <button class="btn btn-secondary" id="hodCancelBtn"><i class="fas fa-times"></i> Cancel</button>
                         </div>
                     </div>
                 `;
-                // Auto-fill username and password
-                const nameInput = document.getElementById('hodStudentName');
-                const enrollInput = document.getElementById('hodStudentEnroll');
-                const userInput = document.getElementById('hodStudentUsername');
-                const passInput = document.getElementById('hodStudentPassword');
-                function updateCredentials() {
-                    const name = nameInput.value.trim();
-                    const enroll = enrollInput.value.trim();
-                    if (enroll) userInput.value = enroll;
-                    if (name) {
-                        const parts = name.split(' ');
-                        const firstName = parts[0] || '';
-                        const lastName = parts.slice(1).join('') || '';
-                        passInput.value = firstName + lastName;
+                // Auto-fill username/password
+                const nameInp = document.getElementById('hodStudentName');
+                const enrollInp = document.getElementById('hodStudentEnroll');
+                const userInp = document.getElementById('hodStudentUsername');
+                const passInp = document.getElementById('hodStudentPassword');
+                function updateCreds() {
+                    if (enrollInp.value) userInp.value = enrollInp.value;
+                    if (nameInp.value) {
+                        const parts = nameInp.value.split(' ');
+                        passInp.value = parts[0] + (parts.slice(1).join('') || '');
                     }
                 }
-                nameInput.addEventListener('input', updateCredentials);
-                enrollInput.addEventListener('input', updateCredentials);
-                // Year change updates term options
+                nameInp.addEventListener('input', updateCreds);
+                enrollInp.addEventListener('input', updateCreds);
+                // Year change -> update term
                 document.getElementById('hodStudentYear').addEventListener('change', function() {
-                    const termSelect = document.getElementById('hodStudentTerm');
-                    const year = this.value;
-                    termSelect.innerHTML = '';
-                    if (year === 'First Year') {
-                        termSelect.innerHTML = '<option value="Term 1">Term 1</option><option value="Term 2">Term 2</option>';
-                    } else if (year === 'Second Year') {
-                        termSelect.innerHTML = '<option value="Term 3">Term 3</option><option value="Term 4">Term 4</option>';
-                    } else if (year === 'Third Year') {
-                        termSelect.innerHTML = '<option value="Term 5">Term 5</option><option value="Term 6">Term 6</option>';
+                    const termSel = document.getElementById('hodStudentTerm');
+                    termSel.innerHTML = '<option value="">Select Term</option>';
+                    if (this.value === 'First Year') {
+                        termSel.innerHTML += '<option value="Term 1">Term 1</option><option value="Term 2">Term 2</option>';
+                    } else if (this.value === 'Second Year') {
+                        termSel.innerHTML += '<option value="Term 3">Term 3</option><option value="Term 4">Term 4</option>';
+                    } else if (this.value === 'Third Year') {
+                        termSel.innerHTML += '<option value="Term 5">Term 5</option><option value="Term 6">Term 6</option>';
                     }
+                    termSel.disabled = false;
                 });
-                document.getElementById('hodAddStudentBtn').addEventListener('click', function() {
+                document.getElementById('hodAddStudentSaveBtn').addEventListener('click', function() {
                     const acYear = document.getElementById('hodStudentAcademicYear').value;
-                    const dept = document.getElementById('hodStudentDepartment').value;
                     const year = document.getElementById('hodStudentYear').value;
                     const term = document.getElementById('hodStudentTerm').value;
                     const name = document.getElementById('hodStudentName').value.trim();
                     const enroll = document.getElementById('hodStudentEnroll').value.trim();
                     const mobile = document.getElementById('hodStudentMobile').value.trim();
                     const email = document.getElementById('hodStudentEmail').value.trim();
-                    const username = document.getElementById('hodStudentUsername').value;
-                    const password = document.getElementById('hodStudentPassword').value;
-                    if (!acYear || !dept || !year || !term || !name || !enroll || !mobile || !email) {
+                    if (!acYear || !year || !term || !name || !enroll || !mobile || !email) {
                         alert('All fields required');
                         return;
                     }
-                    const newId = `STU${String(students.length + 1).padStart(3, '0')}`;
+                    const newId = `STU${String(students.length+1).padStart(3,'0')}`;
                     const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
                     students.push({
-                        id: newId,
-                        name,
-                        enrollment: enroll,
-                        program: dept,
-                        academicYear: acYear,
-                        classYear: year,
-                        term,
-                        mobile,
-                        email,
-                        password,
-                        firstLogin: true,
-                        created_at: today,
-                        updated_at: today
+                        id: newId, name, enrollment: enroll, program: currentUser.department,
+                        academicYear: acYear, classYear: year, term, mobile, email,
+                        password: document.getElementById('hodStudentPassword').value,
+                        firstLogin: true, created_at: today, updated_at: today
                     });
                     saveStudents();
                     showToast('Success', 'Student added', 'success');
-                    // Clear form
+                    // Reset form
                     document.getElementById('hodStudentName').value = '';
                     document.getElementById('hodStudentEnroll').value = '';
                     document.getElementById('hodStudentMobile').value = '';
@@ -4598,22 +4833,33 @@
                     document.getElementById('hodStudentUsername').value = '';
                     document.getElementById('hodStudentPassword').value = '';
                 });
-                document.getElementById('hodCancelStudentBtn').addEventListener('click', function() {
-                    showHODModule('dashboard');
-                });
+                document.getElementById('hodCancelBtn').addEventListener('click', () => showHODDashboard());
+                document.getElementById('hodBackToDashboard').addEventListener('click', () => showHODDashboard());
             }
-
-            // Create Subject
-            if (module === 'createSubject') {
+            else if (module === 'createSubject') {
                 area.innerHTML = `
+                    <div class="module-header">
+                        <button class="back-to-dashboard" id="hodBackToDashboard"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                        <h2 class="section-title"><i class="fas fa-book"></i> Create Subject</h2>
+                    </div>
                     <div class="form-card">
-                        <h3 class="mb-4">Create Subject</h3>
                         <div class="form-row">
                             <div class="form-group"><label class="form-label">Department</label><input type="text" class="search-input" value="${currentUser.department}" readonly></div>
-                            <div class="form-group"><label class="form-label">Year *</label><select class="search-input" id="hodSubjectYear"><option value="First Year">First Year</option><option value="Second Year">Second Year</option><option value="Third Year">Third Year</option></select></div>
+                            <div class="form-group"><label class="form-label">Year *</label>
+                                <select class="search-input" id="hodSubjectYear">
+                                    <option value="">Select Year</option>
+                                    <option value="First Year">First Year</option>
+                                    <option value="Second Year">Second Year</option>
+                                    <option value="Third Year">Third Year</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label">Term *</label><select class="search-input" id="hodSubjectTerm"><option value="Term 1">Term 1</option><option value="Term 2">Term 2</option></select></div>
+                            <div class="form-group"><label class="form-label">Term *</label>
+                                <select class="search-input" id="hodSubjectTerm" disabled>
+                                    <option value="">Select Year first</option>
+                                </select>
+                            </div>
                             <div class="form-group"><label class="form-label">Subject Name *</label><input type="text" class="search-input" id="hodSubjectName"></div>
                         </div>
                         <div class="form-row">
@@ -4621,410 +4867,347 @@
                         </div>
                         <div class="form-actions">
                             <button class="btn btn-primary" id="hodAddSubjectBtn"><i class="fas fa-save"></i> Add Subject</button>
-                            <button class="btn btn-secondary" id="hodCancelSubjectBtn"><i class="fas fa-times"></i> Cancel</button>
+                            <button class="btn btn-secondary" id="hodCancelBtn"><i class="fas fa-times"></i> Cancel</button>
                         </div>
                     </div>
                 `;
                 document.getElementById('hodSubjectYear').addEventListener('change', function() {
-                    const termSelect = document.getElementById('hodSubjectTerm');
-                    const year = this.value;
-                    termSelect.innerHTML = '';
-                    if (year === 'First Year') {
-                        termSelect.innerHTML = '<option value="Term 1">Term 1</option><option value="Term 2">Term 2</option>';
-                    } else if (year === 'Second Year') {
-                        termSelect.innerHTML = '<option value="Term 3">Term 3</option><option value="Term 4">Term 4</option>';
-                    } else if (year === 'Third Year') {
-                        termSelect.innerHTML = '<option value="Term 5">Term 5</option><option value="Term 6">Term 6</option>';
+                    const termSel = document.getElementById('hodSubjectTerm');
+                    termSel.innerHTML = '<option value="">Select Term</option>';
+                    if (this.value === 'First Year') {
+                        termSel.innerHTML += '<option value="Term 1">Term 1</option><option value="Term 2">Term 2</option>';
+                    } else if (this.value === 'Second Year') {
+                        termSel.innerHTML += '<option value="Term 3">Term 3</option><option value="Term 4">Term 4</option>';
+                    } else if (this.value === 'Third Year') {
+                        termSel.innerHTML += '<option value="Term 5">Term 5</option><option value="Term 6">Term 6</option>';
                     }
+                    termSel.disabled = false;
                 });
                 document.getElementById('hodAddSubjectBtn').addEventListener('click', function() {
-                    const dept = currentUser.department;
                     const year = document.getElementById('hodSubjectYear').value;
                     const term = document.getElementById('hodSubjectTerm').value;
                     const name = document.getElementById('hodSubjectName').value.trim();
                     const code = document.getElementById('hodSubjectCode').value.trim();
-                    if (!year || !term || !name || !code) {
-                        alert('All fields required');
-                        return;
-                    }
-                    const newId = `SUB${String(subjects.length + 1).padStart(3, '0')}`;
-                    subjects.push({ id: newId, department: dept, year, term, name, code });
+                    if (!year || !term || !name || !code) { alert('All fields required'); return; }
+                    const newId = `SUB${String(subjects.length+1).padStart(3,'0')}`;
+                    subjects.push({ id: newId, department: currentUser.department, year, term, name, code });
                     saveSubjects();
                     showToast('Success', 'Subject added', 'success');
                     document.getElementById('hodSubjectName').value = '';
                     document.getElementById('hodSubjectCode').value = '';
                 });
-                document.getElementById('hodCancelSubjectBtn').addEventListener('click', () => showHODModule('dashboard'));
+                document.getElementById('hodCancelBtn').addEventListener('click', () => showHODDashboard());
+                document.getElementById('hodBackToDashboard').addEventListener('click', () => showHODDashboard());
             }
-
-            // Create Faculty
-            if (module === 'createFaculty') {
-                // Filter subjects by department
+            else if (module === 'createFaculty') {
+                // Reorder fields: Academic Year, Department, Faculty Name, Subject Dropdown, Email, Mobile
                 const deptSubjects = subjects.filter(s => s.department === currentUser.department);
                 area.innerHTML = `
+                    <div class="module-header">
+                        <button class="back-to-dashboard" id="hodBackToDashboard"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                        <h2 class="section-title"><i class="fas fa-chalkboard-teacher"></i> Create Faculty</h2>
+                    </div>
                     <div class="form-card">
-                        <h3 class="mb-4">Create Faculty</h3>
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label">Academic Year *</label><select class="search-input" id="hodFacultyAcademicYear">${academicYears.filter(y=>y.status==='Active').map(y=>`<option value="${y.id}">${y.name}</option>`).join('')}</select></div>
+                            <div class="form-group"><label class="form-label">Academic Year *</label>
+                                <select class="search-input" id="hodFacultyAcademicYear">
+                                    <option value="">Select Academic Year</option>
+                                    ${academicYears.filter(y=>y.status==='Active').map(y=>`<option value="${y.id}">${y.name}</option>`).join('')}
+                                </select>
+                            </div>
                             <div class="form-group"><label class="form-label">Department</label><input type="text" class="search-input" value="${currentUser.department}" readonly></div>
                         </div>
                         <div class="form-row">
                             <div class="form-group"><label class="form-label">Faculty Name *</label><input type="text" class="search-input" id="hodFacultyName"></div>
-                            <div class="form-group"><label class="form-label">Mobile *</label><input type="text" class="search-input" id="hodFacultyMobile"></div>
+                            <div class="form-group"><label class="form-label">Subject *</label>
+                                <select class="search-input" id="hodFacultySubject">
+                                    <option value="">Select Subject</option>
+                                    ${deptSubjects.map(s=>`<option value="${s.id}">${s.name} (${s.code})</option>`).join('')}
+                                </select>
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group"><label class="form-label">Email *</label><input type="email" class="search-input" id="hodFacultyEmail"></div>
-                            <div class="form-group"><label class="form-label">Subject *</label><select class="search-input" id="hodFacultySubject"><option value="">Select Subject</option>${deptSubjects.map(s=>`<option value="${s.id}">${s.name} (${s.code})</option>`).join('')}</select></div>
+                            <div class="form-group"><label class="form-label">Mobile *</label><input type="text" class="search-input" id="hodFacultyMobile"></div>
                         </div>
                         <div class="form-actions">
                             <button class="btn btn-primary" id="hodAddFacultyBtn"><i class="fas fa-save"></i> Create Faculty</button>
-                            <button class="btn btn-secondary" id="hodCancelFacultyBtn"><i class="fas fa-times"></i> Cancel</button>
+                            <button class="btn btn-secondary" id="hodCancelBtn"><i class="fas fa-times"></i> Cancel</button>
                         </div>
                     </div>
                 `;
                 document.getElementById('hodAddFacultyBtn').addEventListener('click', function() {
                     const acYear = document.getElementById('hodFacultyAcademicYear').value;
-                    const dept = currentUser.department;
                     const name = document.getElementById('hodFacultyName').value.trim();
-                    const mobile = document.getElementById('hodFacultyMobile').value.trim();
-                    const email = document.getElementById('hodFacultyEmail').value.trim();
                     const subjectId = document.getElementById('hodFacultySubject').value;
-                    if (!acYear || !name || !mobile || !email || !subjectId) {
-                        alert('All fields required');
-                        return;
-                    }
-                    const newId = `FAC${String(faculties.length + 1).padStart(3, '0')}`;
+                    const email = document.getElementById('hodFacultyEmail').value.trim();
+                    const mobile = document.getElementById('hodFacultyMobile').value.trim();
+                    if (!acYear || !name || !subjectId || !email || !mobile) { alert('All fields required'); return; }
+                    const newId = `FAC${String(faculties.length+1).padStart(3,'0')}`;
                     const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
-                    faculties.push({
-                        id: newId,
-                        academicYear: acYear,
-                        department: dept,
-                        name,
-                        mobile,
-                        email,
-                        subjectId,
-                        created_at: today,
-                        updated_at: today
-                    });
+                    faculties.push({ id: newId, academicYear: acYear, department: currentUser.department, name, mobile, email, subjectId, created_at: today, updated_at: today });
                     saveFaculties();
                     showToast('Success', 'Faculty added', 'success');
                     document.getElementById('hodFacultyName').value = '';
-                    document.getElementById('hodFacultyMobile').value = '';
                     document.getElementById('hodFacultyEmail').value = '';
+                    document.getElementById('hodFacultyMobile').value = '';
                     document.getElementById('hodFacultySubject').value = '';
                 });
-                document.getElementById('hodCancelFacultyBtn').addEventListener('click', () => showHODModule('dashboard'));
+                document.getElementById('hodCancelBtn').addEventListener('click', () => showHODDashboard());
+                document.getElementById('hodBackToDashboard').addEventListener('click', () => showHODDashboard());
             }
-
-            // Create Feedback
-            if (module === 'createFeedback') {
+            else if (module === 'createFeedback') {
+                // New criteria: only Add Criteria button, no default list
                 const deptSubjects = subjects.filter(s => s.department === currentUser.department);
                 const deptFaculties = faculties.filter(f => f.department === currentUser.department);
-                // Default columns
-                let dynamicCols = ['Teaching Skill', 'Presentation', 'Knowledge', 'Discipline', 'Communication'];
                 area.innerHTML = `
+                    <div class="module-header">
+                        <button class="back-to-dashboard" id="hodBackToDashboard"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                        <h2 class="section-title"><i class="fas fa-star"></i> Create Feedback</h2>
+                    </div>
                     <div class="form-card">
-                        <h3 class="mb-4">Create Feedback</h3>
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label">Academic Year *</label><select class="search-input" id="hodFeedbackAcademicYear">${academicYears.filter(y=>y.status==='Active').map(y=>`<option value="${y.id}">${y.name}</option>`).join('')}</select></div>
+                            <div class="form-group"><label class="form-label">Academic Year *</label>
+                                <select class="search-input" id="hodFeedbackAcademicYear">
+                                    <option value="">Select Academic Year</option>
+                                    ${academicYears.filter(y=>y.status==='Active').map(y=>`<option value="${y.id}">${y.name}</option>`).join('')}
+                                </select>
+                            </div>
                             <div class="form-group"><label class="form-label">Department</label><input type="text" class="search-input" value="${currentUser.department}" readonly></div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label">Year *</label><select class="search-input" id="hodFeedbackYear"><option value="First Year">First Year</option><option value="Second Year">Second Year</option><option value="Third Year">Third Year</option></select></div>
-                            <div class="form-group"><label class="form-label">Term *</label><select class="search-input" id="hodFeedbackTerm"><option value="Term 1">Term 1</option><option value="Term 2">Term 2</option></select></div>
+                            <div class="form-group"><label class="form-label">Year *</label>
+                                <select class="search-input" id="hodFeedbackYear">
+                                    <option value="">Select Year</option>
+                                    <option value="First Year">First Year</option>
+                                    <option value="Second Year">Second Year</option>
+                                    <option value="Third Year">Third Year</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="form-label">Term *</label>
+                                <select class="search-input" id="hodFeedbackTerm" disabled>
+                                    <option value="">Select Year first</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label">Faculty *</label><select class="search-input" id="hodFeedbackFaculty"><option value="">Select Faculty</option>${deptFaculties.map(f=>`<option value="${f.id}">${f.name}</option>`).join('')}</select></div>
-                            <div class="form-group"><label class="form-label">Subject *</label><select class="search-input" id="hodFeedbackSubject"><option value="">Select Subject</option>${deptSubjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+                            <div class="form-group"><label class="form-label">Faculty *</label>
+                                <select class="search-input" id="hodFeedbackFaculty">
+                                    <option value="">Select Faculty</option>
+                                    ${deptFaculties.map(f=>`<option value="${f.id}">${f.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="form-label">Subject *</label>
+                                <select class="search-input" id="hodFeedbackSubject">
+                                    <option value="">Select Subject</option>
+                                    ${deptSubjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+                                </select>
+                            </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-group"><label class="form-label">Feedback Name *</label><input type="text" class="search-input" id="hodFeedbackName" placeholder="e.g., Mid-Term Feedback"></div>
+                            <div class="form-group"><label class="form-label">Feedback Name *</label><input type="text" class="search-input" id="hodFeedbackName"></div>
                         </div>
-                        <div id="feedbackCriteriaContainer">
-                            <h4>Criteria</h4>
-                            ${dynamicCols.map((col, index) => `
-                                <div class="form-row" id="criteriaRow${index}">
-                                    <div class="form-group"><label class="form-label">Criteria ${index+1}</label><input type="text" class="search-input" value="${col}" readonly></div>
-                                    <div class="form-group"><label class="form-label">Max Marks</label><input type="number" class="search-input" id="criteriaMarks${index}" placeholder="e.g., 10" value="10"></div>
-                                    <div class="form-group"><button class="btn btn-danger btn-sm removeCriteria" data-index="${index}" style="margin-top:28px;"><i class="fas fa-trash"></i></button></div>
-                                </div>
-                            `).join('')}
-                        </div>
+                        <div id="criteriaContainer"></div>
                         <button class="btn btn-secondary" id="addCriteriaBtn" style="margin-bottom:20px;"><i class="fas fa-plus"></i> Add Criteria</button>
                         <div class="form-actions">
-                            <button class="btn btn-primary" id="hodAddFeedbackBtn"><i class="fas fa-save"></i> Create Feedback</button>
-                            <button class="btn btn-secondary" id="hodCancelFeedbackBtn"><i class="fas fa-times"></i> Cancel</button>
+                            <button class="btn btn-primary" id="hodCreateFeedbackBtn"><i class="fas fa-save"></i> Create Feedback</button>
+                            <button class="btn btn-secondary" id="hodCancelBtn"><i class="fas fa-times"></i> Cancel</button>
+                        </div>
+                    </div>
+                    <!-- Feedback Table Below Form -->
+                    <div class="database-tables-section" style="margin-top:30px;">
+                        <h3 class="section-title">Feedback Responses</h3>
+                        <div class="data-table-container">
+                            <div class="data-table-wrapper">
+                                <table class="data-table">
+                                    <thead><tr><th>Student Name</th><th>Enrollment Number</th><th>Feedback Name</th><th>Action</th></tr></thead>
+                                    <tbody id="hodFeedbackTableBodyInline"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 `;
-                // Add criteria logic
-                let criteriaCount = dynamicCols.length;
+                // Year change -> update term (reset)
+                document.getElementById('hodFeedbackYear').addEventListener('change', function() {
+                    const termSel = document.getElementById('hodFeedbackTerm');
+                    termSel.innerHTML = '<option value="">Select Term</option>';
+                    if (this.value === 'First Year') {
+                        termSel.innerHTML += '<option value="Term 1">Term 1</option><option value="Term 2">Term 2</option>';
+                    } else if (this.value === 'Second Year') {
+                        termSel.innerHTML += '<option value="Term 3">Term 3</option><option value="Term 4">Term 4</option>';
+                    } else if (this.value === 'Third Year') {
+                        termSel.innerHTML += '<option value="Term 5">Term 5</option><option value="Term 6">Term 6</option>';
+                    }
+                    termSel.disabled = false;
+                });
+                // Add Criteria logic
+                criteriaCount = 0;
                 document.getElementById('addCriteriaBtn').addEventListener('click', function() {
-                    const container = document.getElementById('feedbackCriteriaContainer');
-                    const newRow = document.createElement('div');
-                    newRow.className = 'form-row';
-                    newRow.id = `criteriaRow${criteriaCount}`;
-                    newRow.innerHTML = `
-                        <div class="form-group"><label class="form-label">Criteria ${criteriaCount+1}</label><input type="text" class="search-input" id="newCriteriaName${criteriaCount}" placeholder="Criteria name"></div>
-                        <div class="form-group"><label class="form-label">Max Marks</label><input type="number" class="search-input" id="newCriteriaMarks${criteriaCount}" placeholder="e.g., 10" value="10"></div>
+                    const container = document.getElementById('criteriaContainer');
+                    const row = document.createElement('div');
+                    row.className = 'form-row';
+                    row.id = `criteriaRow${criteriaCount}`;
+                    row.innerHTML = `
+                        <div class="form-group"><label class="form-label">Criteria Name</label><input type="text" class="search-input" id="criteriaName${criteriaCount}" placeholder="e.g., Teaching Skill"></div>
+                        <div class="form-group"><label class="form-label">Max Marks</label><input type="number" class="search-input" id="criteriaMarks${criteriaCount}" placeholder="e.g., 10" value="10"></div>
                         <div class="form-group"><button class="btn btn-danger btn-sm removeCriteria" data-index="${criteriaCount}" style="margin-top:28px;"><i class="fas fa-trash"></i></button></div>
                     `;
-                    container.appendChild(newRow);
-                    // Add remove listener
-                    newRow.querySelector('.removeCriteria').addEventListener('click', function() {
-                        newRow.remove();
+                    container.appendChild(row);
+                    row.querySelector('.removeCriteria').addEventListener('click', function() {
+                        row.remove();
                     });
                     criteriaCount++;
                 });
-                // Remove listeners for existing remove buttons
-                document.querySelectorAll('.removeCriteria').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const index = this.dataset.index;
-                        document.getElementById(`criteriaRow${index}`).remove();
-                    });
-                });
-                document.getElementById('hodAddFeedbackBtn').addEventListener('click', function() {
+                document.getElementById('hodCreateFeedbackBtn').addEventListener('click', function() {
                     const acYear = document.getElementById('hodFeedbackAcademicYear').value;
-                    const dept = currentUser.department;
                     const year = document.getElementById('hodFeedbackYear').value;
                     const term = document.getElementById('hodFeedbackTerm').value;
                     const facultyId = document.getElementById('hodFeedbackFaculty').value;
                     const subjectId = document.getElementById('hodFeedbackSubject').value;
                     const name = document.getElementById('hodFeedbackName').value.trim();
-                    if (!acYear || !dept || !year || !term || !facultyId || !subjectId || !name) {
-                        alert('All fields required');
-                        return;
-                    }
+                    if (!acYear || !year || !term || !facultyId || !subjectId || !name) { alert('All fields required'); return; }
                     // Collect criteria
                     const criteria = [];
-                    // Default criteria (first 5)
-                    const defaultNames = ['Teaching Skill', 'Presentation', 'Knowledge', 'Discipline', 'Communication'];
-                    for (let i = 0; i < defaultNames.length; i++) {
+                    for (let i = 0; i < criteriaCount; i++) {
+                        const nameInput = document.getElementById(`criteriaName${i}`);
                         const marksInput = document.getElementById(`criteriaMarks${i}`);
-                        if (marksInput) {
-                            criteria.push({ name: defaultNames[i], maxMarks: parseInt(marksInput.value) || 10 });
-                        }
-                    }
-                    // New criteria
-                    for (let i = defaultNames.length; i < criteriaCount; i++) {
-                        const nameInput = document.getElementById(`newCriteriaName${i}`);
-                        const marksInput = document.getElementById(`newCriteriaMarks${i}`);
                         if (nameInput && marksInput && nameInput.value.trim()) {
                             criteria.push({ name: nameInput.value.trim(), maxMarks: parseInt(marksInput.value) || 10 });
                         }
                     }
-                    const newId = `FBK${String(feedbacks.length + 1).padStart(3, '0')}`;
+                    if (criteria.length === 0) { alert('Add at least one criteria'); return; }
+                    const newId = `FBK${String(feedbacks.length+1).padStart(3,'0')}`;
                     const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
-                    feedbacks.push({
-                        id: newId,
-                        academicYear: acYear,
-                        department: dept,
-                        year,
-                        term,
-                        facultyId,
-                        subjectId,
-                        name,
-                        criteria,
-                        created_at: today
-                    });
+                    feedbacks.push({ id: newId, academicYear: acYear, department: currentUser.department, year, term, facultyId, subjectId, name, criteria, created_at: today });
                     saveFeedbacks();
                     showToast('Success', 'Feedback created', 'success');
+                    // Refresh the inline feedback table
+                    renderInlineHODFeedbackTable();
                 });
-                document.getElementById('hodCancelFeedbackBtn').addEventListener('click', () => showHODModule('dashboard'));
-            }
-
-            // View Students
-            if (module === 'viewStudents') {
-                const deptStudents = students.filter(s => s.program === currentUser.department);
-                area.innerHTML = `
-                    <h3 class="section-title">Students in ${currentUser.department}</h3>
-                    <div class="data-table-container">
-                        <div class="data-table-wrapper">
-                            <table class="data-table">
-                                <thead><tr><th>ID</th><th>Name</th><th>Enrollment</th><th>Year</th><th>Term</th><th>Mobile</th><th>Email</th><th>Actions</th></tr></thead>
-                                <tbody id="hodViewStudentsBody">
-                                    ${deptStudents.map(s => `
-                                        <tr>
-                                            <td>${s.id}</td>
-                                            <td>${s.name}</td>
-                                            <td>${s.enrollment}</td>
-                                            <td>${s.classYear}</td>
-                                            <td>${s.term}</td>
-                                            <td>${s.mobile}</td>
-                                            <td>${s.email}</td>
-                                            <td class="actions">
-                                                <button class="btn btn-primary btn-sm edit-student-hod" data-id="${s.id}"><i class="fas fa-edit"></i> Edit</button>
-                                                <button class="btn btn-danger btn-sm delete-student-hod" data-id="${s.id}"><i class="fas fa-trash"></i> Delete</button>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-                // Add edit/delete functionality
-                document.querySelectorAll('.edit-student-hod').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = this.dataset.id;
-                        const student = students.find(s => s.id === id);
-                        if (!student) return;
-                        // Simple edit prompt (can be improved with modal)
-                        const newName = prompt('Enter new name', student.name);
-                        if (newName) {
-                            student.name = newName;
-                            saveStudents();
-                            showHODModule('viewStudents');
-                            showToast('Success', 'Student updated', 'success');
+                function renderInlineHODFeedbackTable() {
+                    const tbody = document.getElementById('hodFeedbackTableBodyInline');
+                    if (!tbody) return;
+                    const rows = [];
+                    feedbackResponses.forEach(resp => {
+                        const student = students.find(s => s.id === resp.studentId);
+                        const feedback = feedbacks.find(f => f.id === resp.feedbackId);
+                        if (student && feedback) {
+                            rows.push(`
+                                <tr>
+                                    <td>${student.name}</td>
+                                    <td>${student.enrollment}</td>
+                                    <td>${feedback.name}</td>
+                                    <td class="actions">
+                                        <button class="btn btn-primary btn-sm view-feedback-inline" data-id="${resp.feedbackId}" data-student="${student.id}">View</button>
+                                    </td>
+                                </tr>
+                            `);
                         }
                     });
-                });
-                document.querySelectorAll('.delete-student-hod').forEach(btn => {
-                    btn.addEventListener('click', async function() {
-                        const id = this.dataset.id;
-                        if (await showCustomConfirm('Delete this student?', 'Confirm')) {
-                            students = students.filter(s => s.id !== id);
-                            saveStudents();
-                            showHODModule('viewStudents');
-                            showToast('Success', 'Student deleted', 'success');
-                        }
-                    });
-                });
-            }
-
-            // View Faculty
-            if (module === 'viewFaculty') {
-                const deptFaculties = faculties.filter(f => f.department === currentUser.department);
-                area.innerHTML = `
-                    <h3 class="section-title">Faculty in ${currentUser.department}</h3>
-                    <div class="data-table-container">
-                        <div class="data-table-wrapper">
-                            <table class="data-table">
-                                <thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Email</th><th>Subject</th><th>Actions</th></tr></thead>
-                                <tbody id="hodViewFacultyBody">
-                                    ${deptFaculties.map(f => {
-                                        const sub = subjects.find(s => s.id === f.subjectId);
-                                        return `
-                                            <tr>
-                                                <td>${f.id}</td>
-                                                <td>${f.name}</td>
-                                                <td>${f.mobile}</td>
-                                                <td>${f.email}</td>
-                                                <td>${sub ? sub.name : ''}</td>
-                                                <td class="actions">
-                                                    <button class="btn btn-primary btn-sm edit-faculty-hod" data-id="${f.id}"><i class="fas fa-edit"></i> Edit</button>
-                                                    <button class="btn btn-danger btn-sm delete-faculty-hod" data-id="${f.id}"><i class="fas fa-trash"></i> Delete</button>
-                                                </td>
-                                            </tr>
-                                        `;
-                                    }).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-                document.querySelectorAll('.edit-faculty-hod').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const id = this.dataset.id;
-                        const faculty = faculties.find(f => f.id === id);
-                        if (!faculty) return;
-                        const newName = prompt('Enter new name', faculty.name);
-                        if (newName) {
-                            faculty.name = newName;
-                            saveFaculties();
-                            showHODModule('viewFaculty');
-                            showToast('Success', 'Faculty updated', 'success');
-                        }
-                    });
-                });
-                document.querySelectorAll('.delete-faculty-hod').forEach(btn => {
-                    btn.addEventListener('click', async function() {
-                        const id = this.dataset.id;
-                        if (await showCustomConfirm('Delete this faculty?', 'Confirm')) {
-                            faculties = faculties.filter(f => f.id !== id);
-                            saveFaculties();
-                            showHODModule('viewFaculty');
-                            showToast('Success', 'Faculty deleted', 'success');
-                        }
-                    });
-                });
-            }
-
-            // View Feedback (submitted by students)
-            if (module === 'viewFeedback') {
-                const deptFeedbacks = feedbacks.filter(f => f.department === currentUser.department);
-                // Show feedback forms and their responses
-                area.innerHTML = `
-                    <h3 class="section-title">Feedback Forms (${currentUser.department})</h3>
-                    ${deptFeedbacks.map(fb => {
-                        const responses = feedbackResponses.filter(r => r.feedbackId === fb.id);
-                        const faculty = faculties.find(f => f.id === fb.facultyId);
-                        const subject = subjects.find(s => s.id === fb.subjectId);
-                        return `
-                            <div class="form-card" style="margin-bottom:20px;">
-                                <h4>${fb.name} (${fb.year} - ${fb.term})</h4>
-                                <p>Faculty: ${faculty ? faculty.name : ''} | Subject: ${subject ? subject.name : ''}</p>
-                                <p>Responses: ${responses.length}</p>
-                                <button class="btn btn-primary btn-sm view-feedback-detail" data-id="${fb.id}">View Details</button>
-                            </div>
-                        `;
-                    }).join('')}
-                `;
-                document.querySelectorAll('.view-feedback-detail').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const fbId = this.dataset.id;
-                        const fb = feedbacks.find(f => f.id === fbId);
-                        if (!fb) return;
-                        const responses = feedbackResponses.filter(r => r.feedbackId === fbId);
-                        let details = `<h4>${fb.name} Responses</h4><table class="data-table"><thead><tr><th>Student</th>`;
-                        fb.criteria.forEach(c => { details += `<th>${c.name}</th>`; });
-                        details += `<th>Submitted At</th></tr></thead><tbody>`;
-                        responses.forEach(r => {
-                            const student = students.find(s => s.id === r.studentId);
-                            details += `<tr><td>${student ? student.name : r.studentId}</td>`;
-                            fb.criteria.forEach(c => {
-                                const score = r.scores[c.name] || 0;
-                                details += `<td>${score}</td>`;
-                            });
-                            details += `<td>${r.submittedAt}</td></tr>`;
+                    tbody.innerHTML = rows.join('');
+                    document.querySelectorAll('.view-feedback-inline').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const feedbackId = this.dataset.id;
+                            const studentId = this.dataset.student;
+                            const response = feedbackResponses.find(r => r.feedbackId === feedbackId && r.studentId === studentId);
+                            if (response) {
+                                alert('Scores: ' + JSON.stringify(response.scores, null, 2));
+                            }
                         });
-                        details += '</tbody></table>';
-                        // Show in modal
-                        showCustomAlert(details, 'Feedback Details', 'info');
                     });
+                }
+                renderInlineHODFeedbackTable();
+                document.getElementById('hodCancelBtn').addEventListener('click', () => showHODDashboard());
+                document.getElementById('hodBackToDashboard').addEventListener('click', () => {
+                    // Save last action source and scroll to database tables
+                    lastActionSource = 'databaseTables';
+                    showHODDashboard();
                 });
             }
         }
 
-        // ==================== STUDENT DASHBOARD IMPLEMENTATION ====================
+        // ==================== MODIFIED STUDENT DASHBOARD ====================
         function showStudentDashboard() {
-            // If first login, show change password form
             if (currentUser.firstLogin) {
+                // First login change password screen with eye icons and validation
                 studentDashboard.innerHTML = `
-                    <div style="display:flex; align-items:center; justify-content:center; height:100vh; background:white;">
-                        <div class="form-card" style="max-width:500px; width:100%;">
+                    <nav class="dashboard-navbar">
+                        <div class="dashboard-logo">EDU MASTER</div>
+                        <div class="dashboard-user"><button class="logout-btn" id="studentLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
+                    </nav>
+                    <main class="dashboard-content" style="display:flex; justify-content:center; align-items:center;">
+                        <div class="form-card" style="max-width:500px;">
                             <h3 class="mb-4">Change Password (First Login)</h3>
-                            <div class="form-group"><label class="form-label">New Password</label><input type="password" class="search-input" id="studentNewPass"></div>
-                            <div class="form-group"><label class="form-label">Confirm Password</label><input type="password" class="search-input" id="studentConfirmPass"></div>
+                            <div class="form-group">
+                                <label class="form-label">New Password</label>
+                                <div class="password-container">
+                                    <input type="password" class="search-input" id="studentNewPass">
+                                    <button type="button" class="toggle-password" id="toggleStudentNewPass"><i class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm Password</label>
+                                <div class="password-container">
+                                    <input type="password" class="search-input" id="studentConfirmPass">
+                                    <button type="button" class="toggle-password" id="toggleStudentConfirmPass"><i class="fas fa-eye"></i></button>
+                                </div>
+                                <div class="password-requirements">
+                                    Password must contain:<br>
+                                    - 1 Uppercase<br>
+                                    - 1 Lowercase<br>
+                                    - 1 Number<br>
+                                    - 1 Special Character<br>
+                                    - Minimum 8 Characters
+                                </div>
+                            </div>
+                            <div id="passError" class="error-message" style="display:none;"></div>
                             <button class="btn btn-primary" id="studentChangePassBtn">Change Password</button>
                         </div>
-                    </div>
+                    </main>
                 `;
+                // Toggle eye icons
+                document.getElementById('toggleStudentNewPass').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pwd = document.getElementById('studentNewPass');
+                    const type = pwd.getAttribute('type') === 'password' ? 'text' : 'password';
+                    pwd.setAttribute('type', type);
+                    this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+                });
+                document.getElementById('toggleStudentConfirmPass').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pwd = document.getElementById('studentConfirmPass');
+                    const type = pwd.getAttribute('type') === 'password' ? 'text' : 'password';
+                    pwd.setAttribute('type', type);
+                    this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+                });
+                document.getElementById('studentLogoutBtn').addEventListener('click', handleLogout);
                 document.getElementById('studentChangePassBtn').addEventListener('click', function() {
                     const newPass = document.getElementById('studentNewPass').value;
                     const confirm = document.getElementById('studentConfirmPass').value;
+                    const err = document.getElementById('passError');
                     if (!newPass || newPass !== confirm) {
-                        alert('Passwords do not match');
+                        err.innerHTML = 'Passwords do not match';
+                        err.style.display = 'block';
                         return;
                     }
-                    // Update student password
+                    if (!isStrongPassword(newPass)) {
+                        err.innerHTML = 'Password does not meet requirements';
+                        err.style.display = 'block';
+                        return;
+                    }
                     const student = students.find(s => s.id === currentUser.id);
                     if (student) {
+                        if (newPass === student.password) {
+                            err.innerHTML = 'This password was previously used. You cannot use it again.';
+                            err.style.display = 'block';
+                            return;
+                        }
                         student.password = newPass;
                         student.firstLogin = false;
                         saveStudents();
-                        showToast('Success', 'Password changed. Please login again.', 'success');
-                        setTimeout(() => handleLogout(), 1500);
+                        // Show message for 5 seconds then auto logout
+                        showToast('Success', 'Password changed successfully. Please login again.', 'success');
+                        setTimeout(() => handleLogout(), 5000);
                     }
                 });
                 loginPage.style.opacity = '0';
@@ -5036,51 +5219,43 @@
                 return;
             }
 
-            // Normal student dashboard
+            // Normal student dashboard with quick actions
             studentDashboard.innerHTML = `
-                <div class="student-dashboard-wrapper">
-                    <div class="student-sidebar" id="studentSidebar">
-                        <div class="student-sidebar-header">
-                            <span class="dashboard-logo" style="font-size:1.4rem;">EDU MASTER</span>
-                            <button class="student-sidebar-toggle" id="studentSidebarToggle"><i class="fas fa-bars"></i></button>
-                        </div>
-                        <div class="student-user-info">
-                            <div class="student-user-avatar">${currentUser.name.charAt(0)}</div>
+                <nav class="dashboard-navbar">
+                    <div class="dashboard-logo">EDU MASTER</div>
+                    <div class="dashboard-user">
+                        <div class="user-info">
+                            <div class="user-avatar">${currentUser.name.charAt(0)}</div>
                             <div class="user-details">
                                 <div class="user-name">${currentUser.name}</div>
-                                <div class="user-role">Student (${currentUser.program})</div>
+                                <div class="user-role">Student</div>
                             </div>
                         </div>
-                        <ul class="student-menu">
-                            <li class="student-menu-item active" data-module="profile"><i class="fas fa-user"></i><span>Profile</span></li>
-                            <li class="student-menu-item" data-module="feedbackForms"><i class="fas fa-star"></i><span>Feedback Forms</span></li>
-                        </ul>
+                        <button class="logout-btn" id="studentLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
                     </div>
-                    <div class="student-main-content" id="studentMainContent">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background:white; padding:15px 20px; border-radius:12px;">
-                            <h2 style="margin:0; font-size:1.5rem; font-weight:700; color:var(--primary);">EDU MASTER</h2>
-                            <div style="display:flex; align-items:center; gap:15px;">
-                                <span style="font-weight:600;">${currentUser.name} (Student)</span>
-                                <button class="logout-btn" id="studentLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                            </div>
+                </nav>
+                <main class="dashboard-content" id="studentMainContent">
+                    <!-- Welcome Banner -->
+                    <div class="welcome-banner">
+                        <h1 class="welcome-title-large">Welcome, ${currentUser.name}!</h1>
+                        <p class="welcome-subtitle-large">Quick actions available.</p>
+                    </div>
+                    
+                    <!-- Quick Actions (admin style) -->
+                    <div class="modules-section">
+                        <h2 class="section-title"><i class="fas fa-bolt"></i> Quick Actions</h2>
+                        <div class="quick-actions-grid" style="grid-template-columns:repeat(2,1fr);">
+                            <button class="quick-action-btn btn-green" id="studentFeedbackFormBtn"><i class="fas fa-star"></i><span>Feedback Form</span></button>
+                            <button class="quick-action-btn btn-purple" id="studentProfileBtn"><i class="fas fa-user"></i><span>Profile</span></button>
                         </div>
-                        <div id="studentContentArea"></div>
                     </div>
-                </div>
+                    
+                    <footer class="footer"><div class="footer-copyright">© 2025 EDU MASTER | All Rights Reserved</div></footer>
+                </main>
             `;
             document.getElementById('studentLogoutBtn').addEventListener('click', handleLogout);
-            document.getElementById('studentSidebarToggle').addEventListener('click', function() {
-                document.getElementById('studentSidebar').classList.toggle('closed');
-            });
-            document.querySelectorAll('.student-menu-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    document.querySelectorAll('.student-menu-item').forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                    const module = this.dataset.module;
-                    showStudentModule(module);
-                });
-            });
-            showStudentModule('profile');
+            document.getElementById('studentFeedbackFormBtn').addEventListener('click', () => showStudentModule('feedbackForm'));
+            document.getElementById('studentProfileBtn').addEventListener('click', () => showStudentModule('profile'));
             loginPage.style.opacity = '0';
             setTimeout(() => {
                 loginPage.style.display = 'none';
@@ -5090,11 +5265,77 @@
         }
 
         function showStudentModule(module) {
-            const area = document.getElementById('studentContentArea');
-            if (module === 'profile') {
+            const area = document.getElementById('studentMainContent');
+            if (module === 'feedbackForm') {
+                const available = feedbacks.filter(f => 
+                    f.department === currentUser.program &&
+                    f.year === currentUser.classYear &&
+                    f.term === currentUser.term
+                );
+                const submitted = feedbackResponses.filter(r => r.studentId === currentUser.id).map(r => r.feedbackId);
+                const toShow = available.filter(f => !submitted.includes(f.id));
+                let html = `
+                    <div class="module-header">
+                        <button class="back-to-dashboard" id="studentBackToDashboard"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                        <h2 class="section-title"><i class="fas fa-star"></i> Feedback Forms</h2>
+                    </div>
+                `;
+                if (toShow.length === 0) {
+                    html += '<div class="form-card"><p>No pending feedback forms.</p></div>';
+                } else {
+                    toShow.forEach(fb => {
+                        const faculty = faculties.find(f => f.id === fb.facultyId);
+                        const subject = subjects.find(s => s.id === fb.subjectId);
+                        html += `
+                            <div class="form-card" style="margin-bottom:15px;">
+                                <h4>${fb.name}</h4>
+                                <p>Faculty: ${faculty ? faculty.name : ''} | Subject: ${subject ? subject.name : ''}</p>
+                                <form class="feedback-form" data-id="${fb.id}">
+                                    ${fb.criteria.map(c => `
+                                        <div class="form-group">
+                                            <label class="form-label">${c.name} (Max ${c.maxMarks})</label>
+                                            <input type="number" class="search-input" name="${c.name}" min="0" max="${c.maxMarks}" required>
+                                        </div>
+                                    `).join('')}
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary">Submit</button>
+                                        <button type="button" class="btn btn-secondary cancel-feedback">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        `;
+                    });
+                }
+                area.innerHTML = html;
+                document.getElementById('studentBackToDashboard').addEventListener('click', () => showStudentDashboard());
+                document.querySelectorAll('.cancel-feedback').forEach(btn => {
+                    btn.addEventListener('click', () => showStudentDashboard());
+                });
+                document.querySelectorAll('.feedback-form').forEach(form => {
+                    form.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        const fbId = this.dataset.id;
+                        const scores = {};
+                        const inputs = this.querySelectorAll('input[type="number"]');
+                        for (let input of inputs) scores[input.name] = parseInt(input.value) || 0;
+                        if (feedbackResponses.some(r => r.feedbackId === fbId && r.studentId === currentUser.id)) {
+                            alert('You have already submitted this feedback.');
+                            return;
+                        }
+                        if (!await showCustomConfirm('Submit feedback? You cannot edit later.', 'Confirm')) return;
+                        feedbackResponses.push({ feedbackId: fbId, studentId: currentUser.id, scores, submittedAt: new Date().toLocaleString() });
+                        saveFeedbackResponses();
+                        showToast('Success', 'Feedback submitted', 'success');
+                        showStudentDashboard();
+                    });
+                });
+            } else if (module === 'profile') {
                 area.innerHTML = `
+                    <div class="module-header">
+                        <button class="back-to-dashboard" id="studentBackToDashboard"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                        <h2 class="section-title"><i class="fas fa-user"></i> Student Profile</h2>
+                    </div>
                     <div class="form-card">
-                        <h3>Student Profile</h3>
                         <p><strong>Name:</strong> ${currentUser.name}</p>
                         <p><strong>Enrollment:</strong> ${currentUser.enrollment}</p>
                         <p><strong>Program:</strong> ${currentUser.program}</p>
@@ -5105,69 +5346,7 @@
                         <p><strong>Email:</strong> ${currentUser.email}</p>
                     </div>
                 `;
-            } else if (module === 'feedbackForms') {
-                // Find feedbacks for this student's department, year, term
-                const availableFeedbacks = feedbacks.filter(f => 
-                    f.department === currentUser.program &&
-                    f.year === currentUser.classYear &&
-                    f.term === currentUser.term
-                );
-                // Check which ones already submitted
-                const submitted = feedbackResponses.filter(r => r.studentId === currentUser.id).map(r => r.feedbackId);
-                const toShow = availableFeedbacks.filter(f => !submitted.includes(f.id));
-                if (toShow.length === 0) {
-                    area.innerHTML = '<p>No feedback forms available.</p>';
-                    return;
-                }
-                let html = '<h3>Feedback Forms</h3>';
-                toShow.forEach(fb => {
-                    const faculty = faculties.find(f => f.id === fb.facultyId);
-                    const subject = subjects.find(s => s.id === fb.subjectId);
-                    html += `
-                        <div class="form-card" data-feedback-id="${fb.id}">
-                            <h4>${fb.name}</h4>
-                            <p>Faculty: ${faculty ? faculty.name : ''} | Subject: ${subject ? subject.name : ''}</p>
-                            <form class="feedback-form" data-id="${fb.id}">
-                                ${fb.criteria.map(c => `
-                                    <div class="form-group">
-                                        <label class="form-label">${c.name} (Max ${c.maxMarks})</label>
-                                        <input type="number" class="search-input" name="${c.name}" min="0" max="${c.maxMarks}" required>
-                                    </div>
-                                `).join('')}
-                                <button type="submit" class="btn btn-primary">Submit Feedback</button>
-                            </form>
-                        </div>
-                    `;
-                });
-                area.innerHTML = html;
-                // Add submit handlers
-                document.querySelectorAll('.feedback-form').forEach(form => {
-                    form.addEventListener('submit', async function(e) {
-                        e.preventDefault();
-                        const fbId = this.dataset.id;
-                        const scores = {};
-                        const inputs = this.querySelectorAll('input[type="number"]');
-                        for (let input of inputs) {
-                            scores[input.name] = parseInt(input.value) || 0;
-                        }
-                        // Check if already submitted (double-check)
-                        if (feedbackResponses.some(r => r.feedbackId === fbId && r.studentId === currentUser.id)) {
-                            alert('You have already submitted this feedback.');
-                            return;
-                        }
-                        // Confirm
-                        if (!await showCustomConfirm('Submit feedback? You cannot edit later.', 'Confirm')) return;
-                        feedbackResponses.push({
-                            feedbackId: fbId,
-                            studentId: currentUser.id,
-                            scores,
-                            submittedAt: new Date().toLocaleString()
-                        });
-                        saveFeedbackResponses();
-                        showToast('Success', 'Feedback submitted', 'success');
-                        showStudentModule('feedbackForms');
-                    });
-                });
+                document.getElementById('studentBackToDashboard').addEventListener('click', () => showStudentDashboard());
             }
         }
 
@@ -6298,7 +6477,7 @@
         }
         function clearClassSearch() { document.getElementById('searchClass').value = ''; renderClassTable(); }
 
-        // HOD CRUD (with password)
+        // HOD CRUD (with password and mobile validation)
         let editingHodId = null;
         function showAddHodForm() {
             document.getElementById('hodFormTitle').textContent = 'Add New HOD';
@@ -6331,6 +6510,16 @@
             const password = document.getElementById('hodPassword').value;
             if (!dept || !name || !mobile || !email || !username || !password) {
                 showToast('Error', 'All fields required', 'error');
+                return;
+            }
+            // Validate mobile
+            if (!isValidMobile(mobile)) {
+                showToast('Error', 'Mobile must be exactly 10 digits', 'error');
+                return;
+            }
+            // Validate password strength
+            if (!isStrongPassword(password)) {
+                showToast('Error', 'Password does not meet requirements', 'error');
                 return;
             }
             const today = formatDateToDDMMYYYY(new Date().toISOString().split('T')[0]);
