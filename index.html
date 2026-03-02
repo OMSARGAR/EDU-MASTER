@@ -2581,6 +2581,29 @@
             background: var(--gray-100);
             border-radius: 8px;
         }
+
+        /* Bootstrap input-group custom styling to match search-input */
+        .input-group .search-input {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .input-group .btn-outline-secondary {
+            border: 2px solid var(--gray-200);
+            border-left: none;
+            background: white;
+            color: var(--gray-400);
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+            transition: all var(--transition-fast);
+        }
+        .input-group .btn-outline-secondary:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+            border-color: var(--gray-300);
+        }
+        .input-group .btn-outline-secondary:active {
+            background: var(--gray-200);
+        }
     </style>
 </head>
 <body>
@@ -3164,20 +3187,37 @@
                     
                     <div class="form-card mt-4">
                         <h3 class="mb-4">Change Password</h3>
+                        <!-- Current Password with toggle -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Current Password *</label>
-                                <input type="password" class="search-input" id="currentPassword" placeholder="Enter current password">
+                                <div class="input-group">
+                                    <input type="password" class="search-input" id="currentPassword" placeholder="Enter current password">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" id="toggleCurrentPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">New Password *</label>
-                                <input type="password" class="search-input" id="newPassword" placeholder="Enter new password">
+                                <div class="input-group">
+                                    <input type="password" class="search-input" id="newPassword" placeholder="Enter new password">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" id="toggleNewPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Confirm New Password *</label>
-                                <input type="password" class="search-input" id="confirmPassword" placeholder="Confirm new password">
+                                <div class="input-group">
+                                    <input type="password" class="search-input" id="confirmPassword" placeholder="Confirm new password">
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="passwordMatchError" class="error-message"></div>
                             </div>
                         </div>
                         <div class="form-actions">
@@ -3207,10 +3247,12 @@
                     <div class="form-group">
                         <label class="form-label">Institute Name *</label>
                         <input type="text" class="search-input" id="instituteName" placeholder="Enter institute name">
+                        <div id="instituteNameError" class="error-message"></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Institute Code *</label>
                         <input type="text" class="search-input" id="instituteCode" placeholder="Enter institute code">
+                        <div id="instituteCodeError" class="error-message"></div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -3282,6 +3324,7 @@
                     <div class="form-group">
                         <label class="form-label">Year Name *</label>
                         <input type="text" class="search-input" id="yearName" placeholder="e.g., 2024-2025">
+                        <div id="yearNameError" class="error-message"></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Start Date *</label>
@@ -3380,6 +3423,7 @@
                     <div class="form-group">
                         <label class="form-label">Program Code *</label>
                         <input type="text" class="search-input" id="programmeCode" placeholder="Enter program code">
+                        <div id="programmeCodeError" class="error-message"></div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -3560,28 +3604,32 @@
                     <div class="form-group">
                         <label class="form-label">Full Name *</label>
                         <input type="text" class="search-input" id="hodName" placeholder="Enter full name">
+                        <div id="hodNameError" class="error-message"></div>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Mobile Number *</label>
                         <input type="text" class="search-input" id="hodMobile" placeholder="Enter mobile number">
+                        <div id="hodMobileError" class="error-message"></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Email Address *</label>
                         <input type="email" class="search-input" id="hodEmail" placeholder="Enter email">
+                        <div id="hodEmailError" class="error-message"></div>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Username *</label>
                         <input type="text" class="search-input" id="hodUsername" placeholder="Enter username">
+                        <div id="hodUsernameError" class="error-message"></div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Password *</label>
-                        <div class="password-container">
+                        <div class="input-group">
                             <input type="password" class="search-input" id="hodPassword" placeholder="Enter password">
-                            <button type="button" class="toggle-password" id="toggleHodPassword">
+                            <button class="btn btn-outline-secondary toggle-password" type="button" id="toggleHodPassword">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
@@ -3593,6 +3641,7 @@
                             - 1 Special Character<br>
                             - Minimum 8 Characters
                         </div>
+                        <div id="hodPasswordError" class="error-message"></div>
                     </div>
                 </div>
                 <div class="form-actions">
@@ -3956,6 +4005,98 @@
         window.alert = function(message) { return showCustomAlert(message, 'Alert', 'info'); };
         window.confirm = function(message) { return showCustomConfirm(message, 'Confirm', 'warning'); };
 
+        // ==================== VALIDATION FUNCTIONS ====================
+        function validateInstituteName() {
+            const input = document.getElementById('instituteName');
+            const err = document.getElementById('instituteNameError');
+            const val = input.value.trim();
+            if (!val) { showFieldError(input, err, 'Institute Name is required'); return false; }
+            if (!/^[A-Za-z\s]+$/.test(val)) { showFieldError(input, err, 'Only alphabets allowed'); return false; }
+            clearFieldError(input, err); return true;
+        }
+        function validateInstituteCode() {
+            const input = document.getElementById('instituteCode');
+            const err = document.getElementById('instituteCodeError');
+            const val = input.value.trim();
+            if (!val) { showFieldError(input, err, 'Institute Code is required'); return false; }
+            if (!/^\d+$/.test(val)) { showFieldError(input, err, 'Only numeric digits allowed'); return false; }
+            clearFieldError(input, err); return true;
+        }
+        function validateYearName() {
+            const input = document.getElementById('yearName');
+            const err = document.getElementById('yearNameError');
+            const val = input.value.trim();
+            if (!val) { showFieldError(input, err, 'Year Name is required'); return false; }
+            // allow digits, hyphen, slash, space
+            if (!/^[0-9\-\/\s]+$/.test(val)) { showFieldError(input, err, 'Only numbers and special characters (-, /, space) allowed'); return false; }
+            clearFieldError(input, err); return true;
+        }
+        function validateProgrammeCode() {
+            const input = document.getElementById('programmeCode');
+            const err = document.getElementById('programmeCodeError');
+            const val = input.value.trim();
+            if (!val) { showFieldError(input, err, 'Program Code is required'); return false; }
+            if (!/^\d+$/.test(val)) { showFieldError(input, err, 'Only numeric digits allowed'); return false; }
+            clearFieldError(input, err); return true;
+        }
+        function validateHodName() {
+            const input = document.getElementById('hodName');
+            const err = document.getElementById('hodNameError');
+            const val = input.value.trim();
+            if (!val) { showFieldError(input, err, 'Full Name is required'); return false; }
+            if (!/^[A-Za-z\s]+$/.test(val)) { showFieldError(input, err, 'Only alphabets allowed'); return false; }
+            clearFieldError(input, err); return true;
+        }
+        function validateHodMobile() {
+            const input = document.getElementById('hodMobile');
+            const err = document.getElementById('hodMobileError');
+            const val = input.value.trim();
+            if (!val) { showFieldError(input, err, 'Mobile number is required'); return false; }
+            if (!/^\d{10}$/.test(val)) { showFieldError(input, err, 'Exactly 10 digits required'); return false; }
+            clearFieldError(input, err); return true;
+        }
+        function validateHodEmail() {
+            const input = document.getElementById('hodEmail');
+            const err = document.getElementById('hodEmailError');
+            const val = input.value.trim();
+            if (!val) { showFieldError(input, err, 'Email is required'); return false; }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(val)) { showFieldError(input, err, 'Invalid email format'); return false; }
+            clearFieldError(input, err); return true;
+        }
+        function validateHodPassword() {
+            const input = document.getElementById('hodPassword');
+            const err = document.getElementById('hodPasswordError');
+            const val = input.value;
+            if (!val) { showFieldError(input, err, 'Password is required'); return false; }
+            // password strength already shown, but we can do basic check
+            clearFieldError(input, err); return true;
+        }
+        function showFieldError(input, errEl, msg) {
+            input.classList.add('error');
+            errEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${msg}`;
+            errEl.classList.add('show');
+        }
+        function clearFieldError(input, errEl) {
+            input.classList.remove('error');
+            errEl.classList.remove('show');
+            errEl.innerHTML = '';
+        }
+
+        // ==================== PASSWORD TOGGLE HELPERS ====================
+        function setupPasswordToggle(btnId, inputId) {
+            const btn = document.getElementById(btnId);
+            const input = document.getElementById(inputId);
+            if (!btn || !input) return;
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                btn.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+                input.focus();
+            });
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             setupEventListeners();
@@ -3969,14 +4110,22 @@
             currentRole = 'student';
             document.getElementById('departmentSelector').classList.remove('hidden');
 
-            // Toggle HOD password eye
-            document.getElementById('toggleHodPassword')?.addEventListener('click', function(e) {
-                e.preventDefault();
-                const pwd = document.getElementById('hodPassword');
-                const type = pwd.getAttribute('type') === 'password' ? 'text' : 'password';
-                pwd.setAttribute('type', type);
-                this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-            });
+            // Setup toggles for settings passwords
+            setupPasswordToggle('toggleCurrentPassword', 'currentPassword');
+            setupPasswordToggle('toggleNewPassword', 'newPassword');
+            setupPasswordToggle('toggleConfirmPassword', 'confirmPassword');
+            // HOD toggle already has id, but we need to attach (already attached in original but we'll also attach here)
+            setupPasswordToggle('toggleHodPassword', 'hodPassword');
+
+            // Attach validation listeners
+            document.getElementById('instituteName')?.addEventListener('input', validateInstituteName);
+            document.getElementById('instituteCode')?.addEventListener('input', validateInstituteCode);
+            document.getElementById('yearName')?.addEventListener('input', validateYearName);
+            document.getElementById('programmeCode')?.addEventListener('input', validateProgrammeCode);
+            document.getElementById('hodName')?.addEventListener('input', validateHodName);
+            document.getElementById('hodMobile')?.addEventListener('input', validateHodMobile);
+            document.getElementById('hodEmail')?.addEventListener('input', validateHodEmail);
+            document.getElementById('hodPassword')?.addEventListener('input', validateHodPassword);
         });
 
         // New function to populate student program dropdown with only Active programs
@@ -4019,7 +4168,7 @@
             return classes.some(c => c.academic_year === yearId && c.status !== 'Completed');
         }
 
-        // Setup event listeners
+        // Setup event listeners (existing code, we'll append new validation checks in save handlers)
         function setupEventListeners() {
             // Role selection
             document.querySelectorAll('.role-btn').forEach(btn => {
@@ -5140,16 +5289,16 @@
                             <h3 class="mb-4">Change Password (First Login)</h3>
                             <div class="form-group">
                                 <label class="form-label">New Password</label>
-                                <div class="password-container">
+                                <div class="input-group">
                                     <input type="password" class="search-input" id="studentNewPass">
-                                    <button type="button" class="toggle-password" id="toggleStudentNewPass"><i class="fas fa-eye"></i></button>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" id="toggleStudentNewPass"><i class="fas fa-eye"></i></button>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Confirm Password</label>
-                                <div class="password-container">
+                                <div class="input-group">
                                     <input type="password" class="search-input" id="studentConfirmPass">
-                                    <button type="button" class="toggle-password" id="toggleStudentConfirmPass"><i class="fas fa-eye"></i></button>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button" id="toggleStudentConfirmPass"><i class="fas fa-eye"></i></button>
                                 </div>
                                 <div class="password-requirements">
                                     Password must contain:<br>
@@ -5166,20 +5315,8 @@
                     </main>
                 `;
                 // Toggle eye icons
-                document.getElementById('toggleStudentNewPass').addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const pwd = document.getElementById('studentNewPass');
-                    const type = pwd.getAttribute('type') === 'password' ? 'text' : 'password';
-                    pwd.setAttribute('type', type);
-                    this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-                });
-                document.getElementById('toggleStudentConfirmPass').addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const pwd = document.getElementById('studentConfirmPass');
-                    const type = pwd.getAttribute('type') === 'password' ? 'text' : 'password';
-                    pwd.setAttribute('type', type);
-                    this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-                });
+                setupPasswordToggle('toggleStudentNewPass', 'studentNewPass');
+                setupPasswordToggle('toggleStudentConfirmPass', 'studentConfirmPass');
                 document.getElementById('studentLogoutBtn').addEventListener('click', handleLogout);
                 document.getElementById('studentChangePassBtn').addEventListener('click', function() {
                     const newPass = document.getElementById('studentNewPass').value;
@@ -5866,6 +6003,8 @@
             document.getElementById('instituteCode').value = '';
             document.getElementById('instituteAddress').value = '';
             document.getElementById('instituteStatus').value = '';
+            clearFieldError(document.getElementById('instituteName'), document.getElementById('instituteNameError'));
+            clearFieldError(document.getElementById('instituteCode'), document.getElementById('instituteCodeError'));
         }
         function showEditInstituteForm(inst) {
             document.getElementById('instituteFormTitle').textContent = 'Edit Institute';
@@ -5875,8 +6014,14 @@
             document.getElementById('instituteCode').value = inst.code;
             document.getElementById('instituteAddress').value = inst.address;
             document.getElementById('instituteStatus').value = inst.status;
+            clearFieldError(document.getElementById('instituteName'), document.getElementById('instituteNameError'));
+            clearFieldError(document.getElementById('instituteCode'), document.getElementById('instituteCodeError'));
         }
         function saveInstitute() {
+            if (!validateInstituteName() || !validateInstituteCode()) {
+                showToast('Error', 'Please fix validation errors', 'error');
+                return;
+            }
             const name = document.getElementById('instituteName').value.trim();
             const code = document.getElementById('instituteCode').value.trim();
             const address = document.getElementById('instituteAddress').value.trim();
@@ -5912,6 +6057,8 @@
             editingInstituteId = null;
             document.getElementById('instituteFormTitle').textContent = 'Add New Institute';
             document.getElementById('saveInstituteBtn').innerHTML = '<i class="fas fa-save"></i> Save Institute';
+            clearFieldError(document.getElementById('instituteName'), document.getElementById('instituteNameError'));
+            clearFieldError(document.getElementById('instituteCode'), document.getElementById('instituteCodeError'));
         }
         function renderInstituteTable() {
             const tbody = document.getElementById('instituteTableBody');
@@ -6001,6 +6148,7 @@
             // Enable dropdowns when adding new
             document.getElementById('isCurrentYear').disabled = false;
             document.getElementById('academicStatus').disabled = false;
+            clearFieldError(document.getElementById('yearName'), document.getElementById('yearNameError'));
         }
         function showEditAcademicForm(year) {
             document.getElementById('academicFormTitle').textContent = 'Edit Academic Year';
@@ -6011,6 +6159,7 @@
             document.getElementById('endDate').value = formatDateToYYYYMMDD(year.end_date);
             document.getElementById('isCurrentYear').value = year.is_current;
             document.getElementById('academicStatus').value = year.status;
+            clearFieldError(document.getElementById('yearName'), document.getElementById('yearNameError'));
 
             // Check restrictions
             const hasNonCompleted = hasNonCompletedClassesForAcademicYear(year.id);
@@ -6026,6 +6175,10 @@
             }
         }
         function saveAcademicYear() {
+            if (!validateYearName()) {
+                showToast('Error', 'Please fix validation errors', 'error');
+                return;
+            }
             const name = document.getElementById('yearName').value.trim();
             const start = document.getElementById('startDate').value;
             const end = document.getElementById('endDate').value;
@@ -6093,6 +6246,7 @@
             document.getElementById('saveAcademicBtn').innerHTML = '<i class="fas fa-save"></i> Save Academic Year';
             document.getElementById('isCurrentYear').disabled = false;
             document.getElementById('academicStatus').disabled = false;
+            clearFieldError(document.getElementById('yearName'), document.getElementById('yearNameError'));
         }
         function renderAcademicTable() {
             const tbody = document.getElementById('academicTableBody');
@@ -6183,6 +6337,7 @@
             document.getElementById('programmeDuration').value = '3';
             document.getElementById('programmeDescription').value = '';
             document.getElementById('programmeStatus').value = '';
+            clearFieldError(document.getElementById('programmeCode'), document.getElementById('programmeCodeError'));
         }
         function showEditProgrammeForm(prog) {
             document.getElementById('programmeFormTitle').textContent = 'Edit Program';
@@ -6193,8 +6348,13 @@
             document.getElementById('programmeDuration').value = prog.duration;
             document.getElementById('programmeDescription').value = prog.description;
             document.getElementById('programmeStatus').value = prog.status;
+            clearFieldError(document.getElementById('programmeCode'), document.getElementById('programmeCodeError'));
         }
         function saveProgramme() {
+            if (!validateProgrammeCode()) {
+                showToast('Error', 'Please fix validation errors', 'error');
+                return;
+            }
             const name = document.getElementById('programmeName').value.trim();
             const code = document.getElementById('programmeCode').value.trim();
             const duration = document.getElementById('programmeDuration').value;
@@ -6248,6 +6408,7 @@
             editingProgrammeId = null;
             document.getElementById('programmeFormTitle').textContent = 'Add New Program';
             document.getElementById('saveProgrammeBtn').innerHTML = '<i class="fas fa-save"></i> Save Program';
+            clearFieldError(document.getElementById('programmeCode'), document.getElementById('programmeCodeError'));
         }
         function renderProgrammeTable() {
             const tbody = document.getElementById('programmeTableBody');
@@ -6489,6 +6650,10 @@
             document.getElementById('hodEmail').value = '';
             document.getElementById('hodUsername').value = '';
             document.getElementById('hodPassword').value = '';
+            clearFieldError(document.getElementById('hodName'), document.getElementById('hodNameError'));
+            clearFieldError(document.getElementById('hodMobile'), document.getElementById('hodMobileError'));
+            clearFieldError(document.getElementById('hodEmail'), document.getElementById('hodEmailError'));
+            clearFieldError(document.getElementById('hodPassword'), document.getElementById('hodPasswordError'));
         }
         function showEditHodForm(hod) {
             document.getElementById('hodFormTitle').textContent = 'Edit HOD';
@@ -6500,6 +6665,10 @@
             document.getElementById('hodEmail').value = hod.email;
             document.getElementById('hodUsername').value = hod.username;
             document.getElementById('hodPassword').value = hod.password;
+            clearFieldError(document.getElementById('hodName'), document.getElementById('hodNameError'));
+            clearFieldError(document.getElementById('hodMobile'), document.getElementById('hodMobileError'));
+            clearFieldError(document.getElementById('hodEmail'), document.getElementById('hodEmailError'));
+            clearFieldError(document.getElementById('hodPassword'), document.getElementById('hodPasswordError'));
         }
         function saveHod() {
             const dept = document.getElementById('hodDepartment').value;
@@ -6508,17 +6677,25 @@
             const email = document.getElementById('hodEmail').value.trim();
             const username = document.getElementById('hodUsername').value.trim();
             const password = document.getElementById('hodPassword').value;
+
+            // Run validations
+            const validName = validateHodName();
+            const validMobile = validateHodMobile();
+            const validEmail = validateHodEmail();
+            const validPassword = validateHodPassword();
+
             if (!dept || !name || !mobile || !email || !username || !password) {
                 showToast('Error', 'All fields required', 'error');
                 return;
             }
-            // Validate mobile
-            if (!isValidMobile(mobile)) {
-                showToast('Error', 'Mobile must be exactly 10 digits', 'error');
+            if (!validName || !validMobile || !validEmail || !validPassword) {
+                showToast('Error', 'Please fix validation errors', 'error');
                 return;
             }
-            // Validate password strength
+            // Validate mobile (already done)
+            // Validate password strength (we keep the requirements, but not mandatory per spec)
             if (!isStrongPassword(password)) {
+                showFieldError(document.getElementById('hodPassword'), document.getElementById('hodPasswordError'), 'Password does not meet requirements');
                 showToast('Error', 'Password does not meet requirements', 'error');
                 return;
             }
@@ -6551,6 +6728,10 @@
             editingHodId = null;
             document.getElementById('hodFormTitle').textContent = 'Add New HOD';
             document.getElementById('saveHodBtn').innerHTML = '<i class="fas fa-save"></i> Save HOD';
+            clearFieldError(document.getElementById('hodName'), document.getElementById('hodNameError'));
+            clearFieldError(document.getElementById('hodMobile'), document.getElementById('hodMobileError'));
+            clearFieldError(document.getElementById('hodEmail'), document.getElementById('hodEmailError'));
+            clearFieldError(document.getElementById('hodPassword'), document.getElementById('hodPasswordError'));
         }
         function renderHodTable() {
             const tbody = document.getElementById('hodTableBody');
@@ -6886,8 +7067,16 @@
             const current = document.getElementById('currentPassword').value;
             const newPass = document.getElementById('newPassword').value;
             const confirm = document.getElementById('confirmPassword').value;
+            const err = document.getElementById('passwordMatchError');
             if (!current || !newPass || !confirm) { showToast('Error', 'All fields required', 'error'); return; }
-            if (newPass !== confirm) { showToast('Error', 'New passwords do not match', 'error'); return; }
+            if (newPass !== confirm) {
+                err.innerHTML = '<i class="fas fa-exclamation-circle"></i> New passwords do not match';
+                err.classList.add('show');
+                return;
+            } else {
+                err.classList.remove('show');
+                err.innerHTML = '';
+            }
             if (current !== storedCredentials.admin.password) { showToast('Error', 'Current password incorrect', 'error'); return; }
             storedCredentials.admin.password = newPass;
             localStorage.setItem('eduMasterAdminCredentials', JSON.stringify(storedCredentials.admin));
