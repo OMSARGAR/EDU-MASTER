@@ -189,7 +189,7 @@
             top: 0;
             left: 0;
             overflow: hidden;
-            padding: 0; /* Remove padding for edge-to-edge */
+            padding: 0;
             z-index: 2;
             opacity: 0;
             animation: fadeIn 0.5s ease-out forwards;
@@ -215,7 +215,7 @@
             animation: cardAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             animation-delay: 0.3s;
             position: relative;
-            transition: none; /* Remove hover transition for full-screen */
+            transition: none;
         }
         
         .login-wrapper:hover {
@@ -643,9 +643,11 @@
             transform: translateY(-2px);
         }
         
+        /* Login button container - moved down with margin */
         .login-btn-container {
             width: 100%;
-            margin-top: 15px;
+            margin-top: 25px;
+            margin-bottom: 10px;
             position: relative;
             height: 58px;
             flex-shrink: 0;
@@ -1096,7 +1098,7 @@
             max-width: 600px;
         }
         
-        /* Stats Cards */
+        /* Stats Cards - now 4 columns */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -1106,7 +1108,7 @@
         
         @media (max-width: 1200px) {
             .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
             }
         }
         
@@ -1134,13 +1136,7 @@
         }
         
         .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            display: none;
         }
         
         .stat-card:hover {
@@ -1184,16 +1180,7 @@
         }
         
         .stat-change {
-            font-size: 0.85rem;
-            color: var(--secondary);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .stat-change i {
-            font-size: 0.8rem;
+            display: none;
         }
         
         /* Modules Section */
@@ -2317,10 +2304,7 @@
         .footer {
             text-align: center;
             padding: 20px;
-            background: white;
             margin-top: 30px;
-            border-radius: 16px;
-            box-shadow: var(--shadow-sm);
         }
         
         .footer .footer-copyright {
@@ -2557,4 +2541,79 @@
             background-color: rgba(239, 68, 68, 0.05) !important;
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both !important;
         }
-    
+        
+        /* Password strength message - now wraps only text */
+        .password-requirements {
+            display: inline-block;
+            width: auto;
+            max-width: 100%;
+            font-size: 0.8rem;
+            color: var(--gray-600);
+            margin-top: 5px;
+            padding: 5px 10px;
+            background: var(--gray-100);
+            border-radius: 8px;
+        }
+
+        /* Bootstrap input-group custom styling to match search-input */
+        .input-group .search-input {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .input-group .btn-outline-secondary {
+            border: 2px solid var(--gray-200);
+            border-left: none;
+            background: white;
+            color: var(--gray-400);
+            border-top-right-radius: 10px;
+            border-bottom-right-radius: 10px;
+            transition: all var(--transition-fast);
+        }
+        .input-group .btn-outline-secondary:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+            border-color: var(--gray-300);
+        }
+        .input-group .btn-outline-secondary:active {
+            background: var(--gray-200);
+        }
+
+        /* Fix academic year form inputs to all have same width */
+        #academicModule .search-input {
+            min-width: 0;
+            width: 100%;
+        }
+
+        /* Password field wrapper for inline eye (login style) */
+        .password-field-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .password-field-wrapper .search-input {
+            padding-right: 50px;
+            width: 100%;
+        }
+        .password-field-wrapper .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 5px;
+            z-index: 10;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .password-field-wrapper .toggle-password:hover {
+            color: var(--primary);
+            background-color: rgba(79, 70, 229, 0.1);
+            transform: translateY(-50%) scale(1.1);
+        } 
